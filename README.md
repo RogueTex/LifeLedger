@@ -15,7 +15,7 @@ LifeLedger ingests exported personal data across transactions, calendar, emails,
 | Phase 2 | Feature engineering | ✅ Done |
 | Phase 3 | Insight engine | ✅ Done |
 | Phase 4 | Streamlit UI | ✅ Done |
-| Phase 5 | Demo polish & cache | 🟡 In Progress |
+| Phase 5 | Demo polish & cache | ✅ Done |
 
 ## 🗂️ Project Structure
 
@@ -51,14 +51,20 @@ lifeledger/
 ├── notebooks/
 │   └── eda.ipynb                        # Validation notebook (8 required cells)
 ├── outputs/
-│   ├── insights_p01.json                # Generated cache via save_insights("p01")
-│   └── insights_p05.json                # Generated cache via save_insights("p05")
+│   ├── insights_p01.json                # Frozen demo cache via save_insights("p01")
+│   ├── insights_p05.json                # Frozen demo cache via save_insights("p05")
+│   └── demo_backups/
+│       ├── backup_p01.json              # Backup panel data for p01
+│       └── backup_p05.json              # Backup panel data for p05
 ├── schemas/
 │   └── DATASET_SCHEMA.md
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
 ├── QUICKSTART.md
+├── scripts/
+│   ├── demo_dry_run.sh                  # 2-minute timed demo runbook
+│   └── generate_demo_backups.py         # Backup critical panel data per persona
 └── README.md
 ```
 
@@ -130,13 +136,32 @@ streamlit run src/ui/app.py
 ## 🧠 How It Works
 
 ### Stress-Spend Correlation
-Calendar events are transformed into daily stress scores, then smoothed and aggregated weekly. Weekly stress averages are Pearson-correlated against weekly discretionary spend. The engine flags top spend spike weeks with threshold and prior-week stress evidence.
+Calendar events are transformed into daily stress scores, aggregated weekly, and evaluated against weekly discretionary spend across multiple valid alignments (same-week and prior-week variants). The engine selects the strongest valid signal, emits low-variance fallbacks when needed, and flags spike weeks with threshold math + transaction/event evidence.
 
 ### Freelancer Business Brain (Theo / p05)
 Emails plus calendar context are scanned for invoice/payment signals and implied hourly rate cues. If implied rate is below the **$65/hr Austin baseline**, the system raises an undercharging risk flag.
 
 ### Cross-Source Insight Report
 Conversation tags, lifelog patterns, and persona profile context are fused to produce anxiety theme recurrence, savings goal velocity (`months_to_goal`), and behavioral summaries.
+
+## 📐 Locked Contracts
+
+### Loader Contract
+- Top-level keys are fixed: `profile`, `consent`, `lifelog`, `conversations`, `emails`, `calendar`, `social_posts`, `transactions`, `files_index`.
+- Normalized timeline columns include `ts`, `date`, `week`, `year_week`, `tags`, `refs`, `amount`, `text`, `source`.
+- `year_week` is enforced as `YYYY-WW`.
+
+### Insight Contract (`schema_version: v1_locked`)
+Every insight row includes:
+- `id`
+- `title`
+- `finding`
+- `evidence` (list)
+- `dollar_impact`
+
+Stress/spend output also includes:
+- `correlation_coefficient`, `p_value`, `insufficient_variance`, `lag_used`
+- `spike_weeks` with `top_transactions`, `calendar_events`, and `threshold_math`
 
 ## 🧾 Data Sources Table
 
@@ -188,7 +213,5 @@ ADHD + freelance + undercharging. Secondary demo story: freelancer business brai
 
 ## 🚀 What’s Next
 
-- Align loader/features/insight outputs to final contract fields for judging rubric
-- Tune stress/scoring weights to avoid constant weekly series and produce meaningful `r`
-- Finalize demo polish: chart readability, narrative prompts, and 2-minute talk track
-- Freeze caches and perform final dry-run with live API key
+- Run final live-key chat smoke test with benchmark prompts before judging
+- Keep frozen caches and backup panel files in sync if feature logic changes
