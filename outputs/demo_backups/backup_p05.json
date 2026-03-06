@@ -1,0 +1,99 @@
+{
+  "persona": "p05",
+  "profile_name": "Theo Nakamura",
+  "critical_panels": {
+    "kpi_summary": {
+      "correlation_coefficient": 0.3100973071298601,
+      "months_to_goal": null,
+      "top_themes": []
+    },
+    "stress_spike_panel": {
+      "finding": "Weak positive relationship between stress and discretionary spend using `prior_week_stress_raw` alignment (statistically significant).",
+      "evidence": [
+        "Correlation coefficient: 0.31",
+        "Spike weeks detected: 1",
+        "Track discretionary categories weekly and compare against stressful calendar periods."
+      ],
+      "spike_weeks": [
+        {
+          "year_week": "2024-19",
+          "weekly_discretionary_total": 214.5,
+          "top_transactions": [
+            {
+              "date": "2024-05-07",
+              "merchant": null,
+              "text": "$200.00 - School of Motion subscription - learning",
+              "amount": 200.0,
+              "tags": [
+                "subscriptions"
+              ]
+            },
+            {
+              "date": "2024-05-11",
+              "merchant": null,
+              "text": "$14.50 - Veracruz tacos - food",
+              "amount": 14.5,
+              "tags": [
+                "dining"
+              ]
+            }
+          ],
+          "calendar_events": [
+            {
+              "date": "2024-05-11",
+              "title": "Design meetup \u2014 Austin Creatives (2h) - Canopy",
+              "tags": [
+                "social",
+                "networking",
+                "design"
+              ]
+            },
+            {
+              "date": "2024-05-12",
+              "title": "Skate session with roommates (2h) - East Austin",
+              "tags": [
+                "social",
+                "self_care"
+              ]
+            }
+          ],
+          "threshold_math": {
+            "week_spend": 214.5,
+            "mean": 34.39,
+            "std": 68.09,
+            "threshold": 34.39,
+            "prior_week_stress": 0.036
+          },
+          "prior_week": "2024-18",
+          "prior_week_stress": 0.036,
+          "evidence": "Week 2024-19 spend $214.50 crossed threshold $34.39; prior week stress was 0.04."
+        }
+      ]
+    },
+    "rate_signal_panel": {
+      "finding": "No undercharging signal detected in the cached email data.",
+      "evidence": [
+        "Low-rate matches: 0",
+        "Estimated leakage: $N/A"
+      ],
+      "matches": []
+    },
+    "consent_panel": {
+      "dataset_type": "synthetic",
+      "allowed_uses": [
+        "hackathon_demo",
+        "model_prompting",
+        "local_analysis",
+        "team_collaboration_within_event"
+      ],
+      "prohibited_uses": [
+        "attempt_reidentification",
+        "sharing_outside_event",
+        "commercial_use",
+        "training_production_models"
+      ],
+      "retention": "delete_after_2026-03-31",
+      "notes": "All records are fully synthetic and generated for the Data Portability Hackathon 2026. No real individuals are represented."
+    }
+  }
+}

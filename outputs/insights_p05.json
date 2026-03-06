@@ -1,35 +1,153 @@
 {
+  "schema_version": "v1_locked",
+  "generated_at": "2026-03-06T20:39:48.241348+00:00",
   "persona": "p05",
   "profile_name": "Theo Nakamura",
+  "consent": {
+    "dataset_type": "synthetic",
+    "allowed_uses": [
+      "hackathon_demo",
+      "model_prompting",
+      "local_analysis",
+      "team_collaboration_within_event"
+    ],
+    "prohibited_uses": [
+      "attempt_reidentification",
+      "sharing_outside_event",
+      "commercial_use",
+      "training_production_models"
+    ],
+    "retention": "delete_after_2026-03-31",
+    "notes": "All records are fully synthetic and generated for the Data Portability Hackathon 2026. No real individuals are represented."
+  },
   "insights": [
     {
-      "type": "stress_spend_correlation",
-      "value": {
-        "correlation_coefficient": null,
-        "p_value": null,
-        "interpretation": "Correlation is undefined due to low variance in weekly series.",
-        "spike_weeks": []
-      }
+      "id": "stress_spend_correlation",
+      "title": "Stress and discretionary spend pattern",
+      "finding": "Weak positive relationship between stress and discretionary spend using `prior_week_stress_raw` alignment (statistically significant).",
+      "evidence": [
+        "Correlation coefficient: 0.31",
+        "Spike weeks detected: 1",
+        "Track discretionary categories weekly and compare against stressful calendar periods."
+      ],
+      "dollar_impact": 180.11,
+      "correlation_coefficient": 0.3100973071298601,
+      "p_value": 0.04050709264575804,
+      "insufficient_variance": false,
+      "lag_used": "prior_week_stress_raw",
+      "spike_weeks": [
+        {
+          "year_week": "2024-19",
+          "weekly_discretionary_total": 214.5,
+          "top_transactions": [
+            {
+              "date": "2024-05-07",
+              "merchant": null,
+              "text": "$200.00 - School of Motion subscription - learning",
+              "amount": 200.0,
+              "tags": [
+                "subscriptions"
+              ]
+            },
+            {
+              "date": "2024-05-11",
+              "merchant": null,
+              "text": "$14.50 - Veracruz tacos - food",
+              "amount": 14.5,
+              "tags": [
+                "dining"
+              ]
+            }
+          ],
+          "calendar_events": [
+            {
+              "date": "2024-05-11",
+              "title": "Design meetup \u2014 Austin Creatives (2h) - Canopy",
+              "tags": [
+                "social",
+                "networking",
+                "design"
+              ]
+            },
+            {
+              "date": "2024-05-12",
+              "title": "Skate session with roommates (2h) - East Austin",
+              "tags": [
+                "social",
+                "self_care"
+              ]
+            }
+          ],
+          "threshold_math": {
+            "week_spend": 214.5,
+            "mean": 34.39,
+            "std": 68.09,
+            "threshold": 34.39,
+            "prior_week_stress": 0.036
+          },
+          "prior_week": "2024-18",
+          "prior_week_stress": 0.036,
+          "evidence": "Week 2024-19 spend $214.50 crossed threshold $34.39; prior week stress was 0.04."
+        }
+      ],
+      "what_this_means": "Your spending peaks are likely linked to stressful weeks.",
+      "recommended_next_actions": [
+        "Review the highest-spend week and pre-plan one lower-cost alternative activity.",
+        "Block one recovery hour in the prior week when calendar stress is high."
+      ]
     },
     {
-      "type": "top_anxiety_themes",
-      "value": []
+      "id": "top_anxiety_themes",
+      "title": "Recurring anxiety themes",
+      "finding": "No recurring anxiety theme was detected from current conversation tags.",
+      "evidence": [
+        "Theme rows analyzed: 0",
+        "Themes are extracted from tagged conversation records only."
+      ],
+      "dollar_impact": null,
+      "top_themes": [],
+      "what_this_means": "These themes explain where emotional load is most persistent.",
+      "recommended_next_actions": [
+        "Choose one recurring theme and schedule a concrete mitigation task this week.",
+        "Use weekly check-ins to track whether theme frequency is dropping."
+      ]
     },
     {
-      "type": "months_to_goal",
-      "value": {
-        "months_to_goal": null,
-        "savings_goal": null,
-        "current_savings": null,
-        "avg_net_monthly_savings": null
-      }
+      "id": "months_to_goal",
+      "title": "Savings goal velocity",
+      "finding": "Savings velocity cannot be computed from the current profile fields.",
+      "evidence": [
+        "Savings goal: N/A",
+        "Current savings: N/A",
+        "Avg net monthly savings: N/A"
+      ],
+      "dollar_impact": null,
+      "months_to_goal": null,
+      "savings_goal": null,
+      "current_savings": null,
+      "avg_net_monthly_savings": null,
+      "what_this_means": "Add structured savings fields in profile data to unlock this projection.",
+      "recommended_next_actions": [
+        "Set a weekly transfer amount and automate it on payday.",
+        "Audit one discretionary category to increase monthly net savings."
+      ]
     },
     {
-      "type": "invoice_rate_risk",
-      "value": {
-        "flagged": false,
-        "matches": []
-      }
+      "id": "invoice_rate_risk",
+      "title": "Freelance rate risk",
+      "finding": "No undercharging signal detected in the cached email data.",
+      "evidence": [
+        "Low-rate matches: 0",
+        "Estimated leakage: $N/A"
+      ],
+      "dollar_impact": null,
+      "flagged": false,
+      "matches": [],
+      "what_this_means": "Your pricing floor may be below sustainable market rates.",
+      "recommended_next_actions": [
+        "Set a minimum acceptable hourly floor before sending the next quote.",
+        "Package scope in tiers so clients can trade scope instead of rate."
+      ]
     }
   ]
 }

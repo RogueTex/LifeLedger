@@ -1,0 +1,84 @@
+{
+  "persona": "p01",
+  "profile_name": "Jordan Lee",
+  "critical_panels": {
+    "kpi_summary": {
+      "correlation_coefficient": 0.3323673454827937,
+      "months_to_goal": null,
+      "top_themes": [
+        "career",
+        "anxiety",
+        "relationship"
+      ]
+    },
+    "stress_spike_panel": {
+      "finding": "Weak positive relationship between stress and discretionary spend using `same_week_raw` alignment (statistically significant).",
+      "evidence": [
+        "Correlation coefficient: 0.33",
+        "Spike weeks detected: 1",
+        "Track discretionary categories weekly and compare against stressful calendar periods."
+      ],
+      "spike_weeks": [
+        {
+          "year_week": "2025-19",
+          "weekly_discretionary_total": 179.98,
+          "top_transactions": [
+            {
+              "date": "2025-05-07",
+              "merchant": null,
+              "text": "$89.99 - Netflix/Spotify/Hulu bundle - subscriptions",
+              "amount": 89.99,
+              "tags": [
+                "entertainment",
+                "subscriptions"
+              ]
+            },
+            {
+              "date": "2025-05-11",
+              "merchant": null,
+              "text": "$89.99 - Netflix/Spotify/Hulu bundle - subscriptions",
+              "amount": 89.99,
+              "tags": [
+                "entertainment",
+                "subscriptions"
+              ]
+            }
+          ],
+          "calendar_events": [],
+          "threshold_math": {
+            "week_spend": 179.98,
+            "mean": 24.09,
+            "std": 40.0,
+            "threshold": 24.09,
+            "prior_week_stress": null
+          },
+          "prior_week": "2025-18",
+          "prior_week_stress": null,
+          "evidence": "Week 2025-19 spend $179.98 crossed threshold $24.09; prior week stress was N/A."
+        }
+      ]
+    },
+    "rate_signal_panel": {
+      "finding": null,
+      "evidence": [],
+      "matches": []
+    },
+    "consent_panel": {
+      "dataset_type": "synthetic",
+      "allowed_uses": [
+        "hackathon_demo",
+        "model_prompting",
+        "local_analysis",
+        "team_collaboration_within_event"
+      ],
+      "prohibited_uses": [
+        "attempt_reidentification",
+        "sharing_outside_event",
+        "commercial_use",
+        "training_production_models"
+      ],
+      "retention": "delete_after_2026-03-31",
+      "notes": "All records are fully synthetic and generated for the Data Portability Hackathon 2026. No real individuals are represented."
+    }
+  }
+}
