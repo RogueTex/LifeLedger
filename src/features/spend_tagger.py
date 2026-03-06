@@ -64,7 +64,8 @@ def _get_text_series(df: pd.DataFrame) -> pd.Series:
 
 def _build_year_week(df: pd.DataFrame) -> pd.Series:
     if "year_week" in df.columns:
-        return df["year_week"].astype(str)
+        existing = df["year_week"].astype("string")
+        return existing.where(existing.notna(), None).astype("object")
 
     ts_col = _first_present(df.columns, ("ts", "timestamp", "datetime", "date"))
     if ts_col is None:
@@ -89,6 +90,10 @@ def tag_spend(transactions_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
     tagged["year_week"] = _build_year_week(tagged)
 
     text = _get_text_series(tagged)
+    existing_tags = tagged.get("tags")
+    if existing_tags is None:
+        existing_tags = pd.Series([[] for _ in range(len(tagged))], index=tagged.index)
+    existing_tags = existing_tags.apply(lambda v: [str(x).lower() for x in v] if isinstance(v, list) else [])
 
     tag_patterns = {
         tag: re.compile("|".join(re.escape(k) for k in keywords), flags=re.IGNORECASE)
@@ -96,15 +101,19 @@ def tag_spend(transactions_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
     }
 
     matched_tags: list[list[str]] = []
-    for row_text in text:
-        hits = [tag for tag, pattern in tag_patterns.items() if pattern.search(row_text)]
+    for idx, row_text in text.items():
+        hits = {tag for tag, pattern in tag_patterns.items() if pattern.search(row_text)}
+        raw_tags = set(existing_tags.loc[idx])
+        for discretionary_tag in DISCRETIONARY_TAGS:
+            if discretionary_tag in raw_tags:
+                hits.add(discretionary_tag)
         matched_tags.append(hits)
 
-    tagged["spend_tags"] = matched_tags
+    tagged["spend_tags"] = [sorted(list(v)) for v in matched_tags]
     tagged["is_discretionary"] = tagged["spend_tags"].apply(bool)
 
-    amount = pd.to_numeric(tagged.get("amount", 0.0), errors="coerce").fillna(0.0)
-    discretionary_amount = amount.where(tagged["is_discretionary"], 0.0)
+    amount = pd.to_numeric(tagged.get("amount", 0.0), errors="coerce").fillna(0.0).abs()
+    discretionary_amount = amount.where(tagged["is_discretionary"], 0.0).astype(float)
 
     weekly_summary = (
         pd.DataFrame({"year_week": tagged["year_week"], "discretionary_amount": discretionary_amount})

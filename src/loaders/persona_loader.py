@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,8 @@ DATAFRAME_FILES = [
 ]
 
 REQUIRED_COLUMNS = ["ts", "date", "week", "year_week", "tags", "refs", "amount", "text", "source"]
+YEAR_WEEK_PATTERN = re.compile(r"^\d{4}-\d{2}$")
+AMOUNT_IN_TEXT_PATTERN = re.compile(r"\$?\s*(-?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|-?\d+(?:\.\d{1,2})?)")
 
 
 def _project_root() -> Path:
@@ -58,6 +61,19 @@ def _pick_ts_column(df: pd.DataFrame) -> pd.Series:
     return pd.to_datetime(pd.Series([pd.NaT] * len(df), index=df.index), utc=True)
 
 
+def _extract_amount_from_text(text: Any) -> float | None:
+    if text is None:
+        return None
+    match = AMOUNT_IN_TEXT_PATTERN.search(str(text))
+    if not match:
+        return None
+    raw = match.group(1).replace(",", "").strip()
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_dataframe(df: pd.DataFrame, source_name: str) -> pd.DataFrame:
     if df.empty:
         normalized = df.copy()
@@ -88,21 +104,30 @@ def _normalize_dataframe(df: pd.DataFrame, source_name: str) -> pd.DataFrame:
     else:
         normalized["refs"] = [[] for _ in range(len(normalized))]
 
-    if "amount" in normalized.columns:
-        amount = pd.to_numeric(normalized["amount"], errors="coerce")
-        normalized["amount"] = amount.where(amount.notna(), None).astype(object)
-    else:
-        normalized["amount"] = None
-
     if "text" in normalized.columns:
         normalized["text"] = normalized["text"].fillna("").astype(str)
     else:
         normalized["text"] = ""
 
+    if "amount" in normalized.columns:
+        amount = pd.to_numeric(normalized["amount"], errors="coerce")
+    else:
+        amount = pd.Series([pd.NA] * len(normalized), index=normalized.index, dtype="Float64")
+    inferred_amount = normalized["text"].apply(_extract_amount_from_text)
+    amount = amount.where(amount.notna(), pd.to_numeric(inferred_amount, errors="coerce"))
+    normalized["amount"] = amount.where(amount.notna(), None).astype(object)
+
     if "source" in normalized.columns:
         normalized["source"] = normalized["source"].fillna(source_name).astype(str)
     else:
         normalized["source"] = source_name
+
+    valid_year_week = normalized["year_week"].isna() | normalized["year_week"].astype(str).str.match(YEAR_WEEK_PATTERN)
+    if not bool(valid_year_week.all()):
+        bad_examples = (
+            normalized.loc[~valid_year_week, "year_week"].astype(str).dropna().head(3).tolist()
+        )
+        raise ValueError(f"Invalid year_week values for {source_name}: {bad_examples}")
 
     return normalized
 
@@ -128,13 +153,18 @@ def load_persona(persona_id: str) -> dict[str, Any]:
         raise FileNotFoundError(f"Persona directory not found: {persona_dir}")
 
     persona_data: dict[str, Any] = {
-        "persona_profile": _read_json(persona_dir / "persona_profile.json"),
+        "profile": _read_json(persona_dir / "persona_profile.json"),
         "consent": _read_json(persona_dir / "consent.json"),
     }
 
     for name in DATAFRAME_FILES:
         df = _read_jsonl(persona_dir / f"{name}.jsonl")
         persona_data[name] = _normalize_dataframe(df, source_name=name)
+
+    expected_keys = {"profile", "consent", *DATAFRAME_FILES}
+    actual_keys = set(persona_data.keys())
+    if actual_keys != expected_keys:
+        raise ValueError(f"Loader contract mismatch. expected={sorted(expected_keys)} actual={sorted(actual_keys)}")
 
     return persona_data
 
