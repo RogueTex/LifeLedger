@@ -14,18 +14,23 @@ LifeLedger ingests exported personal data across transactions, calendar, emails,
 | Phase 1 | Data loaders & timeline | ✅ Done |
 | Phase 2 | Feature engineering | ✅ Done |
 | Phase 3 | Insight engine | ✅ Done |
-| Phase 4 | Streamlit UI | 🔲 Next |
-| Phase 5 | Demo polish & cache | 🔲 Next |
+| Phase 4 | Streamlit UI | ✅ Done |
+| Phase 5 | Demo polish & cache | 🟡 In Progress |
 
 ## 🗂️ Project Structure
 
 ```text
 lifeledger/
+├── context/
+│   ├── PROJECT_CHECKLIST.md             # Master checklist + execution order + pre-demo gates
+│   ├── WORKLOG_STATUS.md                # Collaborator handoff tracker (owners, status, blockers)
+│   └── docs/
+│       └── how_to_export_your_own_data.md
 ├── data/
 │   ├── raw/
 │   │   ├── persona_p01/                 # Jordan Lee synthetic exports
 │   │   └── persona_p05/                 # Theo Nakamura synthetic exports
-│   └── processed/                       # Optional normalized/intermediate artifacts
+│   └── processed/
 ├── src/
 │   ├── __init__.py
 │   ├── loaders/
@@ -42,13 +47,14 @@ lifeledger/
 │   │   └── narrative_gen.py             # GPT-4o-mini narrative answer generation from cached insights
 │   └── ui/
 │       ├── __init__.py
-│       └── app.py                       # Streamlit entrypoint (next phase)
+│       └── app.py                       # Streamlit dashboard + spike explainers + grounded chat
 ├── notebooks/
-│   └── eda.ipynb                        # Exploratory analysis notebook
+│   └── eda.ipynb                        # Validation notebook (8 required cells)
 ├── outputs/
 │   ├── insights_p01.json                # Generated cache via save_insights("p01")
 │   └── insights_p05.json                # Generated cache via save_insights("p05")
-├── schemas/                             # Optional schema docs/contracts
+├── schemas/
+│   └── DATASET_SCHEMA.md
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
@@ -63,7 +69,7 @@ lifeledger/
 ```bash
 git clone https://github.com/RogueTex/LifeLedger.git
 cd LifeLedger
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 2. Configure environment.
@@ -92,32 +98,18 @@ Expected per persona (10 entries: 1 folder + 9 files):
 ```python
 from pathlib import Path
 
-ROOT = Path("data/raw")
-PERSONAS = ["p01", "p05"]
-REQUIRED_FILES = [
-    "persona_profile.json",
-    "consent.json",
-    "lifelog.jsonl",
-    "conversations.jsonl",
-    "emails.jsonl",
-    "calendar.jsonl",
-    "social_posts.jsonl",
-    "transactions.jsonl",
-    "files_index.jsonl",
-]
-
-for pid in PERSONAS:
-    pdir = ROOT / f"persona_{pid}"
-    ok = pdir.exists()
-    missing = []
-    for name in REQUIRED_FILES:
-        if not (pdir / name).exists():
-            ok = False
-            missing.append(name)
-    if ok:
-        print(f"✅ persona_{pid}: all files present")
+for pid in ["p01", "p05"]:
+    folder = Path(f"data/raw/persona_{pid}")
+    expected = [
+        "persona_profile.json", "consent.json", "lifelog.jsonl",
+        "conversations.jsonl", "emails.jsonl", "calendar.jsonl",
+        "social_posts.jsonl", "transactions.jsonl", "files_index.jsonl"
+    ]
+    missing = [f for f in expected if not (folder / f).exists()]
+    if missing:
+        print(f"❌ {pid} missing: {missing}")
     else:
-        print(f"❌ persona_{pid}: missing -> {', '.join(missing) if missing else 'folder'}")
+        print(f"✅ {pid} — all files present")
 ```
 
 5. Generate insight cache.
@@ -129,7 +121,7 @@ save_insights("p01")
 save_insights("p05")
 ```
 
-6. Run app (coming next).
+6. Run app.
 
 ```bash
 streamlit run src/ui/app.py
@@ -138,13 +130,13 @@ streamlit run src/ui/app.py
 ## 🧠 How It Works
 
 ### Stress-Spend Correlation
-Calendar events are transformed into daily stress scores, then smoothed and aggregated weekly. Weekly stress averages are Pearson-correlated against weekly discretionary spend. The engine also flags top 3 spend spike weeks with explicit threshold and prior-week stress evidence.
+Calendar events are transformed into daily stress scores, then smoothed and aggregated weekly. Weekly stress averages are Pearson-correlated against weekly discretionary spend. The engine flags top spend spike weeks with threshold and prior-week stress evidence.
 
 ### Freelancer Business Brain (Theo / p05)
-Emails plus calendar context are scanned for invoice/payment signals and implied hourly rate cues. If implied rate is below the **$65/hr Austin baseline**, the system raises an undercharging risk flag with extracted evidence.
+Emails plus calendar context are scanned for invoice/payment signals and implied hourly rate cues. If implied rate is below the **$65/hr Austin baseline**, the system raises an undercharging risk flag.
 
 ### Cross-Source Insight Report
-Conversation tags, lifelog patterns, and persona profile context are fused to produce anxiety theme recurrence, savings goal velocity (`months_to_goal`), and a compact behavioral arc that explains why money outcomes shift.
+Conversation tags, lifelog patterns, and persona profile context are fused to produce anxiety theme recurrence, savings goal velocity (`months_to_goal`), and behavioral summaries.
 
 ## 🧾 Data Sources Table
 
@@ -164,33 +156,39 @@ Conversation tags, lifelog patterns, and persona profile context are fused to pr
 
 | Layer | Choice | Reason |
 |---|---|---|
-| Language | Python 3.11 | pandas + json native |
+| Language | Python 3.12 runtime | pandas + json native |
 | Data | pandas DataFrames | unified timeline across all sources |
 | Features | Rule-based + statistical | deterministic, demo-safe |
 | LLM | GPT-4o-mini via OpenAI | fast, cheap, narrative generation |
 | UI | Streamlit | fastest path to polished interactive demo |
 | Charts | Plotly | timeline chart, correlation scatter |
-| Caching | JSON in `outputs/` | pre-generate before demo, never call live |
+| Caching | JSON in `outputs/` | pre-generate before demo, avoid live compute |
 
 ## 👥 Personas
 
 ### Jordan Lee (p01)
-Burnout + home savings goal. Primary demo story: stress-spend correlation, slowing goal velocity, and anxiety theme recurrence.
+Burnout + home savings goal. Primary demo story: stress-spend correlation, goal velocity, anxiety themes.
 
 ### Theo Nakamura (p05)
-ADHD + freelance + undercharging. Secondary demo story: freelancer business brain, invoice tracking, and implied hourly rate alert.
+ADHD + freelance + undercharging. Secondary demo story: freelancer business brain, invoice tracking, implied rate alert.
 
 ## 🔒 Consent & Data Notes
 
-- All data is 100% synthetic (`pii_level: "synthetic"` in every record).
+- All data is 100% synthetic (`pii_level: "synthetic"` in records).
 - Read `consent.json` before using any persona data.
-- Data is processed locally and never uploaded to third-party services.
-- No raw data is sent to OpenAI; only structured insight JSON is used for narrative generation.
+- Data is processed locally.
+- No raw data is sent to OpenAI; narrative chat uses structured insight JSON.
 - Delete all synthetic data after **March 31, 2026** per hackathon rules.
+
+## 🤝 Collaboration
+
+- Master checklist: `context/PROJECT_CHECKLIST.md`
+- Active handoff/status board: `context/WORKLOG_STATUS.md`
+- Schema reference: `schemas/DATASET_SCHEMA.md`
 
 ## 🚀 What’s Next
 
-- Build Streamlit UI (Prompt 5)
-- Pre-generate and cache all insight JSONs before demo
-- Practice 2-minute demo script: Jordan → spike weeks → Theo → chat Q&A
-- Write data story section for Human-Centric Design bonus award
+- Align loader/features/insight outputs to final contract fields for judging rubric
+- Tune stress/scoring weights to avoid constant weekly series and produce meaningful `r`
+- Finalize demo polish: chart readability, narrative prompts, and 2-minute talk track
+- Freeze caches and perform final dry-run with live API key

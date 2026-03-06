@@ -3,135 +3,108 @@
 Track: Data Portability Hackathon 2026 (Track 3)  
 Deadline: March 9, 2026
 
-## 1) Dataset Intake Checklist
+## 1) Current Snapshot (As Of 2026-03-06)
+
+- [x] Persona data for `p01` and `p05` is present in `data/raw/`
+- [x] Loader, features, insight engine, narrative generator, Streamlit UI implemented
+- [x] Validation notebook scaffold (`notebooks/eda.ipynb`) created with required cells
+- [x] Cached insights generated: `outputs/insights_p01.json`, `outputs/insights_p05.json`
+- [x] Schema and export docs moved to structured locations (`schemas/`, `context/docs/`)
+- [ ] Final contract alignment for judging (field-level schema + evidence richness)
+- [ ] Final demo polish + script rehearsal
+
+## 2) Dataset Intake Checklist
 
 Source Drive:
 `https://drive.google.com/drive/folders/1TEWhdzff-FgkDNY-53IDXIWaPZQ7_5F3`
 
 ### Persona data required
-- [ ] `data/raw/persona_p01/persona_profile.json`
-- [ ] `data/raw/persona_p01/consent.json`
-- [ ] `data/raw/persona_p01/lifelog.jsonl`
-- [ ] `data/raw/persona_p01/conversations.jsonl`
-- [ ] `data/raw/persona_p01/emails.jsonl`
-- [ ] `data/raw/persona_p01/calendar.jsonl`
-- [ ] `data/raw/persona_p01/social_posts.jsonl`
-- [ ] `data/raw/persona_p01/transactions.jsonl`
-- [ ] `data/raw/persona_p01/files_index.jsonl`
-- [ ] `data/raw/persona_p01/README.md`
-- [ ] `data/raw/persona_p05/persona_profile.json`
-- [ ] `data/raw/persona_p05/consent.json`
-- [ ] `data/raw/persona_p05/lifelog.jsonl`
-- [ ] `data/raw/persona_p05/conversations.jsonl`
-- [ ] `data/raw/persona_p05/emails.jsonl`
-- [ ] `data/raw/persona_p05/calendar.jsonl`
-- [ ] `data/raw/persona_p05/social_posts.jsonl`
-- [ ] `data/raw/persona_p05/transactions.jsonl`
-- [ ] `data/raw/persona_p05/files_index.jsonl`
-- [ ] `data/raw/persona_p05/README.md`
+- [x] `data/raw/persona_p01/persona_profile.json`
+- [x] `data/raw/persona_p01/consent.json`
+- [x] `data/raw/persona_p01/lifelog.jsonl`
+- [x] `data/raw/persona_p01/conversations.jsonl`
+- [x] `data/raw/persona_p01/emails.jsonl`
+- [x] `data/raw/persona_p01/calendar.jsonl`
+- [x] `data/raw/persona_p01/social_posts.jsonl`
+- [x] `data/raw/persona_p01/transactions.jsonl`
+- [x] `data/raw/persona_p01/files_index.jsonl`
+- [x] `data/raw/persona_p01/README.md`
+- [x] `data/raw/persona_p05/persona_profile.json`
+- [x] `data/raw/persona_p05/consent.json`
+- [x] `data/raw/persona_p05/lifelog.jsonl`
+- [x] `data/raw/persona_p05/conversations.jsonl`
+- [x] `data/raw/persona_p05/emails.jsonl`
+- [x] `data/raw/persona_p05/calendar.jsonl`
+- [x] `data/raw/persona_p05/social_posts.jsonl`
+- [x] `data/raw/persona_p05/transactions.jsonl`
+- [x] `data/raw/persona_p05/files_index.jsonl`
+- [x] `data/raw/persona_p05/README.md`
 
-### Root docs required
-- [ ] `QUICKSTART.md` (Drive root copy)
-- [ ] `DATASET_SCHEMA.md`
-- [ ] `how_to_export_your_own_data.md`
+### Root/support docs required
+- [x] `QUICKSTART.md`
+- [x] `schemas/DATASET_SCHEMA.md`
+- [x] `context/docs/how_to_export_your_own_data.md`
 
-Current repo state snapshot:
-- `data/raw/` folders exist but are empty.
-- `outputs/` has no cached insights yet.
-
-## 2) Prompt Progress Matrix
+## 3) Prompt Progress Matrix
 
 | Prompt | Scope | Status | Notes |
 |---|---|---|---|
-| Prompt 1 | Project init + structure | 🟡 Partial | Structure and requirements created; `.env.example` and `.gitignore` need verification/update to exact spec. |
-| Prompt 2 | Loader + timeline | 🟡 Partial | Implemented, but schema key names/`year_week` format and strict normalization should be verified against instruction text. |
-| Prompt 3 | Features | 🟡 Partial | Implemented core logic, but current formulas and evidence outputs differ from detailed Prompt 3 spec. |
-| Prompt 4 | Insight engine + narrative | 🟡 Partial | Pipeline exists; output schema and some calculations differ from requested contract. |
-| Prompt 5 | Streamlit app | 🔴 Not started | `src/ui/app.py` is currently empty. |
-| Prompt 6 | Validation notebook | 🔴 Not started | `notebooks/eda.ipynb` is currently empty placeholder. |
+| Prompt 1 | Project init + structure | ✅ Done | Directory and dependency baseline complete. |
+| Prompt 2 | Loader + timeline | 🟡 In Review | Works on real data; final schema contract should be re-checked. |
+| Prompt 3 | Features | 🟡 In Review | Works end-to-end; spike/evidence enrichment can be improved. |
+| Prompt 4 | Insight engine + narrative | 🟡 In Review | Pipeline works; output shape needs final rubric alignment. |
+| Prompt 5 | Streamlit app | ✅ Done | UI + metrics + chart + expanders + chat integrated. |
+| Prompt 6 | Validation notebook | ✅ Done | Notebook file contains required 8-cell flow. |
 
-## 3) Must-Fix Gaps Before Demo
+## 4) High-Priority Gaps
 
-### Infra and repo hygiene
-- [ ] Update `.env.example` to include `OPENAI_API_KEY=sk-your-key-here`.
-- [ ] Update `.gitignore` to include `.env`, `data/raw/`, `__pycache__/`, `*.pyc`, `.DS_Store`.
-- [ ] Remove/ignore any generated `__pycache__` artifacts from git tracking if present.
+- [ ] Align loader keys and `year_week` formatting to final agreed contract (`YYYY-Www` vs current style)
+- [ ] Strengthen stress and spend feature variability so correlation is non-trivial (current constant-series warning appears)
+- [ ] Expand spike-week evidence payload (`top_transactions`, `calendar_events`) for richer demo explainability
+- [ ] Normalize insight output schema to exact judging contract (`id/title/finding/evidence/dollar_impact`)
+- [ ] Validate chat answer quality against 5-10 benchmark questions
 
-### Prompt 2 alignment (loader)
-- [ ] Ensure return keys use exact contract (`profile`, `consent`, source names).
-- [ ] Ensure `year_week` matches required format (`YYYY-Www` if using prompt spec literally).
-- [ ] Ensure `amount` is `None` for all non-transaction rows.
-- [ ] Re-run timeline merge checks with real persona data.
+## 5) Execution Order (From Here)
 
-### Prompt 3 alignment (features)
-- [ ] `stress_scorer`: meeting count must only include events tagged `work` or `meeting`.
-- [ ] `stress_scorer`: apply free block rule exactly (`>4 events => free_block_flag=0 else 1`).
-- [ ] `spend_tagger`: add explicit non-discretionary tag logic from spec.
-- [ ] `correlation`: attach top 3 transactions and up to 3 calendar events per spike week.
+1. Contract alignment pass (Prompt 2/3/4 output shapes)
+2. Run `notebooks/eda.ipynb` end-to-end and capture screenshots/notes
+3. Regenerate `outputs/insights_p01.json` and `outputs/insights_p05.json`
+4. UI polish + demo narrative pass
+5. Final dry run (2-minute timed script)
 
-### Prompt 4 alignment (insights)
-- [ ] Match exact output schema (`id`, `title`, `finding`, `evidence`, `dollar_impact`, etc.).
-- [ ] Compute `avg_net_monthly_savings` from transactions monthly income-expense deltas.
-- [ ] Keep p05 undercharging logic and ensure insight id is `undercharging_alert`.
-- [ ] `save_insights` should print confirmation path.
-- [ ] `narrative_gen` should use the exact system prompt + `max_tokens=300`.
+## 6) Validation Commands
 
-### Prompt 5/6 delivery
-- [ ] Build full Streamlit UI in `src/ui/app.py`.
-- [ ] Build full validation notebook in `notebooks/eda.ipynb` with 8 required cells.
-
-## 4) Execution Order (Team)
-
-1. Prompt 2/3/4 spec alignment pass (code contract correctness)
-2. Drop persona files into `data/raw/`
-3. Run sanity check script (below)
-4. Build and run validation notebook (Prompt 6)
-5. Generate caches: `outputs/insights_p01.json`, `outputs/insights_p05.json`
-6. Build Streamlit UI last (Prompt 5)
-7. Rehearse 2-minute demo flow
-
-## 5) Sanity Check Script (Run First After Data Drop)
-
-```python
-from pathlib import Path
-
-for pid in ["p01", "p05"]:
-    folder = Path(f"data/raw/persona_{pid}")
-    expected = [
-        "persona_profile.json", "consent.json", "lifelog.jsonl",
-        "conversations.jsonl", "emails.jsonl", "calendar.jsonl",
-        "social_posts.jsonl", "transactions.jsonl", "files_index.jsonl"
-    ]
-    missing = [f for f in expected if not (folder / f).exists()]
-    if missing:
-        print(f"❌ {pid} missing: {missing}")
-    else:
-        print(f"✅ {pid} — all files present")
+```bash
+python3 -m py_compile src/loaders/persona_loader.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/insights/insight_engine.py src/insights/narrative_gen.py src/ui/app.py
 ```
 
-## 6) Pre-Demo Checklist
+```bash
+streamlit run src/ui/app.py
+```
 
-- [ ] `outputs/insights_p01.json` exists and has spike weeks
-- [ ] `outputs/insights_p05.json` exists and has undercharging alert
-- [ ] Streamlit app loads for both personas without errors
-- [ ] Chat Q&A works with valid OpenAI key
+```python
+from src.insights.insight_engine import save_insights
+save_insights("p01")
+save_insights("p05")
+```
+
+## 7) Pre-Demo Checklist
+
+- [x] `outputs/insights_p01.json` exists
+- [x] `outputs/insights_p05.json` exists
+- [x] Streamlit app starts
 - [ ] Correlation for p01 is meaningful (target `r > 0.3`)
-- [ ] No live heavy computation during judging (use cached outputs)
-
-## 7) Git Collaboration Workflow
-
-- [ ] Create branch per task: `feat/prompt5-ui`, `feat/prompt6-notebook`, `fix/loader-contract`
-- [ ] Keep PRs scoped to one prompt or one gap set
-- [ ] Before push: run local sanity checks and attach outputs/screenshots
-- [ ] Merge order: data contract fixes -> insight cache -> UI polish
+- [ ] Spike-week explainers are populated with rich examples
+- [ ] Chat Q&A tested with live OpenAI key and expected grounded behavior
+- [ ] Demo script rehearsed at 2 minutes end-to-end
 
 ## 8) Ownership Tracker
 
-- [ ] Owner A: Data ingestion + loader contract
-- [ ] Owner B: Feature engineering alignment
-- [ ] Owner C: Insight schema + narrative generator
-- [ ] Owner D: Streamlit UI + demo script prep
-- [ ] Owner E: Validation notebook + QA
+- [ ] Owner A: Loader/schema contract alignment
+- [ ] Owner B: Feature tuning + spike evidence enrichment
+- [ ] Owner C: Insight output contract + narrative QA
+- [ ] Owner D: Streamlit polish + chart/explainer UX
+- [ ] Owner E: Demo script + rehearsal + submission packaging
 
 ## 9) Key Schema Reference
 
