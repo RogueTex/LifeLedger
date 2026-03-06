@@ -1,0 +1,35 @@
+{
+  "persona": "p05",
+  "profile_name": "Theo Nakamura",
+  "insights": [
+    {
+      "type": "stress_spend_correlation",
+      "value": {
+        "correlation_coefficient": null,
+        "p_value": null,
+        "interpretation": "Correlation is undefined due to low variance in weekly series.",
+        "spike_weeks": []
+      }
+    },
+    {
+      "type": "top_anxiety_themes",
+      "value": []
+    },
+    {
+      "type": "months_to_goal",
+      "value": {
+        "months_to_goal": null,
+        "savings_goal": null,
+        "current_savings": null,
+        "avg_net_monthly_savings": null
+      }
+    },
+    {
+      "type": "invoice_rate_risk",
+      "value": {
+        "flagged": false,
+        "matches": []
+      }
+    }
+  ]
+}
