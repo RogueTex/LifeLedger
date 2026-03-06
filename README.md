@@ -136,7 +136,7 @@ streamlit run src/ui/app.py
 ## 🧠 How It Works
 
 ### Stress-Spend Correlation
-Calendar events are transformed into daily stress scores, aggregated weekly, and evaluated against weekly discretionary spend across multiple valid alignments (same-week and prior-week variants). The engine selects the strongest valid signal, emits low-variance fallbacks when needed, and flags spike weeks with threshold math + transaction/event evidence. UI now includes a full weekly trend chart with spike highlights.
+Calendar events are transformed into daily stress scores, aggregated weekly, and evaluated against weekly discretionary spend across multiple valid alignments (same-week and prior-week variants). The engine selects the strongest valid signal, emits low-variance fallbacks when needed, and flags spike weeks with threshold math + transaction/event evidence. UI includes a full weekly timeline chart with spike highlights.
 
 ### Freelancer Business Brain (Theo / p05)
 Emails plus calendar context are scanned for invoice/payment signals and implied hourly rate cues. If invoice messages contain dollar amounts but no explicit hours, the engine uses trailing calendar project hours as a fallback. If implied rate is below the **$65/hr Austin baseline**, the system raises an undercharging risk flag and estimates leakage.
@@ -180,6 +180,15 @@ Savings-goal output includes:
 | `files_index.jsonl` | 40 | metadata |
 | `persona_profile.json` | 1 | goals, income, debt baseline |
 | `consent.json` | 1 | permitted use — read before touching data |
+
+## 🎨 UX Flow
+
+- App now opens on a transition gate: **Welcome to LifeLedger**.
+- Centered animated logo with smooth entrance animation.
+- Two entry routes:
+  - `Start Now` opens the **Your Data** tab first.
+  - `View Demo` opens the **Demo** tab first.
+- Dashboard polish includes compact KPI cards, full-width timeline chart, always-visible spike evidence cards, and grounded chat.
 
 ## 🛠️ Tech Stack Table
 

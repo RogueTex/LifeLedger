@@ -25,6 +25,11 @@ Last updated: 2026-03-06
 - Regenerated/froze `outputs/insights_p01.json` and `outputs/insights_p05.json`.
 - Added demo hardening assets: `scripts/demo_dry_run.sh`, `scripts/generate_demo_backups.py`, and `outputs/demo_backups/`.
 - Validated app startup and persona cache paths successfully.
+- Replaced spike-week expander flow with always-visible top-3 spike cards (transactions + calendar side-by-side).
+- Reworked stress/spend visualization to a full weekly timeline chart with highlighted spike points.
+- Added compact 3-column KPI cards and tightened card spacing for less visual clutter.
+- Added entry transition gate ("Welcome to LifeLedger") with animated revolving logo and CTA routing (`Start Now` / `View Demo`).
+- Fixed chat-shell HTML wrapper bug that caused stray `</div>` rendering in the UI.
 
 ## QA Notes
 
@@ -36,6 +41,7 @@ Last updated: 2026-03-06
 - Spike evidence renders for both personas (`>=1` week each) with calendar linkage fallback.
 - `p05` undercharging signal now flags with invoice+calendar evidence and leakage estimate.
 - Streamlit startup validation passed.
+- Local UI audit on `http://localhost:8501` completed; major clutter bug (raw HTML row rendering in spike cards) fixed and revalidated via screenshot pass.
 
 ## Next PR Suggestions
 
@@ -45,9 +51,9 @@ Last updated: 2026-03-06
 
 ## Handoff Checklist (Before You Push)
 
-- [ ] Run py_compile check for modified modules
+- [x] Run py_compile check for modified modules
 - [ ] Regenerate `outputs/insights_p01.json` and `outputs/insights_p05.json` if logic changed
 - [ ] Refresh backup panel snapshots via `python3 scripts/generate_demo_backups.py`
-- [ ] Run Streamlit app once and verify no startup errors
-- [ ] Update this file with status and blocker changes
+- [x] Run Streamlit app once and verify no startup errors
+- [x] Update this file with status and blocker changes
 - [ ] Include screenshots or terminal proof in PR description
