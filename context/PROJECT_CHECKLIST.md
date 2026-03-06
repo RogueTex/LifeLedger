@@ -12,6 +12,7 @@ Deadline: March 9, 2026
 - [x] Schema and export docs moved to structured locations (`schemas/`, `context/docs/`)
 - [x] Final contract alignment for judging (field-level schema + evidence richness)
 - [x] Final demo polish + script rehearsal
+- [x] UI/insight enhancement pass completed (trend chart, inference fallback, richer theme/rate signals)
 
 ## 2) Dataset Intake Checklist
 
@@ -52,8 +53,8 @@ Source Drive:
 | Prompt 1 | Project init + structure | ✅ Done | Directory and dependency baseline complete. |
 | Prompt 2 | Loader + timeline | ✅ Done | Loader contract locked (`profile`, `consent`, normalized source keys, strict `year_week`). |
 | Prompt 3 | Features | ✅ Done | Correlation reliability improved and spike evidence payload enriched. |
-| Prompt 4 | Insight engine + narrative | ✅ Done | Insight schema locked + validated before save. |
-| Prompt 5 | Streamlit app | ✅ Done | UI + metrics + chart + expanders + chat integrated. |
+| Prompt 4 | Insight engine + narrative | ✅ Done | Insight schema locked + validated before save; inference fallbacks and expanded explainability added. |
+| Prompt 5 | Streamlit app | ✅ Done | UI + metrics + trend/spike charts + evidence expanders + chat integrated. |
 | Prompt 6 | Validation notebook | ✅ Done | Notebook file contains required 8-cell flow. |
 
 ## 4) High-Priority Gaps
@@ -62,6 +63,8 @@ Source Drive:
 - [x] Strengthen stress and spend feature variability so correlation is non-trivial
 - [x] Expand spike-week evidence payload (`top_transactions`, `calendar_events`, `threshold_math`)
 - [x] Normalize insight output schema to exact judging contract (`id/title/finding/evidence/dollar_impact`)
+- [x] Improve metric completeness (`months_to_goal`) with robust fallback inference
+- [x] Improve freelancer undercharging detection using invoice+calendar evidence
 - [ ] Validate chat answer quality against 5-10 benchmark questions (live-key demo pass pending)
 
 ## 5) Execution Order (From Here)
@@ -94,6 +97,8 @@ save_insights("p05")
 - [x] Streamlit app starts
 - [x] Correlation for p01 is meaningful (target `r >= 0.3`) 
 - [x] Spike-week explainers are populated with rich examples
+- [x] Weekly trend chart renders with spike highlights
+- [x] Months-to-goal card shows inferred value when direct fields are missing
 - [ ] Chat Q&A tested with live OpenAI key and expected grounded behavior
 - [x] Demo script rehearsed at 2 minutes end-to-end
 

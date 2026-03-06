@@ -4,11 +4,11 @@
   "critical_panels": {
     "kpi_summary": {
       "correlation_coefficient": 0.3323673454827937,
-      "months_to_goal": null,
+      "months_to_goal": 31.304456711153776,
       "top_themes": [
         "career",
         "anxiety",
-        "relationship"
+        "money"
       ]
     },
     "stress_spike_panel": {
@@ -44,7 +44,35 @@
               ]
             }
           ],
-          "calendar_events": [],
+          "calendar_events": [
+            {
+              "date": "2025-04-09",
+              "title": "Director promo conversation with Sarah (30m)",
+              "tags": [
+                "career",
+                "promotion"
+              ],
+              "source_week": "2025-15"
+            },
+            {
+              "date": "2025-04-13",
+              "title": "Dentist appointment (1h) - South Austin",
+              "tags": [
+                "health",
+                "appointment"
+              ],
+              "source_week": "2025-15"
+            },
+            {
+              "date": "2025-03-31",
+              "title": "Date night with Alex \u2014 Lenoir Restaurant (2h)",
+              "tags": [
+                "relationship",
+                "social"
+              ],
+              "source_week": "2025-14"
+            }
+          ],
           "threshold_math": {
             "week_spend": 179.98,
             "mean": 24.09,

@@ -115,6 +115,39 @@ def _top_week_events(calendar_df: pd.DataFrame, year_week: str, limit: int = 3) 
                 "date": str(row.get("date")) if pd.notna(row.get("date")) else None,
                 "title": str(row.get("text") or row.get("title") or row.get("subject") or "Event"),
                 "tags": row.get("tags") if isinstance(row.get("tags"), list) else [],
+                "source_week": year_week,
+            }
+        )
+    return out
+
+
+def _nearest_week_events(calendar_df: pd.DataFrame, target_year_week: str, limit: int = 3) -> list[dict[str, Any]]:
+    if calendar_df is None or calendar_df.empty or "year_week" not in calendar_df.columns:
+        return []
+    target_parsed = _parse_year_week(target_year_week)
+    if target_parsed is None:
+        return []
+    target_idx = target_parsed[0] * 53 + target_parsed[1]
+
+    df = calendar_df.dropna(subset=["year_week"]).copy()
+    if df.empty:
+        return []
+    parsed = df["year_week"].apply(_parse_year_week)
+    df = df.loc[parsed.notna()].copy()
+    if df.empty:
+        return []
+    df["_week_idx"] = parsed.apply(lambda t: t[0] * 53 + t[1])
+    df["_distance"] = (df["_week_idx"] - target_idx).abs()
+    df = df.sort_values(["_distance", "year_week"]).head(limit)
+
+    out: list[dict[str, Any]] = []
+    for _, row in df.iterrows():
+        out.append(
+            {
+                "date": str(row.get("date")) if pd.notna(row.get("date")) else None,
+                "title": str(row.get("text") or row.get("title") or row.get("subject") or "Event"),
+                "tags": row.get("tags") if isinstance(row.get("tags"), list) else [],
+                "source_week": str(row.get("year_week")),
             }
         )
     return out
@@ -248,6 +281,12 @@ def compute_correlation(
 
         top_txns = _top_week_transactions(transactions_df, week, limit=3)
         top_events = _top_week_events(calendar_df, week, limit=3)
+        if not top_events:
+            prior_week_events = _top_week_events(calendar_df, prior_week or "", limit=3)
+            if prior_week_events:
+                top_events = prior_week_events
+        if not top_events:
+            top_events = _nearest_week_events(calendar_df, week, limit=3)
         spike_payload = {
             "year_week": week,
             "weekly_discretionary_total": round(weekly_total, 2),
@@ -291,6 +330,19 @@ def compute_correlation(
         if not insufficient_variance
         else "Variance is too low for stable correlation; collect more varied weeks and rerun."
     )
+    spike_weeks_set = {str(x.get("year_week")) for x in spikes}
+    weekly_series: list[dict[str, Any]] = []
+    for _, row in merged.sort_values("year_week").iterrows():
+        yweek = str(row["year_week"])
+        weekly_series.append(
+            {
+                "year_week": yweek,
+                "weekly_discretionary_total": round(float(row["weekly_discretionary_total"]), 2),
+                "weekly_stress_avg": round(float(row["weekly_stress_avg"]), 4),
+                "weekly_stress_raw_avg": round(float(row["weekly_stress_raw_avg"]), 4),
+                "is_spike_week": yweek in spike_weeks_set,
+            }
+        )
 
     return {
         "correlation_coefficient": None if corr_coef is None else float(corr_coef),
@@ -299,5 +351,6 @@ def compute_correlation(
         "interpretation": interpretation,
         "suggestion": suggestion,
         "lag_used": lag_used,
+        "weekly_series": weekly_series,
         "spike_weeks": spikes,
     }

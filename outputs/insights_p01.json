@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_locked",
-  "generated_at": "2026-03-06T20:39:48.170198+00:00",
+  "generated_at": "2026-03-06T21:05:13.225946+00:00",
   "persona": "p01",
   "profile_name": "Jordan Lee",
   "consent": {
@@ -35,6 +35,365 @@
       "p_value": 0.01717624338108662,
       "insufficient_variance": false,
       "lag_used": "same_week_raw",
+      "weekly_series": [
+        {
+          "year_week": "2024-02",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-03",
+          "weekly_discretionary_total": 85.0,
+          "weekly_stress_avg": 0.1667,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-04",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1125,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-05",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0833,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-06",
+          "weekly_discretionary_total": 89.99,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-08",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1786,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-09",
+          "weekly_discretionary_total": 48.5,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-10",
+          "weekly_discretionary_total": 85.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-12",
+          "weekly_discretionary_total": 48.5,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-13",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-15",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1786,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-16",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-17",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2381,
+          "weekly_stress_raw_avg": 0.1667,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-18",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-19",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-20",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-22",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1071,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-23",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-24",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-26",
+          "weekly_discretionary_total": 48.5,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-27",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1786,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-29",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-32",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.25,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-33",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-35",
+          "weekly_discretionary_total": 14.99,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-37",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-40",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-41",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-42",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-43",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-45",
+          "weekly_discretionary_total": 14.99,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-46",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-47",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1786,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-48",
+          "weekly_discretionary_total": 48.5,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-50",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-51",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-52",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1786,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-02",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1786,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-03",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-04",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-05",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-06",
+          "weekly_discretionary_total": 89.99,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-07",
+          "weekly_discretionary_total": 89.99,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-08",
+          "weekly_discretionary_total": 85.0,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-09",
+          "weekly_discretionary_total": 85.0,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-10",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-11",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-12",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-13",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-14",
+          "weekly_discretionary_total": 29.98,
+          "weekly_stress_avg": 0.0357,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-15",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        }
+      ],
       "spike_weeks": [
         {
           "year_week": "2025-19",
@@ -61,7 +420,35 @@
               ]
             }
           ],
-          "calendar_events": [],
+          "calendar_events": [
+            {
+              "date": "2025-04-09",
+              "title": "Director promo conversation with Sarah (30m)",
+              "tags": [
+                "career",
+                "promotion"
+              ],
+              "source_week": "2025-15"
+            },
+            {
+              "date": "2025-04-13",
+              "title": "Dentist appointment (1h) - South Austin",
+              "tags": [
+                "health",
+                "appointment"
+              ],
+              "source_week": "2025-15"
+            },
+            {
+              "date": "2025-03-31",
+              "title": "Date night with Alex \u2014 Lenoir Restaurant (2h)",
+              "tags": [
+                "relationship",
+                "social"
+              ],
+              "source_week": "2025-14"
+            }
+          ],
           "threshold_math": {
             "week_spend": 179.98,
             "mean": 24.09,
@@ -83,27 +470,39 @@
     {
       "id": "top_anxiety_themes",
       "title": "Recurring anxiety themes",
-      "finding": "Most repeated themes: career (2), anxiety (1), relationship (1).",
+      "finding": "Most repeated themes: career (4), anxiety (2), money (2).",
       "evidence": [
-        "Theme rows analyzed: 4",
-        "Themes are extracted from tagged conversation records only."
+        "Theme rows analyzed: 7",
+        "Themes are extracted from conversation tags plus lexicon matches in message text."
       ],
       "dollar_impact": null,
       "top_themes": [
         {
           "theme": "career",
-          "count": 2
+          "count": 4
         },
         {
           "theme": "anxiety",
-          "count": 1
+          "count": 2
+        },
+        {
+          "theme": "money",
+          "count": 2
+        },
+        {
+          "theme": "adhd",
+          "count": 2
+        },
+        {
+          "theme": "burnout",
+          "count": 2
         },
         {
           "theme": "relationship",
           "count": 1
         },
         {
-          "theme": "burnout",
+          "theme": "debt",
           "count": 1
         }
       ],
@@ -116,18 +515,23 @@
     {
       "id": "months_to_goal",
       "title": "Savings goal velocity",
-      "finding": "Savings velocity cannot be computed from the current profile fields.",
+      "finding": "At the current pace, goal is 31.3 months away.",
       "evidence": [
-        "Savings goal: N/A",
-        "Current savings: N/A",
-        "Avg net monthly savings: N/A"
+        "Savings goal: 30000.0",
+        "Current savings: 0.0",
+        "Avg net monthly savings: 958.33",
+        "Estimation mode: income_proxy_10pct",
+        "Inferred goal amount from profile goal text.",
+        "Estimated monthly savings as 10% of stated annual income.",
+        "Assumed current savings baseline as 0 due to missing profile field."
       ],
-      "dollar_impact": null,
-      "months_to_goal": null,
-      "savings_goal": null,
-      "current_savings": null,
-      "avg_net_monthly_savings": null,
-      "what_this_means": "Add structured savings fields in profile data to unlock this projection.",
+      "dollar_impact": 30000.0,
+      "months_to_goal": 31.304456711153776,
+      "savings_goal": 30000.0,
+      "current_savings": 0.0,
+      "avg_net_monthly_savings": 958.33,
+      "estimation_mode": "income_proxy_10pct",
+      "what_this_means": "You have a measurable runway to your target savings goal.",
       "recommended_next_actions": [
         "Set a weekly transfer amount and automate it on payday.",
         "Audit one discretionary category to increase monthly net savings."

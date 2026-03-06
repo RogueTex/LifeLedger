@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_locked",
-  "generated_at": "2026-03-06T20:39:48.241348+00:00",
+  "generated_at": "2026-03-06T21:05:13.312770+00:00",
   "persona": "p05",
   "profile_name": "Theo Nakamura",
   "consent": {
@@ -35,6 +35,358 @@
       "p_value": 0.04050709264575804,
       "insufficient_variance": false,
       "lag_used": "prior_week_stress_raw",
+      "weekly_series": [
+        {
+          "year_week": "2024-14",
+          "weekly_discretionary_total": 9.99,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-15",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-16",
+          "weekly_discretionary_total": 9.99,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-17",
+          "weekly_discretionary_total": 14.5,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-18",
+          "weekly_discretionary_total": 14.5,
+          "weekly_stress_avg": 0.0357,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-19",
+          "weekly_discretionary_total": 214.5,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": true
+        },
+        {
+          "year_week": "2024-20",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-21",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-22",
+          "weekly_discretionary_total": 14.5,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-23",
+          "weekly_discretionary_total": 209.99,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-25",
+          "weekly_discretionary_total": 200.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-27",
+          "weekly_discretionary_total": 18.49,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-28",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-29",
+          "weekly_discretionary_total": 200.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-30",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-31",
+          "weekly_discretionary_total": 8.5,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-32",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-34",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-35",
+          "weekly_discretionary_total": 26.5,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-36",
+          "weekly_discretionary_total": 200.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-37",
+          "weekly_discretionary_total": 8.5,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-38",
+          "weekly_discretionary_total": 26.5,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-39",
+          "weekly_discretionary_total": 200.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-40",
+          "weekly_discretionary_total": 18.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-41",
+          "weekly_discretionary_total": 12.99,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-42",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-43",
+          "weekly_discretionary_total": 200.0,
+          "weekly_stress_avg": 0.1071,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-45",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-46",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-47",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-49",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0357,
+          "weekly_stress_raw_avg": 0.25,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-50",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2024-52",
+          "weekly_discretionary_total": 17.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-01",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.1429,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-02",
+          "weekly_discretionary_total": 12.99,
+          "weekly_stress_avg": 0.25,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-03",
+          "weekly_discretionary_total": 200.0,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.5,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-04",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-05",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2857,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-06",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.2143,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-09",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-10",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.1667,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-11",
+          "weekly_discretionary_total": 12.99,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-12",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-13",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-14",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0714,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-15",
+          "weekly_discretionary_total": 0.0,
+          "weekly_stress_avg": 0.0357,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-17",
+          "weekly_discretionary_total": 25.98,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-19",
+          "weekly_discretionary_total": 8.5,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-20",
+          "weekly_discretionary_total": 14.5,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        },
+        {
+          "year_week": "2025-21",
+          "weekly_discretionary_total": 8.5,
+          "weekly_stress_avg": 0.0,
+          "weekly_stress_raw_avg": 0.0,
+          "is_spike_week": false
+        }
+      ],
       "spike_weeks": [
         {
           "year_week": "2024-19",
@@ -67,7 +419,8 @@
                 "social",
                 "networking",
                 "design"
-              ]
+              ],
+              "source_week": "2024-19"
             },
             {
               "date": "2024-05-12",
@@ -75,7 +428,8 @@
               "tags": [
                 "social",
                 "self_care"
-              ]
+              ],
+              "source_week": "2024-19"
             }
           ],
           "threshold_math": {
@@ -99,13 +453,42 @@
     {
       "id": "top_anxiety_themes",
       "title": "Recurring anxiety themes",
-      "finding": "No recurring anxiety theme was detected from current conversation tags.",
+      "finding": "Most repeated themes: client_stress (3), adhd (2), self_doubt (2).",
       "evidence": [
-        "Theme rows analyzed: 0",
-        "Themes are extracted from tagged conversation records only."
+        "Theme rows analyzed: 7",
+        "Themes are extracted from conversation tags plus lexicon matches in message text."
       ],
       "dollar_impact": null,
-      "top_themes": [],
+      "top_themes": [
+        {
+          "theme": "client_stress",
+          "count": 3
+        },
+        {
+          "theme": "adhd",
+          "count": 2
+        },
+        {
+          "theme": "self_doubt",
+          "count": 2
+        },
+        {
+          "theme": "anxiety",
+          "count": 1
+        },
+        {
+          "theme": "overwhelm",
+          "count": 1
+        },
+        {
+          "theme": "money",
+          "count": 1
+        },
+        {
+          "theme": "relationship",
+          "count": 1
+        }
+      ],
       "what_this_means": "These themes explain where emotional load is most persistent.",
       "recommended_next_actions": [
         "Choose one recurring theme and schedule a concrete mitigation task this week.",
@@ -115,18 +498,23 @@
     {
       "id": "months_to_goal",
       "title": "Savings goal velocity",
-      "finding": "Savings velocity cannot be computed from the current profile fields.",
+      "finding": "At the current pace, goal is 18.9 months away.",
       "evidence": [
-        "Savings goal: N/A",
-        "Current savings: N/A",
-        "Avg net monthly savings: N/A"
+        "Savings goal: 6000.0",
+        "Current savings: 0.0",
+        "Avg net monthly savings: 316.67",
+        "Estimation mode: income_proxy_10pct",
+        "Inferred goal amount from profile goal text.",
+        "Estimated monthly savings as 10% of stated annual income.",
+        "Assumed current savings baseline as 0 due to missing profile field."
       ],
-      "dollar_impact": null,
-      "months_to_goal": null,
-      "savings_goal": null,
-      "current_savings": null,
-      "avg_net_monthly_savings": null,
-      "what_this_means": "Add structured savings fields in profile data to unlock this projection.",
+      "dollar_impact": 6000.0,
+      "months_to_goal": 18.947168977168662,
+      "savings_goal": 6000.0,
+      "current_savings": 0.0,
+      "avg_net_monthly_savings": 316.67,
+      "estimation_mode": "income_proxy_10pct",
+      "what_this_means": "You have a measurable runway to your target savings goal.",
       "recommended_next_actions": [
         "Set a weekly transfer amount and automate it on payday.",
         "Audit one discretionary category to increase monthly net savings."
@@ -135,14 +523,258 @@
     {
       "id": "invoice_rate_risk",
       "title": "Freelance rate risk",
-      "finding": "No undercharging signal detected in the cached email data.",
+      "finding": "Detected invoices that imply hourly rates below the $65 baseline.",
       "evidence": [
-        "Low-rate matches: 0",
-        "Estimated leakage: $N/A"
+        "Low-rate matches: 18",
+        "Estimated leakage: $6422.5",
+        "Used trailing 28-day calendar-based project hours when invoice email had no explicit hours."
       ],
-      "dollar_impact": null,
-      "flagged": false,
-      "matches": [],
+      "dollar_impact": 6422.5,
+      "flagged": true,
+      "matches": [
+        {
+          "date": "2024-04-20",
+          "implied_hourly_rate": 23.2,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            5.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-04-25",
+          "implied_hourly_rate": 3.0,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            5.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2024-05-03",
+          "implied_hourly_rate": 25.78,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            4.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-05-25",
+          "implied_hourly_rate": 19.33,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-06-02",
+          "implied_hourly_rate": 13.65,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            8.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-06-07",
+          "implied_hourly_rate": 1.76,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            8.5
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2024-07-21",
+          "implied_hourly_rate": 19.33,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-10-15",
+          "implied_hourly_rate": 19.33,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-11-20",
+          "implied_hourly_rate": 2.5,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2024-12-18",
+          "implied_hourly_rate": 23.2,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            5.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2025-01-24",
+          "implied_hourly_rate": 1.5,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            10.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-02-13",
+          "implied_hourly_rate": 4.29,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            3.5
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-02-25",
+          "implied_hourly_rate": 3.75,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            4.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-03-07",
+          "implied_hourly_rate": 33.14,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            3.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2025-03-14",
+          "implied_hourly_rate": 17.85,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2025-03-30",
+          "implied_hourly_rate": 1.58,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            9.5
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-04-06",
+          "implied_hourly_rate": 1.36,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            11.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-04-25",
+          "implied_hourly_rate": 11.6,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            10.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        }
+      ],
       "what_this_means": "Your pricing floor may be below sustainable market rates.",
       "recommended_next_actions": [
         "Set a minimum acceptable hourly floor before sending the next quote.",

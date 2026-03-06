@@ -17,6 +17,10 @@ Last updated: 2026-03-06
 - Locked loader contract to `profile`/`consent` + normalized source keys and strict `year_week` validation.
 - Implemented strict insight schema (`id`, `title`, `finding`, `evidence`, `dollar_impact`) with fail-fast validation.
 - Improved stress/spend reliability and enriched spike evidence (`top_transactions`, `calendar_events`, `threshold_math`).
+- Added full weekly trend visualization with spike highlights and improved threshold math presentation in spike expanders.
+- Added months-to-goal fallback inference (`estimation_mode`) from profile goal/income text when direct fields are missing.
+- Expanded anxiety theme extraction with text lexicon matching for freelancer/ADHD/self-doubt signals.
+- Improved undercharging detection with calendar-hours fallback when invoice emails lack explicit hours.
 - Updated Streamlit UI to locked schema only, added Data Story + consent/privacy card, better fallback messaging, and recommended actions.
 - Regenerated/froze `outputs/insights_p01.json` and `outputs/insights_p05.json`.
 - Added demo hardening assets: `scripts/demo_dry_run.sh`, `scripts/generate_demo_backups.py`, and `outputs/demo_backups/`.
@@ -28,7 +32,9 @@ Last updated: 2026-03-06
 - Current frozen cache metrics:
   - `p01` stress/spend correlation: `0.332` (`same_week_raw`)
   - `p05` stress/spend correlation: `0.310` (`prior_week_stress_raw`)
-- Spike evidence renders for both personas (`>=1` week each).
+- `months_to_goal` now computes for both personas via fallback inference when explicit profile fields are absent.
+- Spike evidence renders for both personas (`>=1` week each) with calendar linkage fallback.
+- `p05` undercharging signal now flags with invoice+calendar evidence and leakage estimate.
 - Streamlit startup validation passed.
 
 ## Next PR Suggestions

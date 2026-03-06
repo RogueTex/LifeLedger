@@ -136,13 +136,13 @@ streamlit run src/ui/app.py
 ## 🧠 How It Works
 
 ### Stress-Spend Correlation
-Calendar events are transformed into daily stress scores, aggregated weekly, and evaluated against weekly discretionary spend across multiple valid alignments (same-week and prior-week variants). The engine selects the strongest valid signal, emits low-variance fallbacks when needed, and flags spike weeks with threshold math + transaction/event evidence.
+Calendar events are transformed into daily stress scores, aggregated weekly, and evaluated against weekly discretionary spend across multiple valid alignments (same-week and prior-week variants). The engine selects the strongest valid signal, emits low-variance fallbacks when needed, and flags spike weeks with threshold math + transaction/event evidence. UI now includes a full weekly trend chart with spike highlights.
 
 ### Freelancer Business Brain (Theo / p05)
-Emails plus calendar context are scanned for invoice/payment signals and implied hourly rate cues. If implied rate is below the **$65/hr Austin baseline**, the system raises an undercharging risk flag.
+Emails plus calendar context are scanned for invoice/payment signals and implied hourly rate cues. If invoice messages contain dollar amounts but no explicit hours, the engine uses trailing calendar project hours as a fallback. If implied rate is below the **$65/hr Austin baseline**, the system raises an undercharging risk flag and estimates leakage.
 
 ### Cross-Source Insight Report
-Conversation tags, lifelog patterns, and persona profile context are fused to produce anxiety theme recurrence, savings goal velocity (`months_to_goal`), and behavioral summaries.
+Conversation tags, lifelog patterns, and persona profile context are fused to produce anxiety theme recurrence, savings goal velocity (`months_to_goal`), and behavioral summaries. Theme extraction now combines explicit tags with a text lexicon (including freelancer-focused stress patterns).
 
 ## 📐 Locked Contracts
 
@@ -161,7 +161,11 @@ Every insight row includes:
 
 Stress/spend output also includes:
 - `correlation_coefficient`, `p_value`, `insufficient_variance`, `lag_used`
+- `weekly_series` for full-week trend rendering
 - `spike_weeks` with `top_transactions`, `calendar_events`, and `threshold_math`
+
+Savings-goal output includes:
+- fallback estimation metadata (`estimation_mode`) when direct financial profile fields are missing
 
 ## 🧾 Data Sources Table
 

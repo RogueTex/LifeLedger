@@ -39,6 +39,24 @@ INVOICE_PAYMENT_KEYWORDS: tuple[str, ...] = (
 
 AMOUNT_PATTERN = re.compile(r"\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)")
 HOURS_PATTERN = re.compile(r"(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)", re.IGNORECASE)
+MONEY_K_PATTERN = re.compile(r"\$?\s*(\d+(?:\.\d+)?)\s*k\b", re.IGNORECASE)
+YEARLY_INCOME_PATTERN = re.compile(r"\$?\s*(\d{2,3}(?:,\d{3})?)\s*/?\s*year", re.IGNORECASE)
+TIMELINE_MONTHS_PATTERN = re.compile(r"within\s+(\d+)\s*months?", re.IGNORECASE)
+TIMELINE_YEARS_PATTERN = re.compile(r"within\s+(\d+)\s*years?", re.IGNORECASE)
+
+THEME_LEXICON: dict[str, tuple[str, ...]] = {
+    "anxiety": ("anxiety", "anxious", "nervous", "panic"),
+    "stress": ("stress", "stressed", "pressure"),
+    "burnout": ("burnout", "burned out", "exhausted"),
+    "overwhelm": ("overwhelmed", "overwhelm", "too much"),
+    "career": ("career", "promotion", "manager", "director", "performance"),
+    "money": ("money", "budget", "cash", "income", "rent"),
+    "debt": ("debt", "credit card", "minimum payment"),
+    "relationship": ("partner", "roommate", "relationship", "family"),
+    "self_doubt": ("imposter", "self-doubt", "not good enough", "comparison"),
+    "client_stress": ("client", "scope creep", "revision", "deadline"),
+    "adhd": ("adhd", "focus", "procrastination", "finish projects"),
+}
 
 REQUIRED_INSIGHT_FIELDS = ("id", "title", "finding", "evidence", "dollar_impact")
 
@@ -68,19 +86,92 @@ def _profile_number(profile: dict[str, Any], *keys: str) -> float | None:
     return None
 
 
+def _extract_currency_value(text: Any) -> float | None:
+    if text is None:
+        return None
+    raw = str(text)
+    k_match = MONEY_K_PATTERN.search(raw)
+    if k_match:
+        try:
+            return float(k_match.group(1)) * 1000.0
+        except (TypeError, ValueError):
+            return None
+    amount_match = AMOUNT_PATTERN.search(raw)
+    if not amount_match:
+        return None
+    try:
+        return float(amount_match.group(1).replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+
+
+def _infer_yearly_income(profile: dict[str, Any]) -> float | None:
+    direct = _profile_number(profile, "annual_income", "income_yearly", "yearly_income")
+    if direct is not None and direct > 0:
+        return direct
+    income_approx = profile.get("income_approx")
+    if income_approx is None:
+        return None
+    match = YEARLY_INCOME_PATTERN.search(str(income_approx))
+    if not match:
+        return _extract_currency_value(income_approx)
+    try:
+        return float(match.group(1).replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+
+
+def _infer_goal_amount_from_profile(profile: dict[str, Any]) -> float | None:
+    goals = profile.get("goals") or []
+    if not isinstance(goals, list):
+        return None
+    candidates: list[float] = []
+    for goal in goals:
+        text = str(goal)
+        if "save" in text.lower() or "pay off" in text.lower() or "debt" in text.lower():
+            value = _extract_currency_value(text)
+            if value is not None:
+                candidates.append(value)
+    return max(candidates) if candidates else None
+
+
+def _infer_goal_timeline_months(profile: dict[str, Any]) -> int | None:
+    goals = profile.get("goals") or []
+    if not isinstance(goals, list):
+        return None
+    for goal in goals:
+        text = str(goal)
+        month_match = TIMELINE_MONTHS_PATTERN.search(text)
+        if month_match:
+            return int(month_match.group(1))
+        year_match = TIMELINE_YEARS_PATTERN.search(text)
+        if year_match:
+            return int(year_match.group(1)) * 12
+    return None
+
+
 def _compute_anxiety_themes(conversations_df: pd.DataFrame) -> list[dict[str, Any]]:
-    if conversations_df is None or conversations_df.empty or "tags" not in conversations_df.columns:
+    if conversations_df is None or conversations_df.empty:
         return []
 
-    target = set(ANXIETY_THEMES)
     counts: Counter[str] = Counter()
+    target = set(ANXIETY_THEMES)
 
-    for tags in conversations_df["tags"]:
+    for _, row in conversations_df.iterrows():
+        tags = row.get("tags", [])
         tag_list = tags if isinstance(tags, list) else [tags]
+        text = " ".join(
+            str(row.get(col, "")) for col in ("text", "subject", "title", "summary", "description") if row.get(col)
+        ).lower()
+
         for tag in tag_list:
             normalized = str(tag).strip().lower()
-            if normalized in target:
+            if normalized in target or normalized in THEME_LEXICON:
                 counts[normalized] += 1
+
+        for theme, keywords in THEME_LEXICON.items():
+            if any(keyword in text for keyword in keywords):
+                counts[theme] += 1
 
     return [{"theme": t, "count": c} for t, c in counts.most_common()]
 
@@ -93,14 +184,52 @@ def _extract_email_text(row: pd.Series) -> str:
     return " ".join(parts).strip().lower()
 
 
-def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame) -> dict[str, Any]:
+def _extract_hours_from_calendar(calendar_df: pd.DataFrame, anchor_ts: pd.Timestamp) -> float:
+    if calendar_df is None or calendar_df.empty:
+        return 0.0
+    if not isinstance(anchor_ts, pd.Timestamp) or pd.isna(anchor_ts):
+        return 0.0
+
+    cal = calendar_df.copy()
+    ts = pd.to_datetime(cal.get("ts"), errors="coerce", utc=True)
+    if ts.isna().all():
+        return 0.0
+    window_start = anchor_ts - pd.Timedelta(days=28)
+    mask = (ts >= window_start) & (ts <= anchor_ts)
+    if not bool(mask.any()):
+        return 0.0
+
+    text_series = cal.loc[mask, "text"].fillna("").astype(str).str.lower() if "text" in cal.columns else pd.Series([], dtype="string")
+    tag_series = cal.loc[mask, "tags"] if "tags" in cal.columns else pd.Series([], dtype="object")
+
+    total_hours = 0.0
+    for idx, text in text_series.items():
+        tags = tag_series.loc[idx] if idx in tag_series.index else []
+        tags_list = [str(x).lower() for x in tags] if isinstance(tags, list) else []
+        if not (
+            any(token in text for token in ("client", "design", "freelance", "portfolio", "presentation"))
+            or any(token in tags_list for token in ("client", "design", "freelance", "business_development"))
+        ):
+            continue
+        hrs = 0.0
+        for match in re.findall(r"(\d+(?:\.\d+)?)\s*h", text):
+            try:
+                hrs += float(match)
+            except (TypeError, ValueError):
+                pass
+        total_hours += hrs
+    return round(total_hours, 2)
+
+
+def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame, calendar_df: pd.DataFrame) -> dict[str, Any]:
     if emails_df is None or emails_df.empty:
-        return {"flagged": False, "matches": [], "estimated_monthly_leakage": None}
+        return {"flagged": False, "matches": [], "estimated_monthly_leakage": None, "method_notes": []}
 
     keyword_re = re.compile("|".join(re.escape(k) for k in INVOICE_PAYMENT_KEYWORDS), re.IGNORECASE)
 
     matches: list[dict[str, Any]] = []
     leakage_samples: list[float] = []
+    method_notes: list[str] = []
     for _, row in emails_df.iterrows():
         text = _extract_email_text(row)
         if not text or not keyword_re.search(text):
@@ -108,6 +237,12 @@ def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame) -> dict[str, Any]:
 
         amounts = [float(a.replace(",", "")) for a in AMOUNT_PATTERN.findall(text)]
         hours = [float(h) for h in HOURS_PATTERN.findall(text)]
+        ts = pd.to_datetime(row.get("ts"), errors="coerce", utc=True)
+        if not hours:
+            inferred_hours = _extract_hours_from_calendar(calendar_df, ts)
+            if inferred_hours > 0:
+                hours = [inferred_hours]
+                method_notes.append("Used trailing 28-day calendar-based project hours when invoice email had no explicit hours.")
         if not amounts or not hours:
             continue
 
@@ -123,6 +258,7 @@ def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame) -> dict[str, Any]:
                     "implied_hourly_rate": round(float(implied_rate), 2),
                     "amounts_detected": [round(float(v), 2) for v in amounts],
                     "hours_detected": [round(float(v), 2) for v in hours],
+                    "evidence_text": str(row.get("text", ""))[:180],
                 }
             )
 
@@ -131,6 +267,7 @@ def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame) -> dict[str, Any]:
         "flagged": bool(matches),
         "matches": matches,
         "estimated_monthly_leakage": monthly_leakage,
+        "method_notes": sorted(set(method_notes)),
     }
 
 
@@ -202,6 +339,26 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
     savings_goal = _profile_number(profile, "savings_goal")
     current_savings = _profile_number(profile, "current_savings")
     avg_net_monthly_savings = _profile_number(profile, "avg_net_monthly_savings")
+    estimation_mode = "direct_profile_fields"
+    inference_notes: list[str] = []
+
+    if savings_goal is None:
+        inferred_goal = _infer_goal_amount_from_profile(profile)
+        if inferred_goal is not None:
+            savings_goal = inferred_goal
+            estimation_mode = "inferred_goal_amount"
+            inference_notes.append("Inferred goal amount from profile goal text.")
+
+    if avg_net_monthly_savings is None:
+        yearly_income = _infer_yearly_income(profile)
+        if yearly_income is not None and yearly_income > 0:
+            avg_net_monthly_savings = round((yearly_income / 12.0) * 0.10, 2)
+            estimation_mode = "income_proxy_10pct"
+            inference_notes.append("Estimated monthly savings as 10% of stated annual income.")
+    if current_savings is None and savings_goal is not None:
+        current_savings = 0.0
+        if estimation_mode != "direct_profile_fields":
+            inference_notes.append("Assumed current savings baseline as 0 due to missing profile field.")
 
     months_to_goal: float | None = None
     if (
@@ -211,6 +368,12 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         and avg_net_monthly_savings > 0
     ):
         months_to_goal = (savings_goal - current_savings) / avg_net_monthly_savings
+    if months_to_goal is None:
+        timeline_months = _infer_goal_timeline_months(profile)
+        if timeline_months is not None and timeline_months > 0:
+            months_to_goal = float(timeline_months)
+            estimation_mode = "profile_goal_timeline"
+            inference_notes.append("Used explicit timeline found in profile goals.")
 
     correlation_value = correlation.get("correlation_coefficient")
     spikes = correlation.get("spike_weeks", [])
@@ -235,6 +398,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "p_value": correlation.get("p_value"),
         "insufficient_variance": bool(correlation.get("insufficient_variance")),
         "lag_used": correlation.get("lag_used"),
+        "weekly_series": correlation.get("weekly_series", []),
         "spike_weeks": spikes,
         "what_this_means": (
             "Your spending peaks are likely linked to stressful weeks."
@@ -252,11 +416,13 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "id": "top_anxiety_themes",
         "title": "Recurring anxiety themes",
         "finding": (
-            f"Most repeated themes: {theme_text}." if anxiety_themes else "No recurring anxiety theme was detected from current conversation tags."
+            f"Most repeated themes: {theme_text}."
+            if anxiety_themes
+            else "No recurring anxiety theme was detected from current conversation text and tags."
         ),
         "evidence": [
             f"Theme rows analyzed: {len(anxiety_themes)}",
-            "Themes are extracted from tagged conversation records only.",
+            "Themes are extracted from conversation tags plus lexicon matches in message text.",
         ],
         "dollar_impact": None,
         "top_themes": anxiety_themes,
@@ -284,16 +450,19 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
             f"Savings goal: {savings_goal if savings_goal is not None else 'N/A'}",
             f"Current savings: {current_savings if current_savings is not None else 'N/A'}",
             f"Avg net monthly savings: {avg_net_monthly_savings if avg_net_monthly_savings is not None else 'N/A'}",
+            f"Estimation mode: {estimation_mode}",
+            *inference_notes,
         ],
         "dollar_impact": remaining_to_goal,
         "months_to_goal": months_to_goal,
         "savings_goal": savings_goal,
         "current_savings": current_savings,
         "avg_net_monthly_savings": avg_net_monthly_savings,
+        "estimation_mode": estimation_mode,
         "what_this_means": (
             "You have a measurable runway to your target savings goal."
             if months_to_goal is not None
-            else "Add structured savings fields in profile data to unlock this projection."
+            else "Add structured savings fields in profile data to unlock a more precise projection."
         ),
         "recommended_next_actions": [
             "Set a weekly transfer amount and automate it on payday.",
@@ -304,7 +473,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
     insights: list[dict[str, Any]] = [stress_insight, themes_insight, goal_insight]
 
     if persona_id == "p05":
-        rate_payload = _scan_email_hourly_rate_risk(emails_df)
+        rate_payload = _scan_email_hourly_rate_risk(emails_df, calendar_df)
         matches = rate_payload.get("matches") or []
         rate_insight = {
             "id": "invoice_rate_risk",
@@ -317,6 +486,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
             "evidence": [
                 f"Low-rate matches: {len(matches)}",
                 f"Estimated leakage: ${rate_payload.get('estimated_monthly_leakage') if rate_payload.get('estimated_monthly_leakage') is not None else 'N/A'}",
+                *rate_payload.get("method_notes", []),
             ],
             "dollar_impact": rate_payload.get("estimated_monthly_leakage"),
             "flagged": bool(rate_payload.get("flagged")),

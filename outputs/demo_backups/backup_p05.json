@@ -4,8 +4,12 @@
   "critical_panels": {
     "kpi_summary": {
       "correlation_coefficient": 0.3100973071298601,
-      "months_to_goal": null,
-      "top_themes": []
+      "months_to_goal": 18.947168977168662,
+      "top_themes": [
+        "client_stress",
+        "adhd",
+        "self_doubt"
+      ]
     },
     "stress_spike_panel": {
       "finding": "Weak positive relationship between stress and discretionary spend using `prior_week_stress_raw` alignment (statistically significant).",
@@ -46,7 +50,8 @@
                 "social",
                 "networking",
                 "design"
-              ]
+              ],
+              "source_week": "2024-19"
             },
             {
               "date": "2024-05-12",
@@ -54,7 +59,8 @@
               "tags": [
                 "social",
                 "self_care"
-              ]
+              ],
+              "source_week": "2024-19"
             }
           ],
           "threshold_math": {
@@ -71,12 +77,256 @@
       ]
     },
     "rate_signal_panel": {
-      "finding": "No undercharging signal detected in the cached email data.",
+      "finding": "Detected invoices that imply hourly rates below the $65 baseline.",
       "evidence": [
-        "Low-rate matches: 0",
-        "Estimated leakage: $N/A"
+        "Low-rate matches: 18",
+        "Estimated leakage: $6422.5",
+        "Used trailing 28-day calendar-based project hours when invoice email had no explicit hours."
       ],
-      "matches": []
+      "matches": [
+        {
+          "date": "2024-04-20",
+          "implied_hourly_rate": 23.2,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            5.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-04-25",
+          "implied_hourly_rate": 3.0,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            5.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2024-05-03",
+          "implied_hourly_rate": 25.78,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            4.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-05-25",
+          "implied_hourly_rate": 19.33,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-06-02",
+          "implied_hourly_rate": 13.65,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            8.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-06-07",
+          "implied_hourly_rate": 1.76,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            8.5
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2024-07-21",
+          "implied_hourly_rate": 19.33,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-10-15",
+          "implied_hourly_rate": 19.33,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2024-11-20",
+          "implied_hourly_rate": 2.5,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            6.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2024-12-18",
+          "implied_hourly_rate": 23.2,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            5.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2025-01-24",
+          "implied_hourly_rate": 1.5,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            10.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-02-13",
+          "implied_hourly_rate": 4.29,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            3.5
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-02-25",
+          "implied_hourly_rate": 3.75,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            4.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-03-07",
+          "implied_hourly_rate": 33.14,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            3.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2025-03-14",
+          "implied_hourly_rate": 17.85,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            6.5
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        },
+        {
+          "date": "2025-03-30",
+          "implied_hourly_rate": 1.58,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            9.5
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-04-06",
+          "implied_hourly_rate": 1.36,
+          "amounts_detected": [
+            18.0,
+            18.0,
+            2200.0,
+            15.0
+          ],
+          "hours_detected": [
+            11.0
+          ],
+          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+        },
+        {
+          "date": "2025-04-25",
+          "implied_hourly_rate": 11.6,
+          "amounts_detected": [
+            5840.0,
+            116.0,
+            1160.0
+          ],
+          "hours_detected": [
+            10.0
+          ],
+          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+        }
+      ]
     },
     "consent_panel": {
       "dataset_type": "synthetic",

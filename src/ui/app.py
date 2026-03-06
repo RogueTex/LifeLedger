@@ -133,22 +133,74 @@ def _render_spike_chart(spike_weeks: list[dict[str, Any]]) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
+def _render_weekly_trend_chart(weekly_series: list[dict[str, Any]]) -> None:
+    if not weekly_series:
+        return
+    labels = [str(row.get("year_week")) for row in weekly_series]
+    spend = [float(row.get("weekly_discretionary_total", 0.0)) for row in weekly_series]
+    stress = [float(row.get("weekly_stress_avg", 0.0)) for row in weekly_series]
+    spike_flags = [bool(row.get("is_spike_week")) for row in weekly_series]
+
+    spike_x = [x for x, flag in zip(labels, spike_flags) if flag]
+    spike_y = [y for y, flag in zip(spend, spike_flags) if flag]
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(
+        go.Scatter(
+            x=labels,
+            y=spend,
+            mode="lines",
+            name="Weekly Discretionary Spend",
+            line={"color": "#E76F51", "width": 2},
+        ),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=labels,
+            y=stress,
+            mode="lines",
+            name="Weekly Stress",
+            line={"color": "#264653", "width": 2},
+        ),
+        secondary_y=True,
+    )
+    if spike_x:
+        fig.add_trace(
+            go.Scatter(
+                x=spike_x,
+                y=spike_y,
+                mode="markers",
+                name="Spike Week",
+                marker={"color": "#D62828", "size": 9, "symbol": "diamond"},
+            ),
+            secondary_y=False,
+        )
+    fig.update_layout(
+        height=350,
+        template="plotly_white",
+        margin={"l": 20, "r": 20, "t": 20, "b": 20},
+        legend={"orientation": "h", "y": 1.1, "x": 0.0},
+    )
+    fig.update_xaxes(showticklabels=False)
+    fig.update_yaxes(title_text="Spend ($)", secondary_y=False)
+    fig.update_yaxes(title_text="Stress", range=[0, 1], secondary_y=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+
 def _render_spike_expanders(spike_weeks: list[dict[str, Any]]) -> None:
     for spike in spike_weeks:
         week = _spike_week_label(spike)
         spend = _spike_spend(spike)
         with st.expander(f"Week {week} — ${spend:,.2f}"):
             threshold_math = spike.get("threshold_math") or {}
-            st.write(
-                "Threshold math:",
-                {
-                    "week_spend": threshold_math.get("week_spend"),
-                    "mean": threshold_math.get("mean"),
-                    "std": threshold_math.get("std"),
-                    "threshold": threshold_math.get("threshold"),
-                    "prior_week_stress": threshold_math.get("prior_week_stress"),
-                },
-            )
+            st.markdown("**Threshold math**")
+            m1, m2, m3, m4, m5 = st.columns(5)
+            m1.metric("Week Spend", f"${_fmt_number(threshold_math.get('week_spend'), 2)}")
+            m2.metric("Mean", f"${_fmt_number(threshold_math.get('mean'), 2)}")
+            m3.metric("Std", f"${_fmt_number(threshold_math.get('std'), 2)}")
+            m4.metric("Threshold", f"${_fmt_number(threshold_math.get('threshold'), 2)}")
+            m5.metric("Prior Stress", _fmt_number(threshold_math.get("prior_week_stress"), 2))
             st.caption(spike.get("evidence", "No evidence text available."))
 
             left, right = st.columns(2)
@@ -233,6 +285,8 @@ def main() -> None:
         for ev in stress_insight.get("evidence", []):
             st.write(f"- {ev}")
         spike_weeks = stress_insight.get("spike_weeks") or []
+        weekly_series = stress_insight.get("weekly_series") or []
+        _render_weekly_trend_chart(weekly_series)
         if spike_weeks:
             _render_spike_chart(spike_weeks)
             _render_spike_expanders(spike_weeks)
