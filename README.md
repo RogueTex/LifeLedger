@@ -16,6 +16,7 @@ LifeLedger ingests exported personal data across transactions, calendar, emails,
 | Phase 3 | Insight engine | ✅ Done |
 | Phase 4 | Streamlit UI | ✅ Done |
 | Phase 5 | Demo polish & cache | ✅ Done |
+| Phase 6 | Financial resilience metric layer | ✅ Done |
 
 ## 🗂️ Project Structure
 
@@ -40,7 +41,8 @@ lifeledger/
 │   │   ├── __init__.py
 │   │   ├── stress_scorer.py             # Calendar-derived daily stress + smoothing
 │   │   ├── spend_tagger.py              # Discretionary spend tagging + weekly totals
-│   │   └── correlation.py               # Stress/spend correlation + spike week detection
+│   │   ├── correlation.py               # Stress/spend correlation + spike week detection
+│   │   └── resilience_model.py          # Stability, volatility, runway, regret risk, macro-adjusted decomposition
 │   ├── insights/
 │   │   ├── __init__.py
 │   │   ├── insight_engine.py            # End-to-end insight computation + cache writer
@@ -144,6 +146,16 @@ Emails plus calendar context are scanned for invoice/payment signals and implied
 ### Cross-Source Insight Report
 Conversation tags, lifelog patterns, and persona profile context are fused to produce anxiety theme recurrence, savings goal velocity (`months_to_goal`), and behavioral summaries. Theme extraction now combines explicit tags with a text lexicon (including freelancer-focused stress patterns).
 
+### Financial Resilience Layer
+`src/features/resilience_model.py` computes:
+- `stability_score` and `stability_score_with_macro`
+- `volatility_index`
+- `liquidity_runway_days` (+ confidence band)
+- `regret_risk_signal`
+- decomposition percentages: behavioral, structural fixed load, income instability, macro pressure
+
+Macro overlay uses CPI YoY (`CPIAUCSL`) with robust fallback order: provided series -> local cache (`data/processed/cpi_yoy_cache.csv`) -> deterministic FRED fetch -> deterministic synthetic fallback.
+
 ## 📐 Locked Contracts
 
 ### Loader Contract
@@ -166,6 +178,13 @@ Stress/spend output also includes:
 
 Savings-goal output includes:
 - fallback estimation metadata (`estimation_mode`) when direct financial profile fields are missing
+
+Resilience output IDs:
+- `resilience_stability`
+- `resilience_volatility_index`
+- `resilience_liquidity_runway_forecast`
+- `resilience_regret_risk_signal`
+- `resilience_decomposition`
 
 ## 🧾 Data Sources Table
 

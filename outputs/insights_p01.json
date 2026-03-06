@@ -1,6 +1,7 @@
 {
   "schema_version": "v1_locked",
-  "generated_at": "2026-03-06T21:32:20.623387+00:00",
+  "metric_layer_version": "resilience_v1",
+  "generated_at": "2026-03-06T23:08:06.109128+00:00",
   "persona": "p01",
   "profile_name": "Jordan Lee",
   "consent": {
@@ -535,6 +536,185 @@
       "recommended_next_actions": [
         "Set a weekly transfer amount and automate it on payday.",
         "Audit one discretionary category to increase monthly net savings."
+      ]
+    },
+    {
+      "id": "resilience_stability",
+      "title": "Financial resilience stability score",
+      "finding": "Baseline stability score is 57.47/100; with macro overlay it is 55.23/100.",
+      "evidence": [
+        "Baseline (no overlays): 79.77",
+        "With behavioral overlay: 57.47",
+        "With macro overlay: 77.53",
+        "With both overlays: 55.23",
+        "Macro source: deterministic_fallback",
+        "CPI YoY reference: 2.598"
+      ],
+      "dollar_impact": null,
+      "stability_score": 57.47,
+      "stability_score_with_macro": 55.23,
+      "macro_pressure": 14.95,
+      "component_scores": {
+        "behavioral_risk": 53.11,
+        "structural_fixed_load": 25.11,
+        "income_instability": 47.75,
+        "macro_pressure": 14.95
+      },
+      "decomposition_percentages": {
+        "behavioral": 49.82,
+        "structural_fixed_load": 18.51,
+        "income_instability": 26.66,
+        "macro_pressure": 5.01
+      },
+      "model_weights": {
+        "behavioral": 0.42,
+        "structural": 0.33,
+        "income": 0.25,
+        "macro": 0.15
+      },
+      "overlay_scores": {
+        "baseline_without_overlays": 79.77,
+        "with_behavioral_only": 57.47,
+        "with_macro_only": 77.53,
+        "with_behavioral_and_macro": 55.23
+      },
+      "top_structural_levers": [
+        {
+          "id": "volatility_smoothing",
+          "title": "Smooth weekly discretionary spend",
+          "why": "Weekly discretionary spend swings are driving stability loss.",
+          "action": "Pre-allocate one fixed weekly discretionary budget envelope."
+        },
+        {
+          "id": "inflow_smoothing",
+          "title": "Smooth inflow timing",
+          "why": "Income timing irregularity is widening cash-flow gaps.",
+          "action": "Shift at least one invoice cadence to shorter cycles or add milestone billing."
+        },
+        {
+          "id": "fixed_commitment_reduction",
+          "title": "Lower fixed commitment burden",
+          "why": "Fixed monthly obligations are consuming a high share of inflow.",
+          "action": "Renegotiate or cancel one recurring commitment in the next 14 days."
+        }
+      ],
+      "explainers": {
+        "stability": "Stability = 100 - weighted instability components, clamped to [0,100].",
+        "volatility": "Volatility combines rolling weekly discretionary CV, spike frequency, and spike magnitude.",
+        "liquidity": "Runway uses net burn when balance exists; otherwise effective cadence runway from inflow rhythm vs fixed obligations.",
+        "regret": "Regret risk increases when discretionary spend clusters in the N-day pre-income window during elevated stress.",
+        "income_instability": "Income instability blends inflow gap irregularity and inflow variance across weekly/monthly buckets.",
+        "structural_expense_load": "Structural load is fixed commitments divided by median monthly inflow."
+      },
+      "what_this_means": "Higher stability means lower structural and behavioral instability pressure on finances.",
+      "recommended_next_actions": [
+        "Use overlays to isolate whether behavior or macro pressure is driving score changes.",
+        "Prioritize the top structural levers before adding new discretionary goals."
+      ]
+    },
+    {
+      "id": "resilience_volatility_index",
+      "title": "Discretionary spend volatility index",
+      "finding": "Volatility index is 88.51/100 (higher means more volatile).",
+      "evidence": [
+        "Formula: rolling weekly discretionary CV + spike frequency + spike magnitude.",
+        "Volatility combines rolling weekly discretionary CV, spike frequency, and spike magnitude."
+      ],
+      "dollar_impact": null,
+      "volatility_index": 88.51,
+      "what_this_means": "High volatility can destabilize short-term cash planning and increase stress-linked spending drift.",
+      "recommended_next_actions": [
+        "Set a weekly discretionary envelope and compare actual vs plan.",
+        "Review the largest spike week and pre-commit a lower-cost substitute."
+      ]
+    },
+    {
+      "id": "resilience_liquidity_runway_forecast",
+      "title": "Liquidity runway forecast",
+      "finding": "Estimated liquidity runway is 74.7 days.",
+      "evidence": [
+        "Confidence band: 41.9 to 107.4 days",
+        "Runway mode: effective_cadence",
+        "Estimated net burn monthly: $0.0",
+        "Runway uses net burn when balance exists; otherwise effective cadence runway from inflow rhythm vs fixed obligations."
+      ],
+      "dollar_impact": 0.0,
+      "liquidity_runway_days": 74.7,
+      "liquidity_runway_confidence": {
+        "low": 41.9,
+        "high": 107.4,
+        "confidence": "low"
+      },
+      "liquidity_runway_mode": "effective_cadence",
+      "net_burn_monthly": 0.0,
+      "what_this_means": "Runway indicates how long current liquidity can absorb burn before stress threshold risk increases.",
+      "recommended_next_actions": [
+        "Reduce fixed obligations or increase inflow cadence to extend runway.",
+        "Treat low-confidence runway bands as a signal to tighten weekly controls."
+      ]
+    },
+    {
+      "id": "resilience_regret_risk_signal",
+      "title": "Regret risk signal",
+      "finding": "Regret risk signal is 0.0/100.",
+      "evidence": [
+        "Pre-income window: 5 days",
+        "Near-window discretionary events: 0",
+        "Weighted pre-income spend ratio: 0.0",
+        "Regret risk increases when discretionary spend clusters in the N-day pre-income window during elevated stress."
+      ],
+      "dollar_impact": null,
+      "regret_risk_signal": 0.0,
+      "regret_window_days": 5,
+      "regret_near_window_count": 0,
+      "regret_pre_income_ratio": 0.0,
+      "what_this_means": "High regret risk means stress-sensitive discretionary spending is clustering before expected inflows.",
+      "recommended_next_actions": [
+        "Apply a pre-income cooling period for discretionary purchases.",
+        "Pre-plan one low-cost alternative during high-stress windows."
+      ]
+    },
+    {
+      "id": "resilience_decomposition",
+      "title": "Resilience decomposition",
+      "finding": "Instability pressure is decomposed into behavioral, structural fixed load, income instability, and macro pressure components.",
+      "evidence": [
+        "Behavioral contribution: 49.82%",
+        "Structural contribution: 18.51%",
+        "Income instability contribution: 26.66%",
+        "Macro contribution: 5.01%"
+      ],
+      "dollar_impact": null,
+      "decomposition_percentages": {
+        "behavioral": 49.82,
+        "structural_fixed_load": 18.51,
+        "income_instability": 26.66,
+        "macro_pressure": 5.01
+      },
+      "top_structural_levers": [
+        {
+          "id": "volatility_smoothing",
+          "title": "Smooth weekly discretionary spend",
+          "why": "Weekly discretionary spend swings are driving stability loss.",
+          "action": "Pre-allocate one fixed weekly discretionary budget envelope."
+        },
+        {
+          "id": "inflow_smoothing",
+          "title": "Smooth inflow timing",
+          "why": "Income timing irregularity is widening cash-flow gaps.",
+          "action": "Shift at least one invoice cadence to shorter cycles or add milestone billing."
+        },
+        {
+          "id": "fixed_commitment_reduction",
+          "title": "Lower fixed commitment burden",
+          "why": "Fixed monthly obligations are consuming a high share of inflow.",
+          "action": "Renegotiate or cancel one recurring commitment in the next 14 days."
+        }
+      ],
+      "what_this_means": "The largest decomposition components are the first targets for resilience improvement.",
+      "recommended_next_actions": [
+        "Address the top component first, then re-measure after one spending cycle.",
+        "Use top structural levers as the default intervention queue."
       ]
     }
   ]

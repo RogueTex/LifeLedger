@@ -10,6 +10,7 @@ from typing import Any
 import pandas as pd
 
 from ..features.correlation import compute_correlation
+from ..features.resilience_model import compute_resilience_metrics
 from ..features.spend_tagger import tag_spend
 from ..features.stress_scorer import compute_stress
 from ..loaders.persona_loader import load_persona
@@ -470,7 +471,139 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         ],
     }
 
-    insights: list[dict[str, Any]] = [stress_insight, themes_insight, goal_insight]
+    resilience = compute_resilience_metrics(
+        transactions_df=transactions_df,
+        weekly_stress_series=stress_df,
+        macro_series=None,
+        profile=profile,
+    )
+
+    stability_baseline = resilience.get("stability_score")
+    stability_with_macro = resilience.get("stability_score_with_macro")
+    stability_insight = {
+        "id": "resilience_stability",
+        "title": "Financial resilience stability score",
+        "finding": (
+            f"Baseline stability score is {stability_baseline}/100; with macro overlay it is {stability_with_macro}/100."
+            if stability_baseline is not None and stability_with_macro is not None
+            else "Stability score could not be fully computed from current records."
+        ),
+        "evidence": [
+            f"Baseline (no overlays): {resilience.get('overlay_scores', {}).get('baseline_without_overlays')}",
+            f"With behavioral overlay: {resilience.get('overlay_scores', {}).get('with_behavioral_only')}",
+            f"With macro overlay: {resilience.get('overlay_scores', {}).get('with_macro_only')}",
+            f"With both overlays: {resilience.get('overlay_scores', {}).get('with_behavioral_and_macro')}",
+            f"Macro source: {resilience.get('macro_context', {}).get('source')}",
+            f"CPI YoY reference: {resilience.get('macro_context', {}).get('latest_cpi_yoy')}",
+        ],
+        "dollar_impact": None,
+        "stability_score": stability_baseline,
+        "stability_score_with_macro": stability_with_macro,
+        "macro_pressure": resilience.get("macro_pressure"),
+        "component_scores": resilience.get("component_scores", {}),
+        "decomposition_percentages": resilience.get("decomposition_percentages", {}),
+        "model_weights": resilience.get("model_weights", {}),
+        "overlay_scores": resilience.get("overlay_scores", {}),
+        "top_structural_levers": resilience.get("top_structural_levers", []),
+        "explainers": resilience.get("explainers", {}),
+        "what_this_means": "Higher stability means lower structural and behavioral instability pressure on finances.",
+        "recommended_next_actions": [
+            "Use overlays to isolate whether behavior or macro pressure is driving score changes.",
+            "Prioritize the top structural levers before adding new discretionary goals.",
+        ],
+    }
+
+    volatility_insight = {
+        "id": "resilience_volatility_index",
+        "title": "Discretionary spend volatility index",
+        "finding": f"Volatility index is {resilience.get('volatility_index')}/100 (higher means more volatile).",
+        "evidence": [
+            "Formula: rolling weekly discretionary CV + spike frequency + spike magnitude.",
+            resilience.get("explainers", {}).get("volatility"),
+        ],
+        "dollar_impact": None,
+        "volatility_index": resilience.get("volatility_index"),
+        "what_this_means": "High volatility can destabilize short-term cash planning and increase stress-linked spending drift.",
+        "recommended_next_actions": [
+            "Set a weekly discretionary envelope and compare actual vs plan.",
+            "Review the largest spike week and pre-commit a lower-cost substitute.",
+        ],
+    }
+
+    liquidity_insight = {
+        "id": "resilience_liquidity_runway_forecast",
+        "title": "Liquidity runway forecast",
+        "finding": f"Estimated liquidity runway is {resilience.get('liquidity_runway_days')} days.",
+        "evidence": [
+            f"Confidence band: {resilience.get('liquidity_runway_confidence', {}).get('low')} to {resilience.get('liquidity_runway_confidence', {}).get('high')} days",
+            f"Runway mode: {resilience.get('liquidity_runway_mode')}",
+            f"Estimated net burn monthly: ${resilience.get('net_burn_monthly')}",
+            resilience.get("explainers", {}).get("liquidity"),
+        ],
+        "dollar_impact": resilience.get("net_burn_monthly"),
+        "liquidity_runway_days": resilience.get("liquidity_runway_days"),
+        "liquidity_runway_confidence": resilience.get("liquidity_runway_confidence", {}),
+        "liquidity_runway_mode": resilience.get("liquidity_runway_mode"),
+        "net_burn_monthly": resilience.get("net_burn_monthly"),
+        "what_this_means": "Runway indicates how long current liquidity can absorb burn before stress threshold risk increases.",
+        "recommended_next_actions": [
+            "Reduce fixed obligations or increase inflow cadence to extend runway.",
+            "Treat low-confidence runway bands as a signal to tighten weekly controls.",
+        ],
+    }
+
+    regret_insight = {
+        "id": "resilience_regret_risk_signal",
+        "title": "Regret risk signal",
+        "finding": f"Regret risk signal is {resilience.get('regret_risk_signal')}/100.",
+        "evidence": [
+            f"Pre-income window: {resilience.get('regret_window_days')} days",
+            f"Near-window discretionary events: {resilience.get('regret_near_window_count')}",
+            f"Weighted pre-income spend ratio: {resilience.get('regret_pre_income_ratio')}",
+            resilience.get("explainers", {}).get("regret"),
+        ],
+        "dollar_impact": None,
+        "regret_risk_signal": resilience.get("regret_risk_signal"),
+        "regret_window_days": resilience.get("regret_window_days"),
+        "regret_near_window_count": resilience.get("regret_near_window_count"),
+        "regret_pre_income_ratio": resilience.get("regret_pre_income_ratio"),
+        "what_this_means": "High regret risk means stress-sensitive discretionary spending is clustering before expected inflows.",
+        "recommended_next_actions": [
+            "Apply a pre-income cooling period for discretionary purchases.",
+            "Pre-plan one low-cost alternative during high-stress windows.",
+        ],
+    }
+
+    decomposition_insight = {
+        "id": "resilience_decomposition",
+        "title": "Resilience decomposition",
+        "finding": "Instability pressure is decomposed into behavioral, structural fixed load, income instability, and macro pressure components.",
+        "evidence": [
+            f"Behavioral contribution: {resilience.get('decomposition_percentages', {}).get('behavioral')}%",
+            f"Structural contribution: {resilience.get('decomposition_percentages', {}).get('structural_fixed_load')}%",
+            f"Income instability contribution: {resilience.get('decomposition_percentages', {}).get('income_instability')}%",
+            f"Macro contribution: {resilience.get('decomposition_percentages', {}).get('macro_pressure')}%",
+        ],
+        "dollar_impact": None,
+        "decomposition_percentages": resilience.get("decomposition_percentages", {}),
+        "top_structural_levers": resilience.get("top_structural_levers", []),
+        "what_this_means": "The largest decomposition components are the first targets for resilience improvement.",
+        "recommended_next_actions": [
+            "Address the top component first, then re-measure after one spending cycle.",
+            "Use top structural levers as the default intervention queue.",
+        ],
+    }
+
+    insights: list[dict[str, Any]] = [
+        stress_insight,
+        themes_insight,
+        goal_insight,
+        stability_insight,
+        volatility_insight,
+        liquidity_insight,
+        regret_insight,
+        decomposition_insight,
+    ]
 
     if persona_id == "p05":
         rate_payload = _scan_email_hourly_rate_risk(emails_df, calendar_df)
@@ -501,6 +634,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
 
     result = {
         "schema_version": "v1_locked",
+        "metric_layer_version": resilience.get("model_version"),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "persona": persona_id,
         "profile_name": profile_name,

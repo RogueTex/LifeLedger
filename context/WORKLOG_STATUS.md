@@ -9,6 +9,7 @@ Last updated: 2026-03-06
 | Loader contract alignment | Team | Complete | Keep contract stable; only version with explicit schema bumps | None |
 | Feature tuning (stress/spend/corr) | Team | Complete | Re-validate if stress/spend heuristics change | None |
 | Insight schema normalization | Team | Complete | Maintain `v1_locked` fields and validator in save path | None |
+| Financial resilience metric layer | Team | Complete | Keep `resilience_v1` formulas documented and additive to locked schema | None |
 | Streamlit UX polish | Team | Complete | Run quick UI smoke check before demo | None |
 | Demo prep | Team | Complete | Final live-key QA on benchmark chat prompts | Live key availability |
 
@@ -30,6 +31,11 @@ Last updated: 2026-03-06
 - Added compact 3-column KPI cards and tightened card spacing for less visual clutter.
 - Added entry transition gate ("Welcome to LifeLedger") with animated revolving logo and CTA routing (`Start Now` / `View Demo`).
 - Fixed chat-shell HTML wrapper bug that caused stray `</div>` rendering in the UI.
+- Added resilience model module with explicit metrics: stability, volatility, liquidity runway, regret risk, and decomposition.
+- Added CPI-backed macro overlay with deterministic fallback chain and cached source support.
+- Added new resilience insight IDs and regenerated `outputs/insights_p01.json` and `outputs/insights_p05.json`.
+- Added UI overlay toggles (Behavioral Overlay, Macro Overlay), baseline vs adjusted stability view, decomposition bar chart, and top-3 structural levers.
+- Added formula/assumption documentation in `context/docs/resilience_metrics.md`.
 
 ## QA Notes
 
@@ -41,6 +47,7 @@ Last updated: 2026-03-06
 - Spike evidence renders for both personas (`>=1` week each) with calendar linkage fallback.
 - `p05` undercharging signal now flags with invoice+calendar evidence and leakage estimate.
 - Streamlit startup validation passed.
+- Streamlit startup validation passed after resilience/UI integration.
 - Local UI audit on `http://localhost:8501` completed; major clutter bug (raw HTML row rendering in spike cards) fixed and revalidated via screenshot pass.
 
 ## Next PR Suggestions
@@ -52,7 +59,7 @@ Last updated: 2026-03-06
 ## Handoff Checklist (Before You Push)
 
 - [x] Run py_compile check for modified modules
-- [ ] Regenerate `outputs/insights_p01.json` and `outputs/insights_p05.json` if logic changed
+- [x] Regenerate `outputs/insights_p01.json` and `outputs/insights_p05.json` if logic changed
 - [ ] Refresh backup panel snapshots via `python3 scripts/generate_demo_backups.py`
 - [x] Run Streamlit app once and verify no startup errors
 - [x] Update this file with status and blocker changes

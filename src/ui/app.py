@@ -900,6 +900,104 @@ def _render_spike_details(stress_insight: dict[str, Any]) -> None:
         )
 
 
+def _render_resilience_panel(
+    stability_insight: dict[str, Any] | None,
+    volatility_insight: dict[str, Any] | None,
+    liquidity_insight: dict[str, Any] | None,
+    regret_insight: dict[str, Any] | None,
+    decomposition_insight: dict[str, Any] | None,
+    behavioral_overlay: bool,
+    macro_overlay: bool,
+) -> None:
+    if not stability_insight:
+        return
+
+    overlay_scores = stability_insight.get("overlay_scores") or {}
+    baseline_score = overlay_scores.get("baseline_without_overlays", stability_insight.get("stability_score"))
+
+    if behavioral_overlay and macro_overlay:
+        adjusted_score = overlay_scores.get("with_behavioral_and_macro", stability_insight.get("stability_score_with_macro"))
+    elif behavioral_overlay and not macro_overlay:
+        adjusted_score = overlay_scores.get("with_behavioral_only", stability_insight.get("stability_score"))
+    elif (not behavioral_overlay) and macro_overlay:
+        adjusted_score = overlay_scores.get("with_macro_only", stability_insight.get("stability_score_with_macro"))
+    else:
+        adjusted_score = baseline_score
+
+    volatility_value = None if not volatility_insight else volatility_insight.get("volatility_index")
+    runway_days = None if not liquidity_insight else liquidity_insight.get("liquidity_runway_days")
+    regret_value = None if not regret_insight else regret_insight.get("regret_risk_signal")
+
+    st.markdown(
+        f'<div class="insight-support" style="margin-bottom:0.55rem;">'
+        f'Baseline score excludes behavioral and macro overlays. Current adjusted score reflects toggles: '
+        f'behavioral={behavioral_overlay}, macro={macro_overlay}.'
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Baseline Stability", _fmt_number(baseline_score, 1))
+    col2.metric("Adjusted Stability", _fmt_number(adjusted_score, 1))
+    col3.metric("Volatility Index", _fmt_number(volatility_value, 1))
+    col4.metric("Runway (days)", _fmt_number(runway_days, 1))
+    st.caption(f"Regret risk signal: {_fmt_number(regret_value, 1)} / 100")
+
+    decomposition = dict((decomposition_insight or {}).get("decomposition_percentages") or {})
+    if decomposition:
+        if not behavioral_overlay:
+            decomposition["behavioral"] = 0.0
+        if not macro_overlay:
+            decomposition["macro_pressure"] = 0.0
+        decomposition_rows = [
+            ("Behavioral", float(decomposition.get("behavioral", 0.0))),
+            ("Structural Fixed Load", float(decomposition.get("structural_fixed_load", 0.0))),
+            ("Income Instability", float(decomposition.get("income_instability", 0.0))),
+            ("Macro Pressure", float(decomposition.get("macro_pressure", 0.0))),
+        ]
+        labels = [row[0] for row in decomposition_rows]
+        values = [row[1] for row in decomposition_rows]
+        fig = go.Figure(
+            go.Bar(
+                x=values,
+                y=labels,
+                orientation="h",
+                marker_color=["#6c63ff", "#ff6b6b", "#00d4aa", "#f59e0b"],
+                text=[f"{v:.1f}%" for v in values],
+                textposition="outside",
+            )
+        )
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(13,13,26,0.8)",
+            height=280,
+            margin={"l": 40, "r": 30, "t": 10, "b": 30},
+            xaxis_title="Contribution (%)",
+            yaxis_title="",
+        )
+        fig.update_xaxes(range=[0, max(100.0, max(values) * 1.25)], gridcolor="rgba(255,255,255,0.06)")
+        fig.update_yaxes(gridcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig, use_container_width=True)
+
+    levers = list((decomposition_insight or {}).get("top_structural_levers") or stability_insight.get("top_structural_levers") or [])
+    if levers:
+        st.markdown('<div class="insight-title">Top 3 Structural Levers</div>', unsafe_allow_html=True)
+        for idx, lever in enumerate(levers[:3], start=1):
+            title = escape(str(lever.get("title") or f"Lever {idx}"))
+            why = escape(str(lever.get("why") or ""))
+            action = escape(str(lever.get("action") or ""))
+            st.markdown(
+                f"""
+                <div class="insight-card" style="margin-bottom:0.45rem; padding:0.75rem 0.9rem;">
+                  <div class="insight-finding" style="font-size:15px;">{idx}. {title}</div>
+                  <div class="insight-support" style="margin-bottom:0.2rem;">{why}</div>
+                  <div class="insight-support" style="color:#d6d6ef;">Action: {action}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+
 def _render_chat(chat_key: str, data: dict[str, Any]) -> None:
     _section_label("Ask About Your Data")
     st.markdown('<div class="insight-support">Grounded in precomputed insights only.</div>', unsafe_allow_html=True)
@@ -958,7 +1056,7 @@ def compute_insights_from_uploads(chatgpt_file: Any, txn_file: Any, cal_file: An
     return {"persona": "you", "profile_name": "Your Data", "insights": []}
 
 
-def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool) -> None:
+def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behavioral_overlay: bool, macro_overlay: bool) -> None:
     profile_name = data.get("profile_name") or "Your Data"
     _render_header(profile_name, orb_fast=orb_fast)
 
@@ -966,6 +1064,11 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool) -> No
     theme_insight = _find_insight(data, "top_anxiety_themes")
     goal_insight = _find_insight(data, "months_to_goal")
     rate_insight = _find_insight(data, "invoice_rate_risk")
+    resilience_stability = _find_insight(data, "resilience_stability")
+    resilience_volatility = _find_insight(data, "resilience_volatility_index")
+    resilience_liquidity = _find_insight(data, "resilience_liquidity_runway_forecast")
+    resilience_regret = _find_insight(data, "resilience_regret_risk_signal")
+    resilience_decomposition = _find_insight(data, "resilience_decomposition")
 
     _render_kpi_row(stress_insight, goal_insight, theme_insight)
     _section_spacer()
@@ -999,6 +1102,19 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool) -> No
         match_count = len(rate_insight.get("matches") or [])
         support = f"Low-rate matches detected: {match_count}. Estimated leakage: ${_fmt_number(rate_insight.get('dollar_impact'), 2)}."
         _render_insight_card("Rate Risk", rate_insight, support_override=support)
+        _section_spacer()
+
+    if resilience_stability:
+        _section_label("Financial Resilience Model")
+        _render_resilience_panel(
+            resilience_stability,
+            resilience_volatility,
+            resilience_liquidity,
+            resilience_regret,
+            resilience_decomposition,
+            behavioral_overlay=behavioral_overlay,
+            macro_overlay=macro_overlay,
+        )
         _section_spacer()
 
     _section_label("Data Story")
@@ -1053,6 +1169,10 @@ def main() -> None:
     )
 
     st.sidebar.markdown("---")
+    behavioral_overlay = st.sidebar.toggle("Behavioral Overlay", value=True)
+    macro_overlay = st.sidebar.toggle("Macro Overlay", value=True)
+    st.sidebar.caption("Resilience overlays update adjusted stability and decomposition.")
+    st.sidebar.markdown("---")
     st.sidebar.caption("All data is synthetic and processed locally.")
 
     if st.session_state.get("landing_view") == "your_data":
@@ -1064,7 +1184,13 @@ def main() -> None:
         data = _load_insights(selected)
         demo_chat_key = f"chat_history_demo_{selected}"
         demo_processing = st.session_state.get(f"processing_{demo_chat_key}", False)
-        _render_dashboard(data, chat_key=demo_chat_key, orb_fast=demo_processing)
+        _render_dashboard(
+            data,
+            chat_key=demo_chat_key,
+            orb_fast=demo_processing,
+            behavioral_overlay=behavioral_overlay,
+            macro_overlay=macro_overlay,
+        )
 
     with tab_your_data:
         st.markdown('<div class="hero-wrap"><h1 class="hero-title">Analyze Your Own Exported Data</h1></div>', unsafe_allow_html=True)
@@ -1120,7 +1246,13 @@ def main() -> None:
                 st.info("Upload parsing coming soon — ChatGPT parser is next.")
             else:
                 your_processing = st.session_state.get(f"processing_{your_chat_key}", False)
-                _render_dashboard(your_data_payload, chat_key=your_chat_key, orb_fast=your_processing)
+                _render_dashboard(
+                    your_data_payload,
+                    chat_key=your_chat_key,
+                    orb_fast=your_processing,
+                    behavioral_overlay=behavioral_overlay,
+                    macro_overlay=macro_overlay,
+                )
 
 
 if __name__ == "__main__":
