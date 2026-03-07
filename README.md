@@ -239,6 +239,7 @@ ADHD + freelance + undercharging. Secondary demo story: freelancer business brai
 
 ## 🤝 Collaboration
 
+- **Improvements backlog:** `IMPROVEMENTS.md` — UI and backend tasks for partners
 - Master checklist: `context/PROJECT_CHECKLIST.md`
 - Active handoff/status board: `context/WORKLOG_STATUS.md`
 - Schema reference: `schemas/DATASET_SCHEMA.md`
