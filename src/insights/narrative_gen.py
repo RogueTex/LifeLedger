@@ -27,6 +27,17 @@ def _project_root() -> Path:
 
 
 def _build_client_and_model() -> tuple[OpenAI, str]:
+    groq_key = os.getenv("GROQ_API_KEY")
+    if groq_key:
+        model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        return (
+            OpenAI(
+                api_key=groq_key,
+                base_url="https://api.groq.com/openai/v1",
+            ),
+            model,
+        )
+
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
     if openrouter_key:
         model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")

@@ -853,7 +853,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
 
     result = {
         "schema_version": "v1_locked",
-        "metric_layer_version": resilience.get("model_version"),
+        "metric_layer_version": None,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "persona": persona_id,
         "profile_name": profile_name,
@@ -863,6 +863,243 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
             "prohibited_uses": consent.get("prohibited_uses", []),
             "retention": consent.get("retention"),
             "notes": consent.get("notes"),
+        },
+        "insights": insights,
+    }
+
+    result = _jsonable(result)
+    _validate_insight_schema(result)
+    return result
+
+
+def compute_insights_from_dataframes(
+    transactions_df: pd.DataFrame | None = None,
+    calendar_df: pd.DataFrame | None = None,
+    conversations_df: pd.DataFrame | None = None,
+) -> dict[str, Any]:
+    """Compute insights from user-uploaded DataFrames (no persona file needed)."""
+    if transactions_df is None:
+        transactions_df = pd.DataFrame()
+    if calendar_df is None:
+        calendar_df = pd.DataFrame()
+    if conversations_df is None:
+        conversations_df = pd.DataFrame()
+
+    stress_df = compute_stress(calendar_df)
+    tagged_df, weekly_spend_df = tag_spend(transactions_df)
+    correlation = compute_correlation(stress_df, weekly_spend_df, tagged_df, calendar_df)
+
+    anxiety_themes = _compute_anxiety_themes(conversations_df)
+
+    correlation_value = correlation.get("correlation_coefficient")
+    spikes = correlation.get("spike_weeks", [])
+    avoidable_spend = 0.0
+    for week in spikes:
+        math_row = week.get("threshold_math", {})
+        spend = float(math_row.get("week_spend", 0.0))
+        mean = float(math_row.get("mean", 0.0))
+        avoidable_spend += max(0.0, spend - mean)
+
+    stress_insight = {
+        "id": "stress_spend_correlation",
+        "title": "Stress and discretionary spend pattern",
+        "finding": correlation.get("interpretation"),
+        "evidence": [
+            f"Correlation coefficient: {correlation_value:.2f}" if correlation_value is not None else "Correlation coefficient unavailable",
+            f"Spike weeks detected: {len(spikes)}",
+            correlation.get("suggestion"),
+        ],
+        "dollar_impact": round(avoidable_spend, 2) if avoidable_spend > 0 else None,
+        "correlation_coefficient": correlation_value,
+        "p_value": correlation.get("p_value"),
+        "insufficient_variance": bool(correlation.get("insufficient_variance")),
+        "lag_used": correlation.get("lag_used"),
+        "weekly_series": correlation.get("weekly_series", []),
+        "spike_weeks": spikes,
+        "what_this_means": (
+            "Your spending peaks are likely linked to stressful weeks."
+            if not correlation.get("insufficient_variance")
+            else "There is not enough week-to-week variation yet to estimate a stable stress/spend relationship."
+        ),
+        "recommended_next_actions": [
+            "Review the highest-spend week and pre-plan one lower-cost alternative activity.",
+            "Block one recovery hour in the prior week when calendar stress is high.",
+        ],
+    }
+
+    theme_text = ", ".join(f"{item['theme']} ({item['count']})" for item in anxiety_themes[:3])
+    themes_insight = {
+        "id": "top_anxiety_themes",
+        "title": "Recurring anxiety themes",
+        "finding": (
+            f"Most repeated themes: {theme_text}."
+            if anxiety_themes
+            else "No recurring anxiety theme was detected from current conversation text and tags."
+        ),
+        "evidence": [
+            f"Theme rows analyzed: {len(anxiety_themes)}",
+            "Themes are extracted from conversation tags plus lexicon matches in message text.",
+        ],
+        "dollar_impact": None,
+        "top_themes": anxiety_themes,
+        "what_this_means": "These themes explain where emotional load is most persistent.",
+        "recommended_next_actions": [
+            "Choose one recurring theme and schedule a concrete mitigation task this week.",
+            "Use weekly check-ins to track whether theme frequency is dropping.",
+        ],
+    }
+
+    sub_data = _detect_subscriptions(transactions_df)
+    sub_list = sub_data["subscriptions"]
+    sub_names = ", ".join(s["name"][:30] for s in sub_list[:5])
+    subscription_insight = {
+        "id": "subscription_creep",
+        "title": "Subscription creep",
+        "finding": (
+            f"You have {len(sub_list)} recurring charges totaling ${sub_data['monthly_total']}/mo: {sub_names}."
+            if sub_list
+            else "No recurring subscription charges detected."
+        ),
+        "evidence": [
+            f"Subscriptions detected: {len(sub_list)}",
+            f"Monthly total: ${sub_data['monthly_total']}",
+            f"Yearly cost: ${round(sub_data['monthly_total'] * 12, 2)}",
+        ],
+        "dollar_impact": round(sub_data["monthly_total"] * 12, 2) if sub_data["monthly_total"] > 0 else None,
+        "subscriptions": sub_list,
+        "monthly_total": sub_data["monthly_total"],
+        "what_this_means": (
+            "These charges repeat every month whether you use the service or not. "
+            "Review each one and cancel anything you haven't used in the last 30 days."
+            if sub_list
+            else "No recurring patterns found in your transaction history."
+        ),
+        "recommended_next_actions": [
+            "Open each subscription and check your last login date.",
+            "Cancel one subscription you haven't used in 30 days.",
+        ],
+    }
+
+    dow_data = _compute_day_of_week_spend(transactions_df)
+    expensive_day = dow_data.get("expensive_day")
+    dow_insight = {
+        "id": "expensive_day_of_week",
+        "title": "Your expensive day of the week",
+        "finding": (
+            f"You spend the most on {expensive_day}s — ${dow_data.get('expensive_day_avg', 0):.2f} avg vs ${dow_data.get('overall_daily_avg', 0):.2f} overall ({dow_data.get('pct_above_average', 0):.0f}% above average)."
+            if expensive_day
+            else "Not enough transaction data to determine day-of-week patterns."
+        ),
+        "evidence": [
+            f"Average by day: {', '.join(f'{d}: ${v:.2f}' for d, v in dow_data.get('by_day', {}).items())}",
+            f"Cheapest day: {dow_data.get('cheapest_day', 'N/A')}",
+        ],
+        "dollar_impact": None,
+        "by_day": dow_data.get("by_day", {}),
+        "expensive_day": expensive_day,
+        "cheapest_day": dow_data.get("cheapest_day"),
+        "pct_above_average": dow_data.get("pct_above_average"),
+        "what_this_means": (
+            f"{expensive_day} is when you're most likely to overspend. Knowing this lets you plan ahead."
+            if expensive_day
+            else "Add more transaction history to unlock this pattern."
+        ),
+        "recommended_next_actions": [
+            f"Set a {expensive_day} spending cap and check it before buying." if expensive_day else "Upload more transaction data.",
+            f"Pre-plan {expensive_day} meals or activities to avoid impulse purchases." if expensive_day else "Keep tracking.",
+        ],
+    }
+
+    surge_data = _compute_post_payday_surge(transactions_df)
+    surge_insight = {
+        "id": "post_payday_surge",
+        "title": "Post-payday spending surge",
+        "finding": (
+            f"{surge_data.get('surge_pct', 0)}% of your spending happens within 3 days of getting paid (${surge_data.get('post_payday_total', 0):.2f} of ${surge_data.get('total_spend', 0):.2f})."
+            if surge_data.get("detected")
+            else (
+                f"No significant post-payday surge — {surge_data.get('surge_pct', 0)}% of spending is in the 3-day post-payday window."
+                if surge_data.get("surge_ratio") is not None
+                else "Could not detect income deposits to analyze payday patterns."
+            )
+        ),
+        "evidence": [
+            f"Paydays detected: {surge_data.get('payday_count', 0)}",
+            f"Post-payday spend: ${surge_data.get('post_payday_total', 0)}",
+            f"Total spend: ${surge_data.get('total_spend', 0)}",
+            f"Surge ratio: {surge_data.get('surge_pct', 0)}%",
+        ],
+        "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
+        "detected": surge_data.get("detected", False),
+        "surge_pct": surge_data.get("surge_pct"),
+        "what_this_means": (
+            "You spend heavily right after payday, which can leave you tight before the next one. "
+            "This is a common pattern — awareness is the first step."
+            if surge_data.get("detected")
+            else "Your spending is relatively evenly distributed across the pay cycle."
+        ),
+        "recommended_next_actions": [
+            "Wait 24 hours after payday before any non-essential purchase.",
+            "Auto-transfer savings on payday before you can spend it.",
+        ],
+    }
+
+    worry_data = _compute_worry_timeline(conversations_df, weekly_spend_df)
+    worry_timeline = worry_data.get("timeline", [])
+    peak_week = worry_data.get("peak_worry_week")
+    peak_spend = worry_data.get("peak_worry_spend", 0.0)
+    worry_insight = {
+        "id": "worry_timeline",
+        "title": "When you worry most (AI conversations x spending)",
+        "finding": (
+            f"You mentioned financial/emotional worries {worry_data['total_worry_mentions']} times in AI conversations. "
+            f"Peak worry: week {peak_week}"
+            + (f" (${peak_spend:.2f} spent that week)." if peak_spend else ".")
+            if peak_week
+            else "No worry-related conversations detected in your AI chat exports."
+        ),
+        "evidence": [
+            f"Total worry mentions: {worry_data.get('total_worry_mentions', 0)}",
+            f"Weeks with worry signals: {sum(1 for w in worry_timeline if w['worry_mentions'] > 0)}",
+            "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data.",
+        ],
+        "dollar_impact": None,
+        "timeline": worry_timeline,
+        "peak_worry_week": peak_week,
+        "total_worry_mentions": worry_data.get("total_worry_mentions", 0),
+        "what_this_means": (
+            "Your AI conversations reveal when stress peaks. Overlaying this with spending shows "
+            "whether worry translates into spending changes — something no single data source can show alone."
+            if worry_data.get("total_worry_mentions", 0) > 0
+            else "Upload ChatGPT or Claude exports to unlock this cross-source insight."
+        ),
+        "recommended_next_actions": [
+            "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
+            "Use your AI assistant to journal about financial stress instead of spending through it.",
+        ],
+    }
+
+    insights: list[dict[str, Any]] = [
+        stress_insight,
+        themes_insight,
+        subscription_insight,
+        dow_insight,
+        surge_insight,
+        worry_insight,
+    ]
+
+    result = {
+        "schema_version": "v1_locked",
+        "metric_layer_version": None,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "persona": "upload",
+        "profile_name": "Your Data",
+        "consent": {
+            "dataset_type": "user_upload",
+            "allowed_uses": ["personal_analysis"],
+            "prohibited_uses": [],
+            "retention": "session_only",
+            "notes": "User-uploaded data processed locally.",
         },
         "insights": insights,
     }

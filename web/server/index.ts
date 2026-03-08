@@ -6,7 +6,7 @@ import path from "path";
 const app = express();
 const httpServer = createServer(app);
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 
 const OUTPUTS_DIR = path.resolve(import.meta.dirname, "..", "..", "outputs");
 
@@ -30,6 +30,95 @@ app.get("/api/insights/:personaId", (req, res) => {
   }
   const data = JSON.parse(fs.readFileSync(file, "utf-8"));
   res.json(data);
+});
+
+// POST /api/upload — process uploaded files and return insights
+app.post("/api/upload", async (req, res) => {
+  const { files } = req.body;
+  if (!files || !Array.isArray(files) || files.length === 0) {
+    res.status(400).json({ error: "No files provided" });
+    return;
+  }
+
+  try {
+    const { spawn } = await import("child_process");
+    const scriptPath = path.resolve(OUTPUTS_DIR, "..", "scripts", "process_upload.py");
+    const py = spawn("python", [scriptPath], {
+      cwd: path.resolve(OUTPUTS_DIR, ".."),
+    });
+
+    const inputPayload = JSON.stringify({ files });
+    py.stdin.write(inputPayload);
+    py.stdin.end();
+
+    let stdout = "";
+    let stderr = "";
+    py.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+    py.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+    py.on("close", (code: number) => {
+      if (code !== 0) {
+        console.error("Upload processing stderr:", stderr);
+        res.status(500).json({ error: `Processing failed: ${stderr.slice(0, 300)}` });
+        return;
+      }
+      try {
+        const result = JSON.parse(stdout.trim());
+        res.json(result);
+      } catch {
+        res.status(500).json({ error: "Failed to parse processing output" });
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: `Upload error: ${err.message}` });
+  }
+});
+
+// POST /api/chat/upload — chat against user-uploaded insights (no persona file needed)
+app.post("/api/chat/upload", async (req, res) => {
+  const { question, insights } = req.body;
+  if (!question || !insights) {
+    res.status(400).json({ error: "Missing question or insights" });
+    return;
+  }
+
+  try {
+    const { spawn } = await import("child_process");
+    const projectRoot = path.resolve(OUTPUTS_DIR, "..");
+    const insightsJson = JSON.stringify(insights);
+    const py = spawn("python", [
+      "-c",
+      `
+import json, sys, os
+sys.path.insert(0, ${JSON.stringify(projectRoot)})
+from src.insights.narrative_gen import generate_narrative
+data = json.loads(sys.stdin.read())
+answer = generate_narrative(data["question"], data["insights"])
+print(json.dumps({"answer": answer}))
+`,
+    ], { cwd: projectRoot });
+
+    py.stdin.write(JSON.stringify({ question, insights }));
+    py.stdin.end();
+
+    let stdout = "";
+    let stderr = "";
+    py.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+    py.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+    py.on("close", (code: number) => {
+      if (code !== 0) {
+        res.json({ answer: `AI response unavailable. ${stderr.slice(0, 200)}` });
+        return;
+      }
+      try {
+        const result = JSON.parse(stdout.trim());
+        res.json(result);
+      } catch {
+        res.json({ answer: stdout.trim() || "No response generated." });
+      }
+    });
+  } catch (err: any) {
+    res.json({ answer: `Chat error: ${err.message}` });
+  }
 });
 
 // POST /api/chat — proxy to narrative gen (calls Python)

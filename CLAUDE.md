@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LifeLedger is a personal finance intelligence engine built for the **Data Portability Hackathon 2026, Track 3**. It ingests exported personal data (transactions, calendar, emails, AI conversations, lifelog) to surface behavioral patterns — the thesis being that financial behavior is driven by stress, emotional state, and calendar pressure.
 
-**Tech stack:** Python 3.12, pandas, Streamlit, Plotly, GPT-4o-mini (narrative generation), rule-based + statistical features.
+**Tech stack:** Python 3.12, pandas, Streamlit, Plotly, narrative generation (Groq/OpenRouter/OpenAI), rule-based + statistical features. React + Express web UI in `web/`.
 
 ## Commands
 
@@ -31,6 +31,12 @@ python3 scripts/generate_demo_backups.py
 
 # Demo dry run checklist
 ./scripts/demo_dry_run.sh
+
+# Run the React web app (dev mode)
+cd web && npm run dev
+
+# TypeScript type check (React app)
+cd web && npx tsc --noEmit
 ```
 
 ## Architecture
@@ -43,7 +49,13 @@ data/raw/persona_pXX/*.jsonl
   → src/insights/insight_engine.py (compute insights → validate schema → write JSON cache)
   → outputs/insights_pXX.json (frozen cache, used by UI)
   → src/ui/app.py (Streamlit dashboard reads cached insights)
-  → src/insights/narrative_gen.py (GPT-4o-mini chat answers from cached insight JSON)
+  → src/insights/narrative_gen.py (chat answers from cached insight JSON)
+
+User uploads (React app):
+web/client/src/components/dashboard/DataUploadSection.tsx (file selection + drag-drop)
+  → POST /api/upload (base64 JSON payload, no multer)
+  → scripts/process_upload.py (stdin JSON → upload_parser → compute_insights_from_dataframes)
+  → insight JSON returned to client → dashboard renders
 ```
 
 ### Key modules
@@ -54,9 +66,12 @@ data/raw/persona_pXX/*.jsonl
 - **`src/features/spend_tagger.py`** — Discretionary spend tagging and weekly totals.
 - **`src/features/correlation.py`** — Stress/spend correlation with spike week detection. Tests multiple alignments (same-week, prior-week) and selects strongest valid signal.
 - **`src/features/resilience_model.py`** — (Legacy, no longer used by insight engine.) Stability, volatility, runway, regret risk, macro-adjusted decomposition.
-- **`src/insights/insight_engine.py`** — End-to-end insight computation, schema validation (`v1_locked`), and cache writer. Theme extraction uses `THEME_LEXICON`.
-- **`src/insights/narrative_gen.py`** — GPT-4o-mini narrative generation with retry/backoff (3 attempts), 12K char payload truncation, temp 0.3.
+- **`src/insights/insight_engine.py`** — End-to-end insight computation, schema validation (`v1_locked`), and cache writer. Theme extraction uses `THEME_LEXICON`. `compute_insights_from_dataframes()` runs the full pipeline on raw DataFrames (for user uploads, no persona file needed).
+- **`src/insights/narrative_gen.py`** — Narrative generation with retry/backoff (3 attempts), 12K char payload truncation, temp 0.3. Checks `GROQ_API_KEY` → `OPENROUTER_API_KEY` → `OPENAI_API_KEY` in priority order.
 - **`src/ui/app.py`** — Streamlit dashboard: welcome gate, KPI cards, timeline chart, spike evidence cards, subscription panel, day-of-week chart, worry timeline chart, grounded chat. CSS vars: `--bg`, `--card`, `--accent`, `--warn`, `--positive`.
+- **`web/server/index.ts`** — Express API: `/api/personas`, `/api/insights/:id`, `/api/chat`, `/api/upload`, `/api/chat/upload`.
+- **`web/client/src/`** — React SPA: Welcome → Dashboard (demo personas) or YourData (user uploads). Uses wouter routing, TanStack Query, Recharts, Framer Motion.
+- **`scripts/process_upload.py`** — Bridge script: reads base64 file payload from stdin, parses via `upload_parser`, runs `compute_insights_from_dataframes`, outputs JSON.
 
 ### Personas used
 - **p01 (Jordan Lee)** — Burnout + home savings. Primary demo: stress-spend correlation, goal velocity, anxiety themes.
@@ -78,5 +93,5 @@ Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `do
 - After changing feature or insight logic, always regenerate cached insights and verify with `pytest`.
 - Frozen caches in `outputs/` are what the UI reads — the app does not recompute insights live for demo personas.
 - Use `escape()` for user content in HTML within the Streamlit app.
-- Environment requires `OPENAI_API_KEY` in `.env` for narrative chat (see `.env.example`).
+- Environment requires one of `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `OPENAI_API_KEY` in `.env` for narrative chat. Groq keys start with `gsk_`.
 - All persona data is 100% synthetic. Delete after March 31, 2026 per hackathon rules.

@@ -41,6 +41,35 @@ export async function sendChat(question: string, personaId: string): Promise<str
   return data.answer || "No response.";
 }
 
+export interface UploadFile {
+  name: string;
+  type: "transactions" | "calendar" | "conversations";
+  data: string; // base64
+}
+
+export async function uploadFiles(files: UploadFile[]): Promise<InsightPayload> {
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ files }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Upload failed" }));
+    throw new Error(err.error || "Upload failed");
+  }
+  return res.json();
+}
+
+export async function sendChatUpload(question: string, insights: InsightPayload): Promise<string> {
+  const res = await fetch("/api/chat/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, insights }),
+  });
+  const data = await res.json();
+  return data.answer || "No response.";
+}
+
 export function findInsight(payload: InsightPayload | null, id: string): Insight | null {
   if (!payload) return null;
   return payload.insights.find((i) => i.id === id) || null;
