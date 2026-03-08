@@ -1,15 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Upload, FileUp, Zap, X, FileText, Calendar, MessageSquare, Loader2 } from "lucide-react";
+import { Upload, FileUp, Zap, X, FileText, Calendar, MessageSquare, Loader2, AlertCircle } from "lucide-react";
 import { uploadFiles, type UploadFile, type InsightPayload } from "@/lib/api";
 
-interface FileSlot {
-  file: File | null;
+interface SelectedFile {
+  file: File;
   type: "transactions" | "calendar" | "conversations";
-  label: string;
-  accept: string;
-  icon: typeof FileText;
-  hint: string;
 }
 
 interface Props {
@@ -21,7 +17,6 @@ function fileToBase64(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      // Strip the data:...;base64, prefix
       resolve(result.split(",")[1]);
     };
     reader.onerror = reject;
@@ -37,20 +32,48 @@ function classifyFile(file: File): "transactions" | "calendar" | "conversations"
   return null;
 }
 
+const TYPE_META = {
+  transactions: { label: "Transactions", icon: FileText, color: "text-blue-400" },
+  calendar: { label: "Calendar", icon: Calendar, color: "text-green-400" },
+  conversations: { label: "Conversations", icon: MessageSquare, color: "text-purple-400" },
+} as const;
+
 export default function DataUploadSection({ onInsightsReady }: Props) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [slots, setSlots] = useState<FileSlot[]>([
-    { file: null, type: "transactions", label: "Bank Transactions", accept: ".csv", icon: FileText, hint: "Any bank CSV — Chase, BofA, Amex, Mint, etc." },
-    { file: null, type: "calendar", label: "Calendar", accept: ".ics", icon: Calendar, hint: "Google Calendar .ics export" },
-    { file: null, type: "conversations", label: "AI Conversations", accept: ".json,.zip", icon: MessageSquare, hint: "ChatGPT or Claude export — .json or .zip" },
-  ]);
+  const [files, setFiles] = useState<SelectedFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const addFiles = useCallback((newFiles: FileList | File[]) => {
+    const toAdd: SelectedFile[] = [];
+    const skipped: string[] = [];
 
-  const updateSlot = (index: number, file: File | null) => {
-    setSlots((prev) => prev.map((s, i) => (i === index ? { ...s, file } : s)));
+    for (const file of Array.from(newFiles)) {
+      const type = classifyFile(file);
+      if (!type) {
+        skipped.push(file.name);
+        continue;
+      }
+      // Avoid duplicates by name
+      toAdd.push({ file, type });
+    }
+
+    if (skipped.length > 0) {
+      setError(`Skipped unsupported files: ${skipped.join(", ")}. Use .csv, .ics, .json, or .zip.`);
+    } else {
+      setError(null);
+    }
+
+    setFiles((prev) => {
+      const existing = new Set(prev.map((f) => f.file.name + f.file.size));
+      const deduped = toAdd.filter((f) => !existing.has(f.file.name + f.file.size));
+      return [...prev, ...deduped];
+    });
+  }, []);
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
     setError(null);
   };
 
@@ -68,33 +91,20 @@ export default function DataUploadSection({ onInsightsReady }: Props) {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
-    setError(null);
-
-    const files = Array.from(e.dataTransfer.files);
-    for (const file of files) {
-      const type = classifyFile(file);
-      if (!type) continue;
-      const slotIndex = type === "transactions" ? 0 : type === "calendar" ? 1 : 2;
-      setSlots((prev) => prev.map((s, i) => (i === slotIndex ? { ...s, file } : s)));
-    }
-  }, []);
-
-  const hasFiles = slots.some((s) => s.file !== null);
+    addFiles(e.dataTransfer.files);
+  }, [addFiles]);
 
   const handleAnalyze = async () => {
-    const filesToUpload: UploadFile[] = [];
+    if (files.length === 0) return;
     setError(null);
-
-    for (const slot of slots) {
-      if (!slot.file) continue;
-      const data = await fileToBase64(slot.file);
-      filesToUpload.push({ name: slot.file.name, type: slot.type, data });
-    }
-
-    if (filesToUpload.length === 0) return;
-
     setIsAnalyzing(true);
+
     try {
+      const filesToUpload: UploadFile[] = [];
+      for (const { file, type } of files) {
+        const data = await fileToBase64(file);
+        filesToUpload.push({ name: file.name, type, data });
+      }
       const payload = await uploadFiles(filesToUpload);
       onInsightsReady?.(payload);
     } catch (err: any) {
@@ -135,73 +145,71 @@ export default function DataUploadSection({ onInsightsReady }: Props) {
                 </motion.div>
                 <h3 className="text-xl font-display font-medium">Import Your Financial Data</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Upload bank transactions, calendar events, and AI conversation exports to generate personalized insights.
-                Drag files here or use the buttons below.
+              <p className="text-sm text-muted-foreground mb-4">
+                Drop all your files at once or click to select multiple. We'll auto-detect the type from the extension.
               </p>
 
-              {/* File slots */}
-              <div className="space-y-3 mb-6">
-                {slots.map((slot, index) => {
-                  const Icon = slot.icon;
-                  return (
-                    <div
-                      key={slot.type}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        slot.file
-                          ? "border-primary/30 bg-primary/5"
-                          : "border-border/30 bg-card/30"
-                      }`}
-                    >
-                      <div className={`p-2 rounded-md ${slot.file ? "bg-primary/20" : "bg-secondary/50"}`}>
-                        <Icon className={`w-4 h-4 ${slot.file ? "text-primary" : "text-muted-foreground"}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{slot.label}</p>
-                        {slot.file ? (
-                          <p className="text-xs text-primary truncate">{slot.file.name}</p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">{slot.hint}</p>
-                        )}
-                      </div>
-                      {slot.file ? (
-                        <button
-                          onClick={() => updateSlot(index, null)}
-                          className="p-1.5 rounded-md hover:bg-secondary/50 text-muted-foreground hover:text-foreground cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => fileInputRefs.current[index]?.click()}
-                          className="bg-secondary/50 hover:bg-secondary text-sm px-3 py-1.5 rounded-md border border-border/30 cursor-pointer"
-                        >
-                          <FileUp className="w-3.5 h-3.5 inline mr-1.5" />
-                          Choose
-                        </button>
-                      )}
-                      <input
-                        ref={(el) => { fileInputRefs.current[index] = el; }}
-                        type="file"
-                        accept={slot.accept}
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] ?? null;
-                          updateSlot(index, file);
-                          e.target.value = "";
-                        }}
-                      />
-                    </div>
-                  );
-                })}
+              {/* Single multi-file picker */}
+              <div className="flex items-center gap-3 flex-wrap mb-4">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30 rounded-full text-sm px-4 py-2 flex items-center gap-2 cursor-pointer font-medium"
+                >
+                  <FileUp className="w-4 h-4" />
+                  Choose Files
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  .csv (bank transactions) &middot; .ics (calendar) &middot; .json/.zip (AI conversations)
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".csv,.ics,.json,.zip"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) addFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
               </div>
+
+              {/* File list */}
+              {files.length > 0 && (
+                <div className="space-y-2 mb-5">
+                  {files.map((sf, index) => {
+                    const meta = TYPE_META[sf.type];
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={`${sf.file.name}-${sf.file.size}-${index}`}
+                        className="flex items-center gap-3 p-2.5 rounded-lg border border-primary/20 bg-primary/5"
+                      >
+                        <Icon className={`w-4 h-4 ${meta.color} shrink-0`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{sf.file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {meta.label} &middot; {(sf.file.size / 1024).toFixed(0)} KB
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="p-1 rounded hover:bg-secondary/50 text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Analyze button */}
               <button
                 onClick={handleAnalyze}
-                disabled={!hasFiles || isAnalyzing}
+                disabled={files.length === 0 || isAnalyzing}
                 className={`w-full py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  hasFiles && !isAnalyzing
+                  files.length > 0 && !isAnalyzing
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "bg-secondary/50 text-muted-foreground cursor-not-allowed"
                 }`}
@@ -209,21 +217,40 @@ export default function DataUploadSection({ onInsightsReady }: Props) {
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Analyzing your data...
+                    Analyzing {files.length} file{files.length !== 1 ? "s" : ""}...
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
-                    Analyze My Data
+                    Analyze {files.length > 0 ? `${files.length} File${files.length !== 1 ? "s" : ""}` : "My Data"}
                   </>
                 )}
               </button>
 
               {error && (
-                <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400">
+                <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400 flex items-start gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   {error}
                 </div>
               )}
+
+              <div className="mt-4 pt-4 border-t border-border/30">
+                <p className="text-xs text-muted-foreground mb-2 font-mono uppercase tracking-wider">
+                  Supported formats
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Bank CSV (Chase, BofA, Amex, Mint)", "Google Calendar ICS", "ChatGPT Export", "Claude Export"].map(
+                    (format) => (
+                      <div
+                        key={format}
+                        className="text-xs bg-secondary/50 px-2.5 py-1 rounded-full text-foreground/70"
+                      >
+                        {format}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
 
             <motion.div
