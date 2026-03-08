@@ -10,7 +10,6 @@ from typing import Any
 import pandas as pd
 
 from ..features.correlation import compute_correlation
-from ..features.resilience_model import compute_resilience_metrics
 from ..features.spend_tagger import tag_spend
 from ..features.stress_scorer import compute_stress
 from ..loaders.persona_loader import load_persona
@@ -272,6 +271,216 @@ def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame, calendar_df: pd.DataFr
     }
 
 
+def _detect_subscriptions(transactions_df: pd.DataFrame) -> dict[str, Any]:
+    """Find recurring same-amount charges that look like subscriptions."""
+    if transactions_df is None or transactions_df.empty:
+        return {"subscriptions": [], "monthly_total": 0.0}
+
+    df = transactions_df.copy()
+    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0).abs()
+    df["_abs_amount"] = amount
+
+    text_cols = ("text", "description", "merchant", "memo")
+    texts = pd.Series([""] * len(df), index=df.index)
+    for col in text_cols:
+        if col in df.columns:
+            texts = texts + " " + df[col].fillna("").astype(str)
+    df["_text"] = texts.str.strip().str.lower()
+
+    # Group by rounded amount and description prefix
+    df["_amt_key"] = df["_abs_amount"].round(2)
+    df["_desc_key"] = df["_text"].str[:30]
+
+    subs: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for (amt, desc), group in df.groupby(["_amt_key", "_desc_key"]):
+        if len(group) < 2 or float(amt) < 1.0:
+            continue
+        key = f"{amt:.2f}|{desc}"
+        if key in seen:
+            continue
+        seen.add(key)
+
+        # Check if charges are roughly monthly (20-40 day gaps)
+        ts = pd.to_datetime(group.get("ts", group.get("date")), errors="coerce", utc=True).dropna().sort_values()
+        if len(ts) < 2:
+            continue
+        gaps = ts.diff().dropna().dt.days
+        monthly_gaps = gaps[(gaps >= 20) & (gaps <= 45)]
+        if len(monthly_gaps) < 1:
+            continue
+
+        label = group.iloc[0].get("text") or group.iloc[0].get("description") or group.iloc[0].get("merchant") or "Unknown"
+        subs.append({
+            "name": str(label).strip()[:60],
+            "amount": round(float(amt), 2),
+            "occurrences": int(len(group)),
+            "avg_gap_days": round(float(gaps.mean()), 1) if len(gaps) > 0 else None,
+        })
+
+    subs.sort(key=lambda s: s["amount"], reverse=True)
+    monthly_total = round(sum(s["amount"] for s in subs), 2)
+    return {"subscriptions": subs, "monthly_total": monthly_total}
+
+
+def _compute_day_of_week_spend(transactions_df: pd.DataFrame) -> dict[str, Any]:
+    """Compute average spend by day of week."""
+    if transactions_df is None or transactions_df.empty:
+        return {"by_day": {}, "expensive_day": None, "expensive_day_avg": None, "cheapest_day": None}
+
+    df = transactions_df.copy()
+    ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
+    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0).abs()
+    df["_dow"] = ts.dt.day_name()
+    df["_amount"] = amount
+
+    df = df.dropna(subset=["_dow"])
+    if df.empty:
+        return {"by_day": {}, "expensive_day": None, "expensive_day_avg": None, "cheapest_day": None}
+
+    by_day = df.groupby("_dow")["_amount"].mean().round(2).to_dict()
+
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    by_day_ordered = {d: by_day.get(d, 0.0) for d in day_order if d in by_day}
+
+    expensive_day = max(by_day_ordered, key=by_day_ordered.get) if by_day_ordered else None
+    cheapest_day = min(by_day_ordered, key=by_day_ordered.get) if by_day_ordered else None
+    overall_avg = round(sum(by_day_ordered.values()) / len(by_day_ordered), 2) if by_day_ordered else 0.0
+    expensive_avg = by_day_ordered.get(expensive_day, 0.0)
+    pct_above = round(((expensive_avg - overall_avg) / overall_avg) * 100, 0) if overall_avg > 0 else 0.0
+
+    return {
+        "by_day": by_day_ordered,
+        "expensive_day": expensive_day,
+        "expensive_day_avg": expensive_avg,
+        "cheapest_day": cheapest_day,
+        "overall_daily_avg": overall_avg,
+        "pct_above_average": pct_above,
+    }
+
+
+_INFLOW_KEYWORDS = re.compile(
+    r"(income|salary|payroll|paycheck|deposit|direct dep|transfer in|refund|bonus)", re.IGNORECASE,
+)
+
+
+def _compute_post_payday_surge(transactions_df: pd.DataFrame) -> dict[str, Any]:
+    """Detect spending concentration in the 3 days after income deposits."""
+    if transactions_df is None or transactions_df.empty:
+        return {"detected": False, "surge_ratio": None, "payday_count": 0}
+
+    df = transactions_df.copy()
+    ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
+    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0)
+    df["_ts"] = ts
+    df["_amount"] = amount.abs()
+
+    text_cols = ("text", "description", "merchant", "memo")
+    texts = pd.Series([""] * len(df), index=df.index)
+    for col in text_cols:
+        if col in df.columns:
+            texts = texts + " " + df[col].fillna("").astype(str)
+    df["_text"] = texts.str.lower()
+
+    # Identify paydays (inflow transactions)
+    inflow_mask = df["_text"].str.contains(_INFLOW_KEYWORDS, na=False) | (amount > 0)
+    # Also check for large positive amounts as income proxy
+    large_inflow = df["_amount"] > 500
+    paydays = df[inflow_mask & large_inflow].copy()
+    paydays = paydays.dropna(subset=["_ts"])
+
+    if paydays.empty:
+        return {"detected": False, "surge_ratio": None, "payday_count": 0}
+
+    # For each payday, sum spending in the next 3 days
+    outflows = df[amount < 0].copy() if (amount < 0).any() else df[~(inflow_mask & large_inflow)].copy()
+    outflows = outflows.dropna(subset=["_ts"])
+
+    if outflows.empty:
+        return {"detected": False, "surge_ratio": None, "payday_count": int(len(paydays))}
+
+    post_payday_spend = 0.0
+    total_spend = float(outflows["_amount"].sum())
+
+    for _, payday_row in paydays.iterrows():
+        pay_ts = payday_row["_ts"]
+        window_end = pay_ts + pd.Timedelta(days=3)
+        in_window = outflows[(outflows["_ts"] > pay_ts) & (outflows["_ts"] <= window_end)]
+        post_payday_spend += float(in_window["_amount"].sum())
+
+    surge_ratio = round(post_payday_spend / total_spend, 2) if total_spend > 0 else 0.0
+    # A surge_ratio > 0.30 means 30%+ of all spending happens in 3-day post-payday windows
+    detected = surge_ratio > 0.25
+
+    return {
+        "detected": detected,
+        "surge_ratio": surge_ratio,
+        "surge_pct": round(surge_ratio * 100, 1),
+        "post_payday_total": round(post_payday_spend, 2),
+        "total_spend": round(total_spend, 2),
+        "payday_count": int(len(paydays)),
+    }
+
+
+def _compute_worry_timeline(conversations_df: pd.DataFrame, weekly_spend_df: pd.DataFrame) -> dict[str, Any]:
+    """Build a weekly timeline of worry mentions from AI conversations overlaid with spending."""
+    if conversations_df is None or conversations_df.empty:
+        return {"timeline": [], "peak_worry_week": None, "total_worry_mentions": 0}
+
+    df = conversations_df.copy()
+    ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
+    df["_ts"] = ts
+    df = df.dropna(subset=["_ts"])
+
+    if df.empty:
+        return {"timeline": [], "peak_worry_week": None, "total_worry_mentions": 0}
+
+    iso = df["_ts"].dt.isocalendar()
+    df["_year_week"] = iso.year.astype(str) + "-" + iso.week.astype(str).str.zfill(2)
+
+    worry_keywords = re.compile(
+        r"(anxiety|anxious|stress|worried|overwhelm|burnout|panic|nervous|scared|"
+        r"money|debt|rent|budget|broke|afford|expensive|bills|paycheck)",
+        re.IGNORECASE,
+    )
+
+    text_series = pd.Series([""] * len(df), index=df.index)
+    for col in ("text", "subject", "title", "summary", "description"):
+        if col in df.columns:
+            text_series = text_series + " " + df[col].fillna("").astype(str)
+
+    df["_worry"] = text_series.str.contains(worry_keywords, na=False).astype(int)
+
+    weekly_worry = df.groupby("_year_week")["_worry"].sum().reset_index()
+    weekly_worry.columns = ["year_week", "worry_mentions"]
+
+    # Merge with spending if available
+    if weekly_spend_df is not None and not weekly_spend_df.empty:
+        spend_lookup = dict(zip(weekly_spend_df["year_week"], weekly_spend_df["weekly_discretionary_total"]))
+    else:
+        spend_lookup = {}
+
+    timeline = []
+    for _, row in weekly_worry.iterrows():
+        yw = str(row["year_week"])
+        timeline.append({
+            "year_week": yw,
+            "worry_mentions": int(row["worry_mentions"]),
+            "discretionary_spend": spend_lookup.get(yw, 0.0),
+        })
+
+    timeline.sort(key=lambda r: r["year_week"])
+    total = sum(r["worry_mentions"] for r in timeline)
+    peak = max(timeline, key=lambda r: r["worry_mentions"]) if timeline else None
+
+    return {
+        "timeline": timeline,
+        "peak_worry_week": peak["year_week"] if peak and peak["worry_mentions"] > 0 else None,
+        "peak_worry_spend": peak.get("discretionary_spend") if peak else None,
+        "total_worry_mentions": total,
+    }
+
+
 def _jsonable(value: Any) -> Any:
     if isinstance(value, dict):
         return {k: _jsonable(v) for k, v in value.items()}
@@ -471,126 +680,137 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         ],
     }
 
-    resilience = compute_resilience_metrics(
-        transactions_df=transactions_df,
-        weekly_stress_series=stress_df,
-        macro_series=None,
-        profile=profile,
-    )
-
-    stability_baseline = resilience.get("stability_score")
-    stability_with_macro = resilience.get("stability_score_with_macro")
-    stability_insight = {
-        "id": "resilience_stability",
-        "title": "Financial resilience stability score",
+    # --- Subscription creep ---
+    sub_data = _detect_subscriptions(transactions_df)
+    sub_list = sub_data["subscriptions"]
+    sub_names = ", ".join(s["name"][:30] for s in sub_list[:5])
+    subscription_insight = {
+        "id": "subscription_creep",
+        "title": "Subscription creep",
         "finding": (
-            f"Baseline stability score is {stability_baseline}/100; with macro overlay it is {stability_with_macro}/100."
-            if stability_baseline is not None and stability_with_macro is not None
-            else "Stability score could not be fully computed from current records."
+            f"You have {len(sub_list)} recurring charges totaling ${sub_data['monthly_total']}/mo: {sub_names}."
+            if sub_list
+            else "No recurring subscription charges detected."
         ),
         "evidence": [
-            f"Baseline (no overlays): {resilience.get('overlay_scores', {}).get('baseline_without_overlays')}",
-            f"With behavioral overlay: {resilience.get('overlay_scores', {}).get('with_behavioral_only')}",
-            f"With macro overlay: {resilience.get('overlay_scores', {}).get('with_macro_only')}",
-            f"With both overlays: {resilience.get('overlay_scores', {}).get('with_behavioral_and_macro')}",
-            f"Macro source: {resilience.get('macro_context', {}).get('source')}",
-            f"CPI YoY reference: {resilience.get('macro_context', {}).get('latest_cpi_yoy')}",
+            f"Subscriptions detected: {len(sub_list)}",
+            f"Monthly total: ${sub_data['monthly_total']}",
+            f"Yearly cost: ${round(sub_data['monthly_total'] * 12, 2)}",
         ],
-        "dollar_impact": None,
-        "stability_score": stability_baseline,
-        "stability_score_with_macro": stability_with_macro,
-        "macro_pressure": resilience.get("macro_pressure"),
-        "component_scores": resilience.get("component_scores", {}),
-        "decomposition_percentages": resilience.get("decomposition_percentages", {}),
-        "model_weights": resilience.get("model_weights", {}),
-        "overlay_scores": resilience.get("overlay_scores", {}),
-        "top_structural_levers": resilience.get("top_structural_levers", []),
-        "explainers": resilience.get("explainers", {}),
-        "what_this_means": "Higher stability means lower structural and behavioral instability pressure on finances.",
+        "dollar_impact": round(sub_data["monthly_total"] * 12, 2) if sub_data["monthly_total"] > 0 else None,
+        "subscriptions": sub_list,
+        "monthly_total": sub_data["monthly_total"],
+        "what_this_means": (
+            "These charges repeat every month whether you use the service or not. "
+            "Review each one and cancel anything you haven't used in the last 30 days."
+            if sub_list
+            else "No recurring patterns found in your transaction history."
+        ),
         "recommended_next_actions": [
-            "Use overlays to isolate whether behavior or macro pressure is driving score changes.",
-            "Prioritize the top structural levers before adding new discretionary goals.",
+            "Open each subscription and check your last login date.",
+            "Cancel one subscription you haven't used in 30 days.",
         ],
     }
 
-    volatility_insight = {
-        "id": "resilience_volatility_index",
-        "title": "Discretionary spend volatility index",
-        "finding": f"Volatility index is {resilience.get('volatility_index')}/100 (higher means more volatile).",
+    # --- Expensive day of week ---
+    dow_data = _compute_day_of_week_spend(transactions_df)
+    expensive_day = dow_data.get("expensive_day")
+    dow_insight = {
+        "id": "expensive_day_of_week",
+        "title": "Your expensive day of the week",
+        "finding": (
+            f"You spend the most on {expensive_day}s — ${dow_data.get('expensive_day_avg', 0):.2f} avg vs ${dow_data.get('overall_daily_avg', 0):.2f} overall ({dow_data.get('pct_above_average', 0):.0f}% above average)."
+            if expensive_day
+            else "Not enough transaction data to determine day-of-week patterns."
+        ),
         "evidence": [
-            "Formula: rolling weekly discretionary CV + spike frequency + spike magnitude.",
-            resilience.get("explainers", {}).get("volatility"),
+            f"Average by day: {', '.join(f'{d}: ${v:.2f}' for d, v in dow_data.get('by_day', {}).items())}",
+            f"Cheapest day: {dow_data.get('cheapest_day', 'N/A')}",
         ],
         "dollar_impact": None,
-        "volatility_index": resilience.get("volatility_index"),
-        "what_this_means": "High volatility can destabilize short-term cash planning and increase stress-linked spending drift.",
+        "by_day": dow_data.get("by_day", {}),
+        "expensive_day": expensive_day,
+        "cheapest_day": dow_data.get("cheapest_day"),
+        "pct_above_average": dow_data.get("pct_above_average"),
+        "what_this_means": (
+            f"{expensive_day} is when you're most likely to overspend. Knowing this lets you plan ahead."
+            if expensive_day
+            else "Add more transaction history to unlock this pattern."
+        ),
         "recommended_next_actions": [
-            "Set a weekly discretionary envelope and compare actual vs plan.",
-            "Review the largest spike week and pre-commit a lower-cost substitute.",
+            f"Set a {expensive_day} spending cap and check it before buying." if expensive_day else "Upload more transaction data.",
+            f"Pre-plan {expensive_day} meals or activities to avoid impulse purchases." if expensive_day else "Keep tracking.",
         ],
     }
 
-    liquidity_insight = {
-        "id": "resilience_liquidity_runway_forecast",
-        "title": "Liquidity runway forecast",
-        "finding": f"Estimated liquidity runway is {resilience.get('liquidity_runway_days')} days.",
+    # --- Post-payday surge ---
+    surge_data = _compute_post_payday_surge(transactions_df)
+    surge_insight = {
+        "id": "post_payday_surge",
+        "title": "Post-payday spending surge",
+        "finding": (
+            f"{surge_data.get('surge_pct', 0)}% of your spending happens within 3 days of getting paid (${surge_data.get('post_payday_total', 0):.2f} of ${surge_data.get('total_spend', 0):.2f})."
+            if surge_data.get("detected")
+            else (
+                f"No significant post-payday surge — {surge_data.get('surge_pct', 0)}% of spending is in the 3-day post-payday window."
+                if surge_data.get("surge_ratio") is not None
+                else "Could not detect income deposits to analyze payday patterns."
+            )
+        ),
         "evidence": [
-            f"Confidence band: {resilience.get('liquidity_runway_confidence', {}).get('low')} to {resilience.get('liquidity_runway_confidence', {}).get('high')} days",
-            f"Runway mode: {resilience.get('liquidity_runway_mode')}",
-            f"Estimated net burn monthly: ${resilience.get('net_burn_monthly')}",
-            resilience.get("explainers", {}).get("liquidity"),
+            f"Paydays detected: {surge_data.get('payday_count', 0)}",
+            f"Post-payday spend: ${surge_data.get('post_payday_total', 0)}",
+            f"Total spend: ${surge_data.get('total_spend', 0)}",
+            f"Surge ratio: {surge_data.get('surge_pct', 0)}%",
         ],
-        "dollar_impact": resilience.get("net_burn_monthly"),
-        "liquidity_runway_days": resilience.get("liquidity_runway_days"),
-        "liquidity_runway_confidence": resilience.get("liquidity_runway_confidence", {}),
-        "liquidity_runway_mode": resilience.get("liquidity_runway_mode"),
-        "net_burn_monthly": resilience.get("net_burn_monthly"),
-        "what_this_means": "Runway indicates how long current liquidity can absorb burn before stress threshold risk increases.",
+        "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
+        "detected": surge_data.get("detected", False),
+        "surge_pct": surge_data.get("surge_pct"),
+        "what_this_means": (
+            "You spend heavily right after payday, which can leave you tight before the next one. "
+            "This is a common pattern — awareness is the first step."
+            if surge_data.get("detected")
+            else "Your spending is relatively evenly distributed across the pay cycle."
+        ),
         "recommended_next_actions": [
-            "Reduce fixed obligations or increase inflow cadence to extend runway.",
-            "Treat low-confidence runway bands as a signal to tighten weekly controls.",
+            "Wait 24 hours after payday before any non-essential purchase.",
+            "Auto-transfer savings on payday before you can spend it.",
         ],
     }
 
-    regret_insight = {
-        "id": "resilience_regret_risk_signal",
-        "title": "Regret risk signal",
-        "finding": f"Regret risk signal is {resilience.get('regret_risk_signal')}/100.",
+    # --- Worry timeline (cross-source) ---
+    worry_data = _compute_worry_timeline(conversations_df, weekly_spend_df)
+    worry_timeline = worry_data.get("timeline", [])
+    peak_week = worry_data.get("peak_worry_week")
+    peak_spend = worry_data.get("peak_worry_spend", 0.0)
+    worry_insight = {
+        "id": "worry_timeline",
+        "title": "When you worry most (AI conversations x spending)",
+        "finding": (
+            f"You mentioned financial/emotional worries {worry_data['total_worry_mentions']} times in AI conversations. "
+            f"Peak worry: week {peak_week}"
+            + (f" (${peak_spend:.2f} spent that week)." if peak_spend else ".")
+            if peak_week
+            else "No worry-related conversations detected in your AI chat exports."
+        ),
         "evidence": [
-            f"Pre-income window: {resilience.get('regret_window_days')} days",
-            f"Near-window discretionary events: {resilience.get('regret_near_window_count')}",
-            f"Weighted pre-income spend ratio: {resilience.get('regret_pre_income_ratio')}",
-            resilience.get("explainers", {}).get("regret"),
+            f"Total worry mentions: {worry_data.get('total_worry_mentions', 0)}",
+            f"Weeks with worry signals: {sum(1 for w in worry_timeline if w['worry_mentions'] > 0)}",
+            "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data.",
         ],
         "dollar_impact": None,
-        "regret_risk_signal": resilience.get("regret_risk_signal"),
-        "regret_window_days": resilience.get("regret_window_days"),
-        "regret_near_window_count": resilience.get("regret_near_window_count"),
-        "regret_pre_income_ratio": resilience.get("regret_pre_income_ratio"),
-        "what_this_means": "High regret risk means stress-sensitive discretionary spending is clustering before expected inflows.",
+        "timeline": worry_timeline,
+        "peak_worry_week": peak_week,
+        "total_worry_mentions": worry_data.get("total_worry_mentions", 0),
+        "what_this_means": (
+            "Your AI conversations reveal when stress peaks. Overlaying this with spending shows "
+            "whether worry translates into spending changes — something no single data source can show alone."
+            if worry_data.get("total_worry_mentions", 0) > 0
+            else "Upload ChatGPT or Claude exports to unlock this cross-source insight."
+        ),
         "recommended_next_actions": [
-            "Apply a pre-income cooling period for discretionary purchases.",
-            "Pre-plan one low-cost alternative during high-stress windows.",
-        ],
-    }
-
-    decomposition_insight = {
-        "id": "resilience_decomposition",
-        "title": "Resilience decomposition",
-        "finding": "Instability pressure is decomposed into behavioral, structural fixed load, income instability, and macro pressure components.",
-        "evidence": [
-            f"Behavioral contribution: {resilience.get('decomposition_percentages', {}).get('behavioral')}%",
-            f"Structural contribution: {resilience.get('decomposition_percentages', {}).get('structural_fixed_load')}%",
-            f"Income instability contribution: {resilience.get('decomposition_percentages', {}).get('income_instability')}%",
-            f"Macro contribution: {resilience.get('decomposition_percentages', {}).get('macro_pressure')}%",
-        ],
-        "dollar_impact": None,
-        "decomposition_percentages": resilience.get("decomposition_percentages", {}),
-        "top_structural_levers": resilience.get("top_structural_levers", []),
-        "what_this_means": "The largest decomposition components are the first targets for resilience improvement.",
-        "recommended_next_actions": [
-            "Address the top component first, then re-measure after one spending cycle.",
-            "Use top structural levers as the default intervention queue.",
+            "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
+            "Use your AI assistant to journal about financial stress instead of spending through it.",
         ],
     }
 
@@ -598,11 +818,10 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         stress_insight,
         themes_insight,
         goal_insight,
-        stability_insight,
-        volatility_insight,
-        liquidity_insight,
-        regret_insight,
-        decomposition_insight,
+        subscription_insight,
+        dow_insight,
+        surge_insight,
+        worry_insight,
     ]
 
     if persona_id == "p05":

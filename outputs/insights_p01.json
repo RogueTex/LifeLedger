@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_locked",
-  "metric_layer_version": "resilience_v1",
+  "metric_layer_version": "actionable_v2",
   "generated_at": "2026-03-06T23:08:06.109128+00:00",
   "persona": "p01",
   "profile_name": "Jordan Lee",
@@ -539,182 +539,152 @@
       ]
     },
     {
-      "id": "resilience_stability",
-      "title": "Financial resilience stability score",
-      "finding": "Baseline stability score is 57.47/100; with macro overlay it is 55.23/100.",
+      "id": "subscription_creep",
+      "title": "Subscription creep",
+      "finding": "You have 4 recurring charges totaling $234.96/mo: Netflix/Spotify/Hulu bundle, Gym membership, Cloud storage, Meal kit delivery.",
       "evidence": [
-        "Baseline (no overlays): 79.77",
-        "With behavioral overlay: 57.47",
-        "With macro overlay: 77.53",
-        "With both overlays: 55.23",
-        "Macro source: deterministic_fallback",
-        "CPI YoY reference: 2.598"
+        "Subscriptions detected: 4",
+        "Monthly total: $234.96",
+        "Yearly cost: $2819.52"
       ],
-      "dollar_impact": null,
-      "stability_score": 57.47,
-      "stability_score_with_macro": 55.23,
-      "macro_pressure": 14.95,
-      "component_scores": {
-        "behavioral_risk": 53.11,
-        "structural_fixed_load": 25.11,
-        "income_instability": 47.75,
-        "macro_pressure": 14.95
-      },
-      "decomposition_percentages": {
-        "behavioral": 49.82,
-        "structural_fixed_load": 18.51,
-        "income_instability": 26.66,
-        "macro_pressure": 5.01
-      },
-      "model_weights": {
-        "behavioral": 0.42,
-        "structural": 0.33,
-        "income": 0.25,
-        "macro": 0.15
-      },
-      "overlay_scores": {
-        "baseline_without_overlays": 79.77,
-        "with_behavioral_only": 57.47,
-        "with_macro_only": 77.53,
-        "with_behavioral_and_macro": 55.23
-      },
-      "top_structural_levers": [
+      "dollar_impact": 2819.52,
+      "subscriptions": [
         {
-          "id": "volatility_smoothing",
-          "title": "Smooth weekly discretionary spend",
-          "why": "Weekly discretionary spend swings are driving stability loss.",
-          "action": "Pre-allocate one fixed weekly discretionary budget envelope."
+          "name": "Netflix/Spotify/Hulu bundle",
+          "amount": 89.99,
+          "occurrences": 12,
+          "avg_gap_days": 30.2
         },
         {
-          "id": "inflow_smoothing",
-          "title": "Smooth inflow timing",
-          "why": "Income timing irregularity is widening cash-flow gaps.",
-          "action": "Shift at least one invoice cadence to shorter cycles or add milestone billing."
+          "name": "Gym membership - Equinox",
+          "amount": 79.99,
+          "occurrences": 10,
+          "avg_gap_days": 30.5
         },
         {
-          "id": "fixed_commitment_reduction",
-          "title": "Lower fixed commitment burden",
-          "why": "Fixed monthly obligations are consuming a high share of inflow.",
-          "action": "Renegotiate or cancel one recurring commitment in the next 14 days."
+          "name": "iCloud storage 2TB",
+          "amount": 14.99,
+          "occurrences": 11,
+          "avg_gap_days": 30.1
+        },
+        {
+          "name": "HelloFresh meal kit",
+          "amount": 49.99,
+          "occurrences": 8,
+          "avg_gap_days": 31.0
         }
       ],
-      "explainers": {
-        "stability": "Stability = 100 - weighted instability components, clamped to [0,100].",
-        "volatility": "Volatility combines rolling weekly discretionary CV, spike frequency, and spike magnitude.",
-        "liquidity": "Runway uses net burn when balance exists; otherwise effective cadence runway from inflow rhythm vs fixed obligations.",
-        "regret": "Regret risk increases when discretionary spend clusters in the N-day pre-income window during elevated stress.",
-        "income_instability": "Income instability blends inflow gap irregularity and inflow variance across weekly/monthly buckets.",
-        "structural_expense_load": "Structural load is fixed commitments divided by median monthly inflow."
-      },
-      "what_this_means": "Higher stability means lower structural and behavioral instability pressure on finances.",
+      "monthly_total": 234.96,
+      "what_this_means": "These charges repeat every month whether you use the service or not. Review each one and cancel anything you haven't used in the last 30 days.",
       "recommended_next_actions": [
-        "Use overlays to isolate whether behavior or macro pressure is driving score changes.",
-        "Prioritize the top structural levers before adding new discretionary goals."
+        "Open each subscription and check your last login date.",
+        "Cancel one subscription you haven't used in 30 days."
       ]
     },
     {
-      "id": "resilience_volatility_index",
-      "title": "Discretionary spend volatility index",
-      "finding": "Volatility index is 88.51/100 (higher means more volatile).",
+      "id": "expensive_day_of_week",
+      "title": "Your expensive day of the week",
+      "finding": "You spend the most on Fridays \u2014 $47.82 avg vs $28.15 overall (70% above average).",
       "evidence": [
-        "Formula: rolling weekly discretionary CV + spike frequency + spike magnitude.",
-        "Volatility combines rolling weekly discretionary CV, spike frequency, and spike magnitude."
+        "Average by day: Monday: $22.10, Tuesday: $18.50, Wednesday: $25.30, Thursday: $31.20, Friday: $47.82, Saturday: $35.40, Sunday: $16.75",
+        "Cheapest day: Sunday"
       ],
       "dollar_impact": null,
-      "volatility_index": 88.51,
-      "what_this_means": "High volatility can destabilize short-term cash planning and increase stress-linked spending drift.",
-      "recommended_next_actions": [
-        "Set a weekly discretionary envelope and compare actual vs plan.",
-        "Review the largest spike week and pre-commit a lower-cost substitute."
-      ]
-    },
-    {
-      "id": "resilience_liquidity_runway_forecast",
-      "title": "Liquidity runway forecast",
-      "finding": "Estimated liquidity runway is 74.7 days.",
-      "evidence": [
-        "Confidence band: 41.9 to 107.4 days",
-        "Runway mode: effective_cadence",
-        "Estimated net burn monthly: $0.0",
-        "Runway uses net burn when balance exists; otherwise effective cadence runway from inflow rhythm vs fixed obligations."
-      ],
-      "dollar_impact": 0.0,
-      "liquidity_runway_days": 74.7,
-      "liquidity_runway_confidence": {
-        "low": 41.9,
-        "high": 107.4,
-        "confidence": "low"
+      "by_day": {
+        "Monday": 22.1,
+        "Tuesday": 18.5,
+        "Wednesday": 25.3,
+        "Thursday": 31.2,
+        "Friday": 47.82,
+        "Saturday": 35.4,
+        "Sunday": 16.75
       },
-      "liquidity_runway_mode": "effective_cadence",
-      "net_burn_monthly": 0.0,
-      "what_this_means": "Runway indicates how long current liquidity can absorb burn before stress threshold risk increases.",
+      "expensive_day": "Friday",
+      "cheapest_day": "Sunday",
+      "pct_above_average": 70.0,
+      "what_this_means": "Friday is when you're most likely to overspend. Knowing this lets you plan ahead.",
       "recommended_next_actions": [
-        "Reduce fixed obligations or increase inflow cadence to extend runway.",
-        "Treat low-confidence runway bands as a signal to tighten weekly controls."
+        "Set a Friday spending cap and check it before buying.",
+        "Pre-plan Friday meals or activities to avoid impulse purchases."
       ]
     },
     {
-      "id": "resilience_regret_risk_signal",
-      "title": "Regret risk signal",
-      "finding": "Regret risk signal is 0.0/100.",
+      "id": "post_payday_surge",
+      "title": "Post-payday spending surge",
+      "finding": "34.2% of your spending happens within 3 days of getting paid ($1,847.30 of $5,401.20).",
       "evidence": [
-        "Pre-income window: 5 days",
-        "Near-window discretionary events: 0",
-        "Weighted pre-income spend ratio: 0.0",
-        "Regret risk increases when discretionary spend clusters in the N-day pre-income window during elevated stress."
+        "Paydays detected: 12",
+        "Post-payday spend: $1847.30",
+        "Total spend: $5401.20",
+        "Surge ratio: 34.2%"
+      ],
+      "dollar_impact": 1847.3,
+      "detected": true,
+      "surge_pct": 34.2,
+      "what_this_means": "You spend heavily right after payday, which can leave you tight before the next one. This is a common pattern \u2014 awareness is the first step.",
+      "recommended_next_actions": [
+        "Wait 24 hours after payday before any non-essential purchase.",
+        "Auto-transfer savings on payday before you can spend it."
+      ]
+    },
+    {
+      "id": "worry_timeline",
+      "title": "When you worry most (AI conversations x spending)",
+      "finding": "You mentioned financial/emotional worries 14 times in AI conversations. Peak worry: week 2025-07 ($89.99 spent that week).",
+      "evidence": [
+        "Total worry mentions: 14",
+        "Weeks with worry signals: 8",
+        "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data."
       ],
       "dollar_impact": null,
-      "regret_risk_signal": 0.0,
-      "regret_window_days": 5,
-      "regret_near_window_count": 0,
-      "regret_pre_income_ratio": 0.0,
-      "what_this_means": "High regret risk means stress-sensitive discretionary spending is clustering before expected inflows.",
-      "recommended_next_actions": [
-        "Apply a pre-income cooling period for discretionary purchases.",
-        "Pre-plan one low-cost alternative during high-stress windows."
-      ]
-    },
-    {
-      "id": "resilience_decomposition",
-      "title": "Resilience decomposition",
-      "finding": "Instability pressure is decomposed into behavioral, structural fixed load, income instability, and macro pressure components.",
-      "evidence": [
-        "Behavioral contribution: 49.82%",
-        "Structural contribution: 18.51%",
-        "Income instability contribution: 26.66%",
-        "Macro contribution: 5.01%"
-      ],
-      "dollar_impact": null,
-      "decomposition_percentages": {
-        "behavioral": 49.82,
-        "structural_fixed_load": 18.51,
-        "income_instability": 26.66,
-        "macro_pressure": 5.01
-      },
-      "top_structural_levers": [
+      "timeline": [
         {
-          "id": "volatility_smoothing",
-          "title": "Smooth weekly discretionary spend",
-          "why": "Weekly discretionary spend swings are driving stability loss.",
-          "action": "Pre-allocate one fixed weekly discretionary budget envelope."
+          "year_week": "2024-50",
+          "worry_mentions": 2,
+          "discretionary_spend": 0.0
         },
         {
-          "id": "inflow_smoothing",
-          "title": "Smooth inflow timing",
-          "why": "Income timing irregularity is widening cash-flow gaps.",
-          "action": "Shift at least one invoice cadence to shorter cycles or add milestone billing."
+          "year_week": "2024-51",
+          "worry_mentions": 3,
+          "discretionary_spend": 0.0
         },
         {
-          "id": "fixed_commitment_reduction",
-          "title": "Lower fixed commitment burden",
-          "why": "Fixed monthly obligations are consuming a high share of inflow.",
-          "action": "Renegotiate or cancel one recurring commitment in the next 14 days."
+          "year_week": "2025-02",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2025-04",
+          "worry_mentions": 2,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2025-06",
+          "worry_mentions": 1,
+          "discretionary_spend": 89.99
+        },
+        {
+          "year_week": "2025-07",
+          "worry_mentions": 3,
+          "discretionary_spend": 89.99
+        },
+        {
+          "year_week": "2025-08",
+          "worry_mentions": 1,
+          "discretionary_spend": 85.0
+        },
+        {
+          "year_week": "2025-09",
+          "worry_mentions": 1,
+          "discretionary_spend": 85.0
         }
       ],
-      "what_this_means": "The largest decomposition components are the first targets for resilience improvement.",
+      "peak_worry_week": "2025-07",
+      "total_worry_mentions": 14,
+      "what_this_means": "Your AI conversations reveal when stress peaks. Overlaying this with spending shows whether worry translates into spending changes \u2014 something no single data source can show alone.",
       "recommended_next_actions": [
-        "Address the top component first, then re-measure after one spending cycle.",
-        "Use top structural levers as the default intervention queue."
+        "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
+        "Use your AI assistant to journal about financial stress instead of spending through it."
       ]
     }
   ]
