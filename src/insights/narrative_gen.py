@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+import time
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
+logger = logging.getLogger(__name__)
+
+MAX_PAYLOAD_CHARS = 12_000
+MAX_RETRIES = 3
+RETRY_DELAYS = (1, 2, 4)
 
 SYSTEM_PROMPT = (
     "Answer only from provided insights JSON, cite dollar amounts and dates, "
@@ -35,6 +42,14 @@ def _build_client_and_model() -> tuple[OpenAI, str]:
     return OpenAI(), model
 
 
+def _truncate_payload(payload: str) -> str:
+    """Truncate insights payload to stay within token-safe character limits."""
+    if len(payload) <= MAX_PAYLOAD_CHARS:
+        return payload
+    truncated = payload[:MAX_PAYLOAD_CHARS]
+    return truncated + "\n... [truncated — payload exceeded limit]"
+
+
 def generate_narrative(question: str, insights_json: Any) -> str:
     """Generate a concise narrative answer grounded only in insights JSON."""
     load_dotenv(_project_root() / ".env")
@@ -45,17 +60,45 @@ def generate_narrative(question: str, insights_json: Any) -> str:
     if not isinstance(insights_json, str):
         insights_payload = json.dumps(insights_json, indent=2)
 
-    response = client.chat.completions.create(
-        model=model,
-        temperature=0.2,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"Question: {question}\n\nInsights JSON:\n{insights_payload}",
-            },
-        ],
-    )
+    insights_payload = _truncate_payload(insights_payload)
 
-    content = response.choices[0].message.content
-    return content.strip() if content else ""
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": f"Question: {question}\n\nInsights JSON:\n{insights_payload}",
+        },
+    ]
+
+    # Retry with exponential backoff for transient API errors
+    last_exc: Exception | None = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                temperature=0.3,
+                messages=messages,
+            )
+            break
+        except (ConnectionError, TimeoutError) as exc:
+            last_exc = exc
+            logger.warning("API call failed (attempt %d/%d): %s", attempt + 1, MAX_RETRIES, exc)
+        except Exception as exc:
+            # Catch rate-limit and other transient OpenAI errors
+            if "rate" in str(exc).lower() or "timeout" in str(exc).lower():
+                last_exc = exc
+                logger.warning("API call failed (attempt %d/%d): %s", attempt + 1, MAX_RETRIES, exc)
+            else:
+                raise
+        if attempt < MAX_RETRIES - 1:
+            time.sleep(RETRY_DELAYS[attempt])
+    else:
+        return f"Unable to generate narrative (API unavailable after {MAX_RETRIES} retries)."
+
+    # Safe response parsing
+    try:
+        content = response.choices[0].message.content
+        return content.strip() if content else ""
+    except (AttributeError, IndexError, TypeError) as exc:
+        logger.error("Malformed API response: %s", exc)
+        return ""

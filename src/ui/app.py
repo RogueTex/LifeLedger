@@ -23,6 +23,13 @@ PERSONA_OPTIONS = {
     "p05": "Theo Nakamura — Freelancer Business Brain",
 }
 
+_SUGGESTED_QUESTIONS = [
+    "What drives my spending spikes?",
+    "How stable are my finances?",
+    "What are my biggest anxiety themes?",
+    "How can I reduce regret spending?",
+]
+
 
 def _project_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -59,337 +66,602 @@ def _fmt_number(value: Any, digits: int = 2) -> str:
         return "N/A"
 
 
+# ---------------------------------------------------------------------------
+# Global Styles — "Warm Noir Editorial"
+# ---------------------------------------------------------------------------
 def _inject_global_style() -> None:
     st.markdown(
         """
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
         :root {
-          --bg: #0a0a0f;
-          --card: #13131a;
-          --accent: #6c63ff;
-          --warn: #ff6b6b;
-          --positive: #00d4aa;
-          --text: #f2f2f7;
-          --muted: #888;
+          --canvas: #0c0c10;
+          --surface: #141418;
+          --surface-raised: #1c1c22;
+          --surface-hover: #22222a;
+          --gold: #c9a55c;
+          --gold-dim: rgba(201, 165, 92, 0.15);
+          --gold-glow: rgba(201, 165, 92, 0.08);
+          --emerald: #4ade80;
+          --emerald-dim: rgba(74, 222, 128, 0.12);
+          --coral: #f87171;
+          --coral-dim: rgba(248, 113, 113, 0.12);
+          --amber: #f59e0b;
+          --text-primary: #e8e4de;
+          --text-secondary: #8a8590;
+          --text-tertiary: #5a5660;
+          --border: rgba(255, 255, 255, 0.06);
+          --border-gold: rgba(201, 165, 92, 0.2);
+          --font-display: 'DM Serif Display', Georgia, serif;
+          --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+          --radius: 14px;
+          --radius-sm: 8px;
+          --radius-xs: 6px;
+          --shadow-card: 0 2px 20px rgba(0,0,0,0.3), 0 0 0 1px var(--border);
+          --shadow-gold: 0 4px 30px rgba(201, 165, 92, 0.06);
+          --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
-          background: var(--bg);
-          color: var(--text);
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          background: var(--canvas) !important;
+          color: var(--text-primary);
+          font-family: var(--font-body);
+          font-weight: 400;
+        }
+
+        /* Grain texture overlay */
+        [data-testid="stApp"]::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          opacity: 0.025;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 256px 256px;
         }
 
         [data-testid="stMainBlockContainer"], .block-container {
-          max-width: 1180px;
-          margin-left: auto;
-          margin-right: auto;
-          padding-top: 0;
-          padding-right: 1rem;
-          padding-left: 1rem;
-          padding-bottom: 1.5rem;
+          max-width: 1100px !important;
+          margin: 0 auto;
+          padding: 0 1.5rem 2rem !important;
+          position: relative;
+          z-index: 1;
         }
+
+        /* Hide default Streamlit header/footer */
+        header[data-testid="stHeader"] { background: transparent !important; }
+        footer { display: none !important; }
+        #MainMenu { display: none !important; }
 
         [data-testid="stSidebar"] {
-          background: #101018;
-          border-right: 1px solid rgba(108, 99, 255, 0.2);
+          background: #0e0e13 !important;
+          border-right: 1px solid var(--border) !important;
         }
 
-        .hero-wrap {
-          padding-top: 0.9rem;
-          margin-bottom: 1.1rem;
+        [data-testid="stSidebar"] .stMarkdown p,
+        [data-testid="stSidebar"] .stCaption p {
+          font-family: var(--font-body);
+          color: var(--text-secondary);
         }
 
-        .hero-row {
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
+        /* ── Hero ───────────────────────────────────────── */
+        .ll-hero {
+          padding: 2.5rem 0 1.8rem;
+          position: relative;
+        }
+
+        .ll-hero-name {
+          font-family: var(--font-display);
+          font-size: clamp(2.4rem, 5vw, 3.6rem);
+          font-weight: 400;
+          color: var(--text-primary);
+          line-height: 1.08;
+          margin: 0;
+          letter-spacing: -0.01em;
+        }
+
+        .ll-hero-sub {
+          margin-top: 0.5rem;
+          font-size: 0.95rem;
+          color: var(--text-tertiary);
+          font-weight: 300;
+          letter-spacing: 0.02em;
+        }
+
+        .ll-hero-rule {
+          margin-top: 1.5rem;
+          height: 1px;
+          border: 0;
+          background: linear-gradient(90deg, var(--gold) 0%, var(--gold-dim) 60%, transparent 100%);
+        }
+
+        /* ── Section Labels ─────────────────────────────── */
+        .ll-label {
+          font-family: var(--font-body);
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          font-size: 10px;
+          font-weight: 600;
+          color: var(--gold);
+          margin-bottom: 0.75rem;
+          margin-top: 0.25rem;
+        }
+
+        /* ── KPI Cards ──────────────────────────────────── */
+        .ll-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
           gap: 1rem;
         }
 
-        .hero-copy {
-          min-width: 0;
-          flex: 1;
+        .ll-kpi {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 1.4rem 1.5rem 1.2rem;
+          position: relative;
+          overflow: hidden;
+          transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
         }
 
-        .hero-title {
-          font-size: 2.8rem;
-          font-weight: 800;
-          line-height: 1.05;
-          color: var(--text);
-          margin: 0;
+        .ll-kpi::before {
+          content: "";
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 2px;
+          background: var(--kpi-accent, var(--gold));
+          opacity: 0;
+          transition: opacity 0.3s var(--ease-out);
         }
 
-        .hero-tagline {
-          margin-top: 0.35rem;
-          color: #8e8e9a;
-          font-size: 1rem;
+        .ll-kpi:hover {
+          border-color: var(--border-gold);
+          box-shadow: var(--shadow-gold);
         }
 
-        .hero-rule {
-          margin-top: 0.9rem;
-          height: 1px;
-          border: 0;
-          background: linear-gradient(90deg, #6c63ff, #ff6b6b);
-        }
+        .ll-kpi:hover::before { opacity: 1; }
 
-        .metric-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 0.85rem;
-          margin-bottom: 1rem;
-        }
-
-        .kpi-card,
-        .insight-card,
-        .spike-card,
-        .chat-shell {
-          background: var(--card);
-          border: 1px solid rgba(108, 99, 255, 0.2);
-          border-radius: 16px;
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-        }
-
-        .kpi-card {
-          padding: 1rem 1rem 0.9rem;
-          min-height: 132px;
-        }
-
-        .kpi-label {
+        .ll-kpi-label {
+          font-size: 10px;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          font-size: 11px;
-          color: #8e8ea0;
-          margin-bottom: 0.4rem;
-        }
-
-        .kpi-value {
-          font-size: 2.4rem;
-          font-weight: 700;
-          line-height: 1;
-          margin-bottom: 0.4rem;
-        }
-
-        .kpi-detail {
-          font-size: 12px;
-          color: #8f90a6;
-          line-height: 1.35;
-        }
-
-        div[data-testid="metric-container"] label,
-        div[data-testid="metric-container"] div[data-testid="stMetricLabel"] {
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          font-size: 11px;
-        }
-
-        div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-          font-size: 2.4rem;
-          font-weight: 700;
-        }
-
-        .section-heading {
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
-          color: #9c94ff;
-          font-size: 12px;
-          margin-top: 0.8rem;
-          margin-bottom: 0.55rem;
-        }
-
-        .insight-card {
-          padding: 0.95rem 1rem;
+          letter-spacing: 0.16em;
+          color: var(--text-tertiary);
+          font-weight: 600;
           margin-bottom: 0.75rem;
         }
 
-        .insight-title {
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
+        .ll-kpi-value {
+          font-family: var(--font-display);
+          font-size: 2.6rem;
+          line-height: 1;
+          margin-bottom: 0.6rem;
+        }
+
+        .ll-kpi-detail {
           font-size: 12px;
-          color: #9c94ff;
-          margin-bottom: 0.45rem;
+          color: var(--text-secondary);
+          line-height: 1.5;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
         }
 
-        .insight-finding {
-          font-size: 18px;
-          color: var(--text);
-          font-weight: 700;
-          margin-bottom: 0.45rem;
+        /* ── Insight Cards ──────────────────────────────── */
+        .ll-insight {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 1.5rem 1.6rem;
+          margin-bottom: 0.85rem;
+          transition: border-color 0.3s var(--ease-out);
         }
 
-        .insight-support {
+        .ll-insight:hover {
+          border-color: var(--border-gold);
+        }
+
+        .ll-insight-eyebrow {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          color: var(--gold);
+          font-weight: 600;
+          margin-bottom: 0.6rem;
+        }
+
+        .ll-insight-headline {
+          font-family: var(--font-display);
+          font-size: 1.25rem;
+          color: var(--text-primary);
+          line-height: 1.3;
+          margin-bottom: 0.5rem;
+        }
+
+        .ll-insight-body {
           font-size: 13px;
-          color: var(--muted);
-          line-height: 1.45;
-          margin-bottom: 0.7rem;
+          color: var(--text-secondary);
+          line-height: 1.55;
+          margin-bottom: 0.75rem;
         }
 
-        .pill-row {
+        /* ── Pills ──────────────────────────────────────── */
+        .ll-pills {
           display: flex;
           gap: 0.4rem;
           flex-wrap: wrap;
         }
 
-        .action-pill, .tag-pill {
-          background: rgba(108, 99, 255, 0.15);
-          border: 1px solid rgba(108, 99, 255, 0.3);
-          border-radius: 20px;
-          padding: 4px 12px;
-          font-size: 12px;
-          color: #ddd9ff;
+        .ll-pill {
+          background: var(--gold-dim);
+          border: 1px solid var(--border-gold);
+          border-radius: 100px;
+          padding: 4px 14px;
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--gold);
           display: inline-block;
         }
 
-        .tag-pill {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          color: #b8b8c6;
-          padding: 2px 8px;
-          font-size: 11px;
+        /* ── Consent Banner ─────────────────────────────── */
+        .ll-consent {
+          background: var(--emerald-dim);
+          border-left: 2px solid var(--emerald);
+          border-radius: var(--radius-sm);
+          padding: 0.85rem 1rem;
+          color: var(--emerald);
+          font-size: 12px;
+          margin-top: 0.75rem;
+          line-height: 1.5;
+          font-weight: 500;
         }
 
-        .consent-banner {
-          background: rgba(0, 212, 170, 0.08);
-          border-left: 3px solid #00d4aa;
-          border-radius: 10px;
-          padding: 0.75rem 0.9rem;
-          color: rgba(225, 255, 249, 0.92);
-          font-size: 13px;
-          margin-top: 0.55rem;
+        /* ── Spike Cards ────────────────────────────────── */
+        .ll-spike {
+          background: var(--surface);
+          border: 1px solid var(--coral-dim);
+          border-left: 3px solid var(--coral);
+          border-radius: var(--radius);
+          padding: 1.4rem 1.5rem;
+          margin-bottom: 0.85rem;
         }
 
-        .spike-card {
-          padding: 0.75rem 0.8rem 0.8rem;
-          margin-top: 0.55rem;
+        .ll-spike-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          margin-bottom: 1.2rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid var(--border);
         }
 
-        .tx-row {
+        .ll-spike-week {
+          font-family: var(--font-display);
+          font-size: 1.15rem;
+          color: var(--coral);
+        }
+
+        .ll-spike-meta {
+          font-size: 12px;
+          color: var(--text-tertiary);
+          font-weight: 500;
+        }
+
+        .ll-spike-grid {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          gap: 0.5rem;
-          align-items: start;
-          margin-bottom: 0.6rem;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-          padding-bottom: 0.45rem;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
         }
 
-        .tx-merchant {
-          color: #f1f1f8;
-          font-size: 13px;
-          margin-bottom: 0.25rem;
-          line-height: 1.35;
-        }
-
-        .tx-amount {
-          color: var(--warn);
+        .ll-spike-col-title {
+          font-size: 9px;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: var(--text-tertiary);
           font-weight: 700;
-          font-size: 14px;
-          white-space: nowrap;
+          margin-bottom: 0.75rem;
         }
 
-        .cal-row {
-          margin-bottom: 0.55rem;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-          padding-bottom: 0.4rem;
-          color: #d5d5e0;
+        .ll-tx {
+          display: flex;
+          justify-content: space-between;
+          padding: 0.45rem 0;
+          border-bottom: 1px solid var(--border);
           font-size: 13px;
-          line-height: 1.35;
         }
 
-        .chat-shell {
-          padding: 0.85rem;
-          margin-top: 0.5rem;
+        .ll-tx-name { color: var(--text-secondary); }
+        .ll-tx-amt { color: var(--coral); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        .ll-cal-item {
+          padding: 0.45rem 0;
+          border-bottom: 1px solid var(--border);
+          font-size: 13px;
+          color: var(--text-secondary);
         }
 
-        .chat-user {
+        /* ── Chat ───────────────────────────────────────── */
+        .ll-chat {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 1.2rem;
+          margin-top: 0.75rem;
+          min-height: 140px;
+        }
+
+        .ll-chat-empty {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem 1rem;
+          text-align: center;
+        }
+
+        .ll-chat-empty-title {
+          font-family: var(--font-display);
+          font-size: 1.1rem;
+          color: var(--text-secondary);
+          margin-bottom: 0.5rem;
+        }
+
+        .ll-chat-empty-sub {
+          font-size: 12px;
+          color: var(--text-tertiary);
+          max-width: 340px;
+          line-height: 1.5;
+          margin-bottom: 1rem;
+        }
+
+        .ll-chat-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+          justify-content: center;
+        }
+
+        .ll-chat-chip {
+          background: var(--gold-dim);
+          border: 1px solid var(--border-gold);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--gold);
+          cursor: default;
+        }
+
+        .ll-msg-user {
           margin-left: auto;
-          max-width: 78%;
-          background: rgba(108, 99, 255, 0.25);
-          border: 1px solid rgba(108, 99, 255, 0.35);
-          border-radius: 14px 14px 2px 14px;
-          padding: 0.6rem 0.75rem;
-          color: #eceaff;
-          margin-bottom: 0.55rem;
-          font-size: 13px;
-          line-height: 1.4;
-        }
-
-        .chat-assistant {
-          margin-right: auto;
-          max-width: 82%;
-          background: #12121a;
-          border-left: 3px solid #00d4aa;
-          border-radius: 12px;
-          padding: 0.6rem 0.75rem;
-          color: #e7fef8;
-          margin-bottom: 0.55rem;
+          max-width: 75%;
+          background: var(--gold-dim);
+          border: 1px solid var(--border-gold);
+          border-radius: var(--radius) var(--radius) 4px var(--radius);
+          padding: 0.7rem 0.9rem;
+          color: var(--text-primary);
+          margin-bottom: 0.6rem;
           font-size: 13px;
           line-height: 1.45;
+        }
+
+        .ll-msg-assistant {
+          margin-right: auto;
+          max-width: 80%;
+          background: var(--surface-raised);
+          border-left: 2px solid var(--emerald);
+          border-radius: var(--radius-sm);
+          padding: 0.7rem 0.9rem;
+          color: #d5f5e3;
+          margin-bottom: 0.6rem;
+          font-size: 13px;
+          line-height: 1.55;
           white-space: pre-wrap;
         }
 
-        .typing {
+        .ll-typing {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          color: #8de9d2;
-          font-size: 12px;
+          gap: 5px;
+          padding: 0.7rem 0.9rem;
         }
 
-        .typing span {
-          width: 6px;
-          height: 6px;
+        .ll-typing span {
+          width: 5px; height: 5px;
           border-radius: 50%;
-          background: #8de9d2;
-          animation: blink 1.2s infinite;
+          background: var(--emerald);
+          animation: ll-blink 1.4s infinite;
         }
 
-        .typing span:nth-child(2) { animation-delay: 0.2s; }
-        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        .ll-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .ll-typing span:nth-child(3) { animation-delay: 0.4s; }
 
-        @keyframes blink {
-          0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
-          40% { opacity: 1; transform: translateY(-2px); }
+        @keyframes ll-blink {
+          0%, 80%, 100% { opacity: 0.15; transform: scale(0.85); }
+          40% { opacity: 1; transform: scale(1); }
         }
 
+        /* ── Overlay Help ───────────────────────────────── */
+        .ll-overlay-help {
+          font-size: 11px;
+          color: var(--text-secondary);
+          background: var(--gold-glow);
+          border-left: 2px solid var(--gold);
+          border-radius: var(--radius-xs);
+          padding: 0.6rem 0.85rem;
+          margin-bottom: 0.75rem;
+          line-height: 1.5;
+          font-weight: 500;
+        }
+
+        /* ── Upload Zones ───────────────────────────────── */
+        .ll-upload {
+          background: var(--surface);
+          border: 1.5px dashed var(--border-gold);
+          border-radius: var(--radius);
+          padding: 1rem 1.2rem;
+          margin-bottom: 0.5rem;
+          transition: background 0.2s, border-color 0.2s;
+        }
+
+        .ll-upload:hover {
+          background: var(--surface-hover);
+          border-color: var(--gold);
+        }
+
+        .ll-upload-label {
+          font-family: var(--font-display);
+          font-size: 0.95rem;
+          color: var(--text-primary);
+          margin-bottom: 2px;
+        }
+
+        .ll-upload-hint {
+          font-size: 11px;
+          color: var(--text-tertiary);
+        }
+
+        /* ── Form Overrides ─────────────────────────────── */
         .stChatInput textarea,
         .stTextInput input {
-          background: #11111a !important;
-          color: #f4f4fc !important;
-          border: 1px solid rgba(108, 99, 255, 0.35) !important;
-          border-radius: 12px !important;
+          background: var(--surface-raised) !important;
+          color: var(--text-primary) !important;
+          border: 1px solid var(--border) !important;
+          border-radius: var(--radius-sm) !important;
+          font-family: var(--font-body) !important;
         }
 
         .stChatInput textarea:focus,
         .stTextInput input:focus {
-          border: 1px solid #6c63ff !important;
-          box-shadow: 0 0 0 1px rgba(108, 99, 255, 0.4) !important;
+          border-color: var(--gold) !important;
+          box-shadow: 0 0 0 2px var(--gold-dim) !important;
+          outline: none !important;
         }
 
         [data-baseweb="select"] > div {
-          background: #11111a !important;
-          border: 1px solid rgba(108, 99, 255, 0.35) !important;
-          color: #ececff !important;
-          border-radius: 10px !important;
+          background: var(--surface-raised) !important;
+          border: 1px solid var(--border) !important;
+          color: var(--text-primary) !important;
+          border-radius: var(--radius-sm) !important;
+          font-family: var(--font-body) !important;
         }
 
         .stAlert, .stInfo, .stWarning {
-          background: #151524 !important;
-          border: 1px solid rgba(108, 99, 255, 0.25) !important;
-          color: #dfdfff !important;
+          background: var(--surface) !important;
+          border: 1px solid var(--border) !important;
+          color: var(--text-secondary) !important;
+          font-family: var(--font-body) !important;
+          border-radius: var(--radius-sm) !important;
         }
 
-        @media (max-width: 920px) {
-          .metric-grid { grid-template-columns: 1fr; }
-          .hero-title { font-size: 2.2rem; }
-          .hero-row { flex-direction: column; align-items: flex-start; }
-          .chat-user, .chat-assistant { max-width: 100%; }
+        div[data-testid="metric-container"] label,
+        div[data-testid="metric-container"] div[data-testid="stMetricLabel"] {
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-size: 10px;
+          font-weight: 600;
+          color: var(--text-tertiary) !important;
+          font-family: var(--font-body) !important;
         }
+
+        div[data-testid="metric-container"] [data-testid="stMetricValue"] {
+          font-family: var(--font-display) !important;
+          font-size: 2rem;
+          color: var(--text-primary) !important;
+        }
+
+        .stButton > button {
+          min-height: 46px;
+          font-family: var(--font-body) !important;
+          font-weight: 600;
+          border-radius: var(--radius-sm) !important;
+          letter-spacing: 0.02em;
+        }
+
+        .stButton > button[kind="primary"] {
+          background: var(--gold) !important;
+          color: #0c0c10 !important;
+          border: none !important;
+        }
+
+        .stButton > button[kind="primary"]:hover {
+          background: #d4b06a !important;
+        }
+
+        /* Focus visible */
+        button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+          outline: 2px solid var(--gold);
+          outline-offset: 2px;
+        }
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+          gap: 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .stTabs [data-baseweb="tab"] {
+          font-family: var(--font-body) !important;
+          font-weight: 600 !important;
+          font-size: 13px !important;
+          letter-spacing: 0.04em;
+          color: var(--text-tertiary) !important;
+          padding: 0.6rem 1.2rem !important;
+          border-bottom: 2px solid transparent;
+        }
+
+        .stTabs [aria-selected="true"] {
+          color: var(--gold) !important;
+          border-bottom-color: var(--gold) !important;
+        }
+
+        /* ── Reduced Motion ─────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+
+        /* ── Responsive ─────────────────────────────────── */
+        @media (max-width: 920px) {
+          .ll-kpi-grid { grid-template-columns: 1fr 1fr; }
+          .ll-spike-grid { grid-template-columns: 1fr; }
+          .ll-hero-name { font-size: 2rem; }
+        }
+
+        @media (max-width: 600px) {
+          .ll-kpi-grid { grid-template-columns: 1fr; }
+          .ll-msg-user, .ll-msg-assistant { max-width: 100%; }
+        }
+
+        /* ── Page Load Animation ────────────────────────── */
+        @keyframes ll-fade-up {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ll-animate {
+          animation: ll-fade-up 0.5s var(--ease-out) both;
+        }
+
+        .ll-animate-d1 { animation-delay: 0.05s; }
+        .ll-animate-d2 { animation-delay: 0.12s; }
+        .ll-animate-d3 { animation-delay: 0.19s; }
+        .ll-animate-d4 { animation-delay: 0.26s; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 def _one_sentence(text: Any) -> str:
     raw = str(text or "").strip()
     if not raw:
@@ -402,111 +674,75 @@ def _one_sentence(text: Any) -> str:
 
 
 def _section_label(name: str) -> None:
-    st.markdown(
-        f'<div style="font-size:10px; text-transform:uppercase; '
-        f'letter-spacing:0.2em; color:#444; margin-bottom:12px;">'
-        f"{escape(name)}</div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="ll-label">{escape(name)}</div>', unsafe_allow_html=True)
 
 
 def _section_spacer() -> None:
-    st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
 
 
-def _gradient_divider() -> None:
+def _divider() -> None:
     st.markdown(
-        '<div style="height:1px; background:linear-gradient('
-        'to right, rgba(108,99,255,0.3), rgba(255,107,107,0.3), '
-        'rgba(0,0,0,0)); margin:8px 0 24px 0;"></div>',
+        '<div style="height:1px; background:linear-gradient(90deg, '
+        'var(--gold-dim), transparent); margin:12px 0 28px;"></div>',
         unsafe_allow_html=True,
     )
 
 
+# ---------------------------------------------------------------------------
+# Welcome Gate
+# ---------------------------------------------------------------------------
 def _render_welcome_gate() -> bool:
     st.markdown(
         """
         <style>
-        [data-testid="stSidebar"] { display: none; }
-        .welcome-stage {
-          min-height: 92vh;
+        [data-testid="stSidebar"] { display: none !important; }
+        .ll-welcome {
+          min-height: 90vh;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           text-align: center;
-          animation: fade-up 520ms ease;
+          animation: ll-fade-up 0.6s var(--ease-out) both;
         }
-        .welcome-title {
-          font-size: clamp(2.2rem, 6vw, 4.8rem);
-          line-height: 1.02;
-          font-weight: 800;
-          color: #f4f4fc;
-          margin: 0 0 1.6rem 0;
+        .ll-welcome-wordmark {
+          font-family: var(--font-display);
+          font-size: clamp(3rem, 8vw, 6rem);
+          color: var(--text-primary);
+          line-height: 1;
+          margin-bottom: 0.3rem;
           letter-spacing: -0.02em;
         }
-        .welcome-logo-wrap {
-          width: 160px;
-          height: 160px;
-          border-radius: 999px;
-          display: grid;
-          place-items: center;
-          position: relative;
-          margin-bottom: 1.4rem;
+        .ll-welcome-wordmark span {
+          color: var(--gold);
         }
-        .welcome-logo-ring {
-          position: absolute;
-          inset: 0;
-          border-radius: 999px;
-          background: conic-gradient(from 0deg, #6c63ff, #8d85ff, #ff6b6b, #6c63ff);
-          filter: blur(0.3px);
-          animation: spin 5.2s linear infinite;
-        }
-        .welcome-logo-core {
-          width: 122px;
-          height: 122px;
-          border-radius: 999px;
-          background: radial-gradient(circle at 32% 28%, #1d1c2b, #0b0b12 70%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          display: grid;
-          place-items: center;
-          position: relative;
-          z-index: 1;
-          box-shadow: 0 0 32px rgba(108, 99, 255, 0.25);
-        }
-        .welcome-logo-text {
-          color: #e9e6ff;
-          font-size: 1.6rem;
-          font-weight: 700;
+        .ll-welcome-tagline {
+          font-size: 1.05rem;
+          color: var(--text-tertiary);
+          font-weight: 300;
           letter-spacing: 0.04em;
+          margin-bottom: 2.5rem;
+          max-width: 400px;
         }
-        .welcome-sub {
-          color: #8f8fa1;
-          font-size: 0.98rem;
-          margin-bottom: 1.4rem;
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes fade-up {
-          0% { opacity: 0; transform: translateY(10px); }
-          100% { opacity: 1; transform: translateY(0); }
+        .ll-welcome-line {
+          width: 48px;
+          height: 1.5px;
+          background: var(--gold);
+          margin: 0 auto 2rem;
+          opacity: 0.5;
         }
         </style>
-        <div class="welcome-stage">
-          <h1 class="welcome-title">Welcome to LifeLedger</h1>
-          <div class="welcome-logo-wrap">
-            <div class="welcome-logo-ring"></div>
-            <div class="welcome-logo-core"><div class="welcome-logo-text">LL</div></div>
-          </div>
-          <div class="welcome-sub">Connect your money to your life with grounded insights.</div>
+        <div class="ll-welcome">
+          <div class="ll-welcome-wordmark">Life<span>Ledger</span></div>
+          <div class="ll-welcome-line"></div>
+          <div class="ll-welcome-tagline">Connect your money to your life with grounded insights.</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    c1, c2, c3 = st.columns([1.4, 1, 1.4])
+    c1, c2, c3 = st.columns([1.5, 1, 1.5])
     with c2:
         start_now = st.button("Start Now", use_container_width=True, type="primary", key="welcome_start_now")
         demo = st.button("View Demo", use_container_width=True, key="welcome_demo")
@@ -522,100 +758,84 @@ def _render_welcome_gate() -> bool:
     return False
 
 
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
 def _render_header(profile_name: str, orb_fast: bool) -> None:
     st.markdown(
         f"""
-        <div class="hero-wrap">
-          <div class="hero-row">
-            <div class="hero-copy">
-              <h1 class="hero-title">{escape(profile_name)}</h1>
-              <div class="hero-tagline">This is what your data can tell you.</div>
-            </div>
-          </div>
-          <hr class="hero-rule" />
+        <div class="ll-hero ll-animate">
+          <h1 class="ll-hero-name">{escape(profile_name)}</h1>
+          <div class="ll-hero-sub">This is what your data reveals.</div>
+          <hr class="ll-hero-rule" />
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
+# ---------------------------------------------------------------------------
+# Orb (refined)
+# ---------------------------------------------------------------------------
 def _render_orb_overlay() -> None:
     st.markdown(
         """
 <style>
-.orb-container {
+.ll-orb-wrap {
   position: fixed;
-  top: 60px;
-  right: 40px;
-  width: 100px;
-  height: 100px;
+  top: 56px; right: 32px;
+  width: 80px; height: 80px;
   z-index: 999;
+  pointer-events: none;
 }
-.orb-core {
+.ll-orb {
   position: absolute;
   top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 48px; height: 48px;
+  transform: translate(-50%,-50%);
+  width: 36px; height: 36px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%,
-    #a78bfa, #6c63ff 40%, #ff6b6b 80%);
-  box-shadow: 0 0 30px rgba(108,99,255,0.6),
-              0 0 60px rgba(108,99,255,0.2);
-  animation: breathe 3s ease-in-out infinite;
+  background: radial-gradient(circle at 35% 35%, #d4b06a, #c9a55c 50%, #8b6914 100%);
+  box-shadow: 0 0 24px rgba(201,165,92,0.35), 0 0 60px rgba(201,165,92,0.1);
+  animation: ll-breathe 4s ease-in-out infinite;
 }
-.orb-ring {
+.ll-orb-ring {
   position: absolute;
   top: 50%; left: 50%;
+  width: 36px; height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(108,99,255,0.5);
-  transform: translate(-50%, -50%) scale(1);
-  animation: pulse-ring 2.5s ease-out infinite;
+  border: 1px solid rgba(201,165,92,0.3);
+  transform: translate(-50%,-50%) scale(1);
+  animation: ll-pulse 3s ease-out infinite;
 }
-.orb-ring:nth-child(2) { animation-delay: 0.6s; }
-.orb-ring:nth-child(3) { animation-delay: 1.2s; }
-.orb-ring:nth-child(2),
-.orb-ring:nth-child(3),
-.orb-ring:nth-child(4) {
-  width: 48px; height: 48px;
+.ll-orb-ring:nth-child(2) { animation-delay: 0.8s; }
+@keyframes ll-pulse {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; }
 }
-@keyframes pulse-ring {
-  0%   { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50%,-50%) scale(2.8); opacity: 0; }
-}
-@keyframes breathe {
-  0%, 100% { transform: translate(-50%,-50%) scale(0.95); }
-  50%       { transform: translate(-50%,-50%) scale(1.05); }
+@keyframes ll-breathe {
+  0%,100% { transform: translate(-50%,-50%) scale(0.92); }
+  50%     { transform: translate(-50%,-50%) scale(1.08); }
 }
 </style>
-<div class="orb-container">
-  <div class="orb-ring"></div>
-  <div class="orb-ring"></div>
-  <div class="orb-ring"></div>
-  <div class="orb-core"></div>
+<div class="ll-orb-wrap">
+  <div class="ll-orb-ring"></div>
+  <div class="ll-orb-ring"></div>
+  <div class="ll-orb"></div>
 </div>
 """,
         unsafe_allow_html=True,
     )
 
 
-def _render_metric_card(label: str, value: str, detail: str, color: str) -> str:
+# ---------------------------------------------------------------------------
+# KPI Cards
+# ---------------------------------------------------------------------------
+def _render_metric_card(label: str, value: str, detail: str, accent: str) -> str:
     return f"""
-    <div style="background:#13131a;
-    border:1px solid rgba(108,99,255,0.2);
-    border-radius:12px;
-    padding:20px 24px;
-    min-height:0;">
-      <div style="font-size:11px; text-transform:uppercase;
-      letter-spacing:0.12em; color:#666; margin-bottom:8px;">
-        {escape(label)}
-      </div>
-      <div style="font-size:2rem; font-weight:800;
-      color:{color}; line-height:1.1;">
-        {escape(value)}
-      </div>
-      <div style="font-size:12px; color:#666; margin-top:6px;">
-        {escape(detail)}
-      </div>
+    <div class="ll-kpi" style="--kpi-accent: {accent};">
+      <div class="ll-kpi-label">{escape(label)}</div>
+      <div class="ll-kpi-value" style="color:{accent};">{escape(value)}</div>
+      <div class="ll-kpi-detail">{escape(detail)}</div>
     </div>
     """
 
@@ -633,29 +853,22 @@ def _render_kpi_row(stress_insight: dict[str, Any] | None, goal_insight: dict[st
     months_detail = (goal_insight or {}).get("what_this_means", "Savings timeline unavailable in current profile.")
     themes_detail = (theme_insight or {}).get("what_this_means", "Theme extraction unavailable.")
 
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col1:
-        st.markdown(
-            _render_metric_card("Stress to Spend Correlation", corr_value, corr_detail, "#6c63ff"),
-            unsafe_allow_html=True,
-        )
-    with col2:
-        st.markdown(
-            _render_metric_card("Months to Savings Goal", months_value, months_detail, "#00d4aa"),
-            unsafe_allow_html=True,
-        )
-    with col3:
-        st.markdown(
-            _render_metric_card("Top Anxiety Themes", themes_value, themes_detail, "#ff6b6b"),
-            unsafe_allow_html=True,
-        )
+    cards = "".join([
+        _render_metric_card("Stress \u00d7 Spend Correlation", corr_value, corr_detail, "var(--gold)"),
+        _render_metric_card("Months to Savings Goal", months_value, months_detail, "var(--emerald)"),
+        _render_metric_card("Top Anxiety Themes", themes_value, themes_detail, "var(--coral)"),
+    ])
+    st.markdown(f'<div class="ll-kpi-grid ll-animate ll-animate-d1">{cards}</div>', unsafe_allow_html=True)
 
 
+# ---------------------------------------------------------------------------
+# Insight Card
+# ---------------------------------------------------------------------------
 def _render_actions_pills(actions: list[str]) -> str:
     if not actions:
         return ""
-    pills = "".join(f'<span class="action-pill">{escape(a)}</span>' for a in actions)
-    return f'<div class="pill-row">{pills}</div>'
+    pills = "".join(f'<span class="ll-pill">{escape(a)}</span>' for a in actions)
+    return f'<div class="ll-pills">{pills}</div>'
 
 
 def _render_insight_card(section_title: str, insight: dict[str, Any], support_override: str | None = None) -> None:
@@ -666,10 +879,10 @@ def _render_insight_card(section_title: str, insight: dict[str, Any], support_ov
 
     st.markdown(
         f"""
-        <div class="insight-card">
-          <div class="insight-title">{escape(section_title)}</div>
-          <div class="insight-finding">{escape(finding)}</div>
-          <div class="insight-support">{escape(support)}</div>
+        <div class="ll-insight">
+          <div class="ll-insight-eyebrow">{escape(section_title)}</div>
+          <div class="ll-insight-headline">{escape(finding)}</div>
+          <div class="ll-insight-body">{escape(support)}</div>
           {_render_actions_pills([str(a) for a in actions])}
         </div>
         """,
@@ -677,10 +890,13 @@ def _render_insight_card(section_title: str, insight: dict[str, Any], support_ov
     )
 
 
+# ---------------------------------------------------------------------------
+# Data Story
+# ---------------------------------------------------------------------------
 def _render_data_story(consent: dict[str, Any]) -> None:
     story_summary = (
-        "Exported synthetic records across calendar, transactions, conversations, email, and social logs are fused "
-        "to compute stress patterns, discretionary spend trends, and cross-source weekly insights."
+        "Exported synthetic records across calendar, transactions, conversations, email, and social logs "
+        "are fused to compute stress patterns, discretionary spend trends, and cross-source weekly insights."
     )
     story_detail = (
         "Multi-source linkage matters because single-source views miss behavioral links that appear only when "
@@ -689,10 +905,10 @@ def _render_data_story(consent: dict[str, Any]) -> None:
 
     st.markdown(
         f"""
-        <div class="insight-card">
-          <div class="insight-title">Data Story</div>
-          <div class="insight-finding">{escape(story_summary)}</div>
-          <div class="insight-support">{escape(story_detail)}</div>
+        <div class="ll-insight">
+          <div class="ll-insight-eyebrow">Data Story</div>
+          <div class="ll-insight-headline">{escape(story_summary)}</div>
+          <div class="ll-insight-body">{escape(story_detail)}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -701,15 +917,15 @@ def _render_data_story(consent: dict[str, Any]) -> None:
     dataset = consent.get("dataset_type", "unknown") if consent else "unknown"
     retention = consent.get("retention", "unknown") if consent else "unknown"
     consent_text = (
-        "Local processing only. This demo runs in synthetic mode. No raw records are sent to the LLM; only structured "
-        f"insights JSON is used for chat. Dataset: {dataset} | Retention: {retention}"
+        f"Local processing only \u2014 synthetic mode. No raw records reach the LLM. "
+        f"Dataset: {dataset} \u00b7 Retention: {retention}"
     )
-    st.markdown(
-        f'<div class="consent-banner">🔒 {escape(consent_text)}</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="ll-consent">{escape(consent_text)}</div>', unsafe_allow_html=True)
 
 
+# ---------------------------------------------------------------------------
+# Spike helpers
+# ---------------------------------------------------------------------------
 def _spike_week_label(spike: dict[str, Any]) -> str:
     return str(spike.get("year_week") or "Unknown")
 
@@ -729,6 +945,9 @@ def _spike_stress(spike: dict[str, Any]) -> float:
         return 0.0
 
 
+# ---------------------------------------------------------------------------
+# Spike Chart (Plotly — updated palette)
+# ---------------------------------------------------------------------------
 def _render_spike_chart(spike_weeks: list[dict[str, Any]], weekly_spend_df: list[dict[str, Any]]) -> None:
     if not weekly_spend_df:
         return
@@ -757,38 +976,28 @@ def _render_spike_chart(spike_weeks: list[dict[str, Any]], weekly_spend_df: list
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
-            x=weeks,
-            y=spend,
-            mode="lines+markers",
-            line={"color": "#ff6b6b", "width": 2},
-            marker={"size": 6},
+            x=weeks, y=spend, mode="lines+markers",
+            line={"color": "#f87171", "width": 2},
+            marker={"size": 5, "color": "#f87171"},
             fill="tozeroy",
-            fillcolor="rgba(255,107,107,0.1)",
+            fillcolor="rgba(248,113,113,0.06)",
             name="Discretionary Spend",
         ),
         secondary_y=False,
     )
     fig.add_trace(
         go.Scatter(
-            x=weeks,
-            y=stress_smooth,
-            mode="lines",
-            line={"color": "#6c63ff", "width": 2, "dash": "dot"},
+            x=weeks, y=stress_smooth, mode="lines",
+            line={"color": "#c9a55c", "width": 2, "dash": "dot"},
             name="Stress Score",
         ),
         secondary_y=True,
     )
     fig.add_trace(
         go.Scatter(
-            x=spike_x,
-            y=spike_y,
-            mode="markers",
-            marker={
-                "symbol": "circle",
-                "size": 14,
-                "color": "#ff6b6b",
-                "line": {"color": "white", "width": 2},
-            },
+            x=spike_x, y=spike_y, mode="markers",
+            marker={"symbol": "diamond", "size": 12, "color": "#f87171",
+                    "line": {"color": "#e8e4de", "width": 1.5}},
             name="Spike Week",
         ),
         secondary_y=False,
@@ -796,30 +1005,33 @@ def _render_spike_chart(spike_weeks: list[dict[str, Any]], weekly_spend_df: list
 
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(13,13,26,0.8)",
-        height=300,
-        margin={"l": 40, "r": 40, "t": 20, "b": 40},
-        legend={"orientation": "h", "y": -0.2, "font": {"color": "#888"}},
+        plot_bgcolor="rgba(20,20,24,0.6)",
+        font={"family": "Plus Jakarta Sans, system-ui", "color": "#8a8590"},
+        height=320,
+        margin={"l": 48, "r": 48, "t": 16, "b": 44},
+        legend={"orientation": "h", "y": -0.18, "font": {"color": "#8a8590", "size": 11}},
     )
-    fig.update_xaxes(gridcolor="rgba(255,255,255,0.05)", tickfont={"color": "#888"})
+    fig.update_xaxes(gridcolor="rgba(255,255,255,0.04)", tickfont={"color": "#5a5660", "size": 10})
     fig.update_yaxes(
-        title_text="Spend ($)",
-        gridcolor="rgba(255,255,255,0.05)",
-        tickfont={"color": "#888"},
+        title_text="Spend ($)", gridcolor="rgba(255,255,255,0.04)",
+        tickfont={"color": "#5a5660", "size": 10},
+        title_font={"color": "#5a5660", "size": 11},
         secondary_y=False,
     )
     fig.update_yaxes(
-        title_text="Stress",
-        overlaying="y",
-        side="right",
-        range=[0, 1.2],
+        title_text="Stress", overlaying="y", side="right", range=[0, 1.2],
         gridcolor="rgba(0,0,0,0)",
+        tickfont={"color": "#5a5660", "size": 10},
+        title_font={"color": "#5a5660", "size": 11},
         secondary_y=True,
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
 
+# ---------------------------------------------------------------------------
+# Spike Detail Cards
+# ---------------------------------------------------------------------------
 def _render_spike_details(stress_insight: dict[str, Any]) -> None:
     spike_weeks = stress_insight.get("spike_weeks") or []
     if not spike_weeks:
@@ -836,62 +1048,38 @@ def _render_spike_details(stress_insight: dict[str, Any]) -> None:
         stress = _fmt_number(spike.get("prior_week_stress"), 2)
 
         txns = spike.get("top_transactions") or []
-        transaction_rows: list[str] = []
+        tx_rows: list[str] = []
         for tx in txns:
             text = escape(str(tx.get("text", "Transaction")))
             amount = _fmt_number(tx.get("amount"), 2)
-            transaction_rows.append(
-                f'<div style="display:flex; justify-content:space-between; '
-                f'padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">'
-                f'<span style="color:#ddd; font-size:13px;">{text}</span>'
-                f'<span style="color:#ff6b6b; font-weight:600;">${amount}</span>'
-                f"</div>"
-            )
-        if not transaction_rows:
-            transaction_rows.append(
-                '<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); '
-                'color:#aaa; font-size:13px;">No discretionary transactions matched.</div>'
-            )
+            tx_rows.append(f'<div class="ll-tx"><span class="ll-tx-name">{text}</span><span class="ll-tx-amt">${amount}</span></div>')
+        if not tx_rows:
+            tx_rows.append('<div class="ll-tx"><span class="ll-tx-name" style="color:var(--text-tertiary)">No discretionary transactions matched.</span><span></span></div>')
 
         events = spike.get("calendar_events") or []
-        calendar_rows: list[str] = []
+        cal_rows: list[str] = []
         for event in events:
             title = str(event.get("title", "Event"))
             date = str(event.get("date", "N/A"))
-            event_text = escape(f"{date} | {title}")
-            calendar_rows.append(
-                f'<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); '
-                f'color:#aaa; font-size:13px;">📅 {event_text}</div>'
-            )
-        if not calendar_rows:
-            calendar_rows.append(
-                '<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); '
-                'color:#aaa; font-size:13px;">📅 No calendar evidence linked.</div>'
-            )
+            cal_rows.append(f'<div class="ll-cal-item">{escape(date)} \u2014 {escape(title)}</div>')
+        if not cal_rows:
+            cal_rows.append('<div class="ll-cal-item" style="color:var(--text-tertiary)">No calendar evidence linked.</div>')
 
         st.markdown(
             f"""
-            <div style="background:#13131a; border:1px solid rgba(255,107,107,0.3);
-            border-radius:12px; padding:20px; margin-bottom:12px;">
-              <div style="display:flex; justify-content:space-between;
-              align-items:center; margin-bottom:16px;">
-                <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
-                  🔴 {week}</span>
-                <span style="color:#888; font-size:13px;">
-                  ${spend} spent · prior stress {stress}</span>
+            <div class="ll-spike">
+              <div class="ll-spike-header">
+                <span class="ll-spike-week">Week {week}</span>
+                <span class="ll-spike-meta">${spend} spent &middot; stress {stress}</span>
               </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+              <div class="ll-spike-grid">
                 <div>
-                  <div style="color:#888; font-size:11px;
-                  text-transform:uppercase; letter-spacing:0.1em;
-                  margin-bottom:8px;">Transactions</div>
-                  {"".join(transaction_rows)}
+                  <div class="ll-spike-col-title">Transactions</div>
+                  {"".join(tx_rows)}
                 </div>
                 <div>
-                  <div style="color:#888; font-size:11px;
-                  text-transform:uppercase; letter-spacing:0.1em;
-                  margin-bottom:8px;">Calendar</div>
-                  {"".join(calendar_rows)}
+                  <div class="ll-spike-col-title">Calendar Context</div>
+                  {"".join(cal_rows)}
                 </div>
               </div>
             </div>
@@ -900,6 +1088,9 @@ def _render_spike_details(stress_insight: dict[str, Any]) -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# Resilience Panel
+# ---------------------------------------------------------------------------
 def _render_resilience_panel(
     stability_insight: dict[str, Any] | None,
     volatility_insight: dict[str, Any] | None,
@@ -928,11 +1119,17 @@ def _render_resilience_panel(
     runway_days = None if not liquidity_insight else liquidity_insight.get("liquidity_runway_days")
     regret_value = None if not regret_insight else regret_insight.get("regret_risk_signal")
 
+    active = []
+    if behavioral_overlay:
+        active.append("Behavioral")
+    if macro_overlay:
+        active.append("Macro")
+    active_text = " + ".join(active) if active else "None"
     st.markdown(
-        f'<div class="insight-support" style="margin-bottom:0.55rem;">'
-        f'Baseline score excludes behavioral and macro overlays. Current adjusted score reflects toggles: '
-        f'behavioral={behavioral_overlay}, macro={macro_overlay}.'
-        f"</div>",
+        f'<div class="ll-overlay-help">'
+        f'<strong>Active overlays:</strong> {escape(active_text)} &mdash; '
+        f'Toggle in the sidebar to isolate behavioral patterns from macro pressure. '
+        f'Baseline excludes all overlays.</div>',
         unsafe_allow_html=True,
     )
 
@@ -959,48 +1156,49 @@ def _render_resilience_panel(
         values = [row[1] for row in decomposition_rows]
         fig = go.Figure(
             go.Bar(
-                x=values,
-                y=labels,
-                orientation="h",
-                marker_color=["#6c63ff", "#ff6b6b", "#00d4aa", "#f59e0b"],
+                x=values, y=labels, orientation="h",
+                marker_color=["#c9a55c", "#f87171", "#4ade80", "#f59e0b"],
                 text=[f"{v:.1f}%" for v in values],
                 textposition="outside",
+                textfont={"family": "Plus Jakarta Sans", "size": 11, "color": "#8a8590"},
             )
         )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(13,13,26,0.8)",
-            height=280,
-            margin={"l": 40, "r": 30, "t": 10, "b": 30},
+            plot_bgcolor="rgba(20,20,24,0.6)",
+            font={"family": "Plus Jakarta Sans, system-ui", "color": "#8a8590"},
+            height=260,
+            margin={"l": 48, "r": 40, "t": 10, "b": 30},
             xaxis_title="Contribution (%)",
-            yaxis_title="",
         )
-        fig.update_xaxes(range=[0, max(100.0, max(values) * 1.25)], gridcolor="rgba(255,255,255,0.06)")
+        fig.update_xaxes(range=[0, max(100.0, max(values) * 1.25)], gridcolor="rgba(255,255,255,0.04)")
         fig.update_yaxes(gridcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True)
 
     levers = list((decomposition_insight or {}).get("top_structural_levers") or stability_insight.get("top_structural_levers") or [])
     if levers:
-        st.markdown('<div class="insight-title">Top 3 Structural Levers</div>', unsafe_allow_html=True)
+        st.markdown('<div class="ll-label" style="margin-top:0.5rem">Top Structural Levers</div>', unsafe_allow_html=True)
         for idx, lever in enumerate(levers[:3], start=1):
             title = escape(str(lever.get("title") or f"Lever {idx}"))
             why = escape(str(lever.get("why") or ""))
             action = escape(str(lever.get("action") or ""))
             st.markdown(
                 f"""
-                <div class="insight-card" style="margin-bottom:0.45rem; padding:0.75rem 0.9rem;">
-                  <div class="insight-finding" style="font-size:15px;">{idx}. {title}</div>
-                  <div class="insight-support" style="margin-bottom:0.2rem;">{why}</div>
-                  <div class="insight-support" style="color:#d6d6ef;">Action: {action}</div>
+                <div class="ll-insight" style="padding:1rem 1.2rem; margin-bottom:0.5rem;">
+                  <div class="ll-insight-headline" style="font-size:1rem;">{idx}. {title}</div>
+                  <div class="ll-insight-body" style="margin-bottom:0.25rem;">{why}</div>
+                  <div class="ll-insight-body" style="color:var(--text-primary); margin-bottom:0;">Action: {action}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
 
+# ---------------------------------------------------------------------------
+# Chat
+# ---------------------------------------------------------------------------
 def _render_chat(chat_key: str, data: dict[str, Any]) -> None:
     _section_label("Ask About Your Data")
-    st.markdown('<div class="insight-support">Grounded in precomputed insights only.</div>', unsafe_allow_html=True)
 
     if chat_key not in st.session_state:
         st.session_state[chat_key] = []
@@ -1013,11 +1211,25 @@ def _render_chat(chat_key: str, data: dict[str, Any]) -> None:
 
     chat_rows = []
     for msg in st.session_state[chat_key]:
-        cls = "chat-user" if msg["role"] == "user" else "chat-assistant"
+        cls = "ll-msg-user" if msg["role"] == "user" else "ll-msg-assistant"
         chat_rows.append(f'<div class="{cls}">{escape(str(msg["content"]))}</div>')
-    st.markdown(f'<div class="chat-shell">{"".join(chat_rows)}</div>', unsafe_allow_html=True)
 
-    question = st.chat_input("Ask a question about your insights...")
+    if not chat_rows:
+        chips = "".join(f'<span class="ll-chat-chip">{escape(q)}</span>' for q in _SUGGESTED_QUESTIONS)
+        empty = (
+            '<div class="ll-chat-empty">'
+            '<div class="ll-chat-empty-title">Ask anything about your insights</div>'
+            '<div class="ll-chat-empty-sub">'
+            'Responses are grounded in your precomputed data. No raw records leave this session.'
+            '</div>'
+            f'<div class="ll-chat-chips">{chips}</div>'
+            '</div>'
+        )
+        st.markdown(f'<div class="ll-chat">{empty}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="ll-chat">{"".join(chat_rows)}</div>', unsafe_allow_html=True)
+
+    question = st.chat_input("Ask a question about your insights\u2026")
     if question:
         st.session_state[chat_key].append({"role": "user", "content": question})
         st.session_state[pending_key] = question
@@ -1028,7 +1240,7 @@ def _render_chat(chat_key: str, data: dict[str, Any]) -> None:
     if pending_question:
         typing_placeholder = st.empty()
         typing_placeholder.markdown(
-            '<div class="chat-assistant"><div class="typing"><span></span><span></span><span></span></div></div>',
+            '<div class="ll-msg-assistant"><div class="ll-typing"><span></span><span></span><span></span></div></div>',
             unsafe_allow_html=True,
         )
 
@@ -1051,11 +1263,17 @@ def _render_chat(chat_key: str, data: dict[str, Any]) -> None:
         st.rerun()
 
 
+# ---------------------------------------------------------------------------
+# Upload stub
+# ---------------------------------------------------------------------------
 def compute_insights_from_uploads(chatgpt_file: Any, txn_file: Any, cal_file: Any) -> dict[str, Any]:
     # TODO: implement parsers
     return {"persona": "you", "profile_name": "Your Data", "insights": []}
 
 
+# ---------------------------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------------------------
 def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behavioral_overlay: bool, macro_overlay: bool) -> None:
     profile_name = data.get("profile_name") or "Your Data"
     _render_header(profile_name, orb_fast=orb_fast)
@@ -1076,7 +1294,7 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behav
     if stress_insight:
         _section_label("Stress vs Discretionary Spend")
         st.markdown(
-            f'<div class="insight-support" style="margin-bottom:0.4rem;">{escape(_one_sentence(stress_insight.get("finding")))}</div>',
+            f'<div class="ll-insight-body" style="margin-bottom:0.6rem;">{escape(_one_sentence(stress_insight.get("finding")))}</div>',
             unsafe_allow_html=True,
         )
         spike_weeks = stress_insight.get("spike_weeks") or []
@@ -1107,24 +1325,22 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behav
     if resilience_stability:
         _section_label("Financial Resilience Model")
         _render_resilience_panel(
-            resilience_stability,
-            resilience_volatility,
-            resilience_liquidity,
-            resilience_regret,
-            resilience_decomposition,
-            behavioral_overlay=behavioral_overlay,
-            macro_overlay=macro_overlay,
+            resilience_stability, resilience_volatility, resilience_liquidity,
+            resilience_regret, resilience_decomposition,
+            behavioral_overlay=behavioral_overlay, macro_overlay=macro_overlay,
         )
         _section_spacer()
 
     _section_label("Data Story")
     _render_data_story(data.get("consent", {}))
     _section_spacer()
-    _gradient_divider()
-    _section_spacer()
+    _divider()
     _render_chat(chat_key, data)
 
 
+# ---------------------------------------------------------------------------
+# Your Data Placeholder
+# ---------------------------------------------------------------------------
 def _render_your_data_placeholder(has_upload: bool, orb_fast: bool) -> None:
     _render_header("Your Data", orb_fast=orb_fast)
     _section_label("Insights Status")
@@ -1135,18 +1351,21 @@ def _render_your_data_placeholder(has_upload: bool, orb_fast: bool) -> None:
     )
     st.markdown(
         f"""
-        <div class="insight-card">
-          <div class="insight-title">Pipeline</div>
-          <div class="insight-finding">Upload -> Parse -> Compute -> Chat</div>
-          <div class="insight-support">{escape(status)}</div>
+        <div class="ll-insight">
+          <div class="ll-insight-eyebrow">Pipeline</div>
+          <div class="ll-insight-headline">Upload &rarr; Parse &rarr; Compute &rarr; Chat</div>
+          <div class="ll-insight-body">{escape(status)}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 def main() -> None:
-    st.set_page_config(page_title="LifeLedger", page_icon="💰", layout="wide")
+    st.set_page_config(page_title="LifeLedger", page_icon="\U0001f4b0", layout="wide")
     _inject_global_style()
     if "entered_app" not in st.session_state:
         st.session_state["entered_app"] = False
@@ -1159,7 +1378,11 @@ def main() -> None:
 
     _render_orb_overlay()
 
-    st.sidebar.title("💰 LifeLedger")
+    st.sidebar.markdown(
+        '<div style="font-family: DM Serif Display, Georgia, serif; font-size: 1.5rem; '
+        'color: var(--text-primary, #e8e4de); margin-bottom: 0.15rem;">Life<span style="color:#c9a55c;">Ledger</span></div>',
+        unsafe_allow_html=True,
+    )
     st.sidebar.caption("Connect your money to your life.")
 
     selected = st.sidebar.selectbox(
@@ -1171,43 +1394,59 @@ def main() -> None:
     st.sidebar.markdown("---")
     behavioral_overlay = st.sidebar.toggle("Behavioral Overlay", value=True)
     macro_overlay = st.sidebar.toggle("Macro Overlay", value=True)
-    st.sidebar.caption("Resilience overlays update adjusted stability and decomposition.")
+    st.sidebar.caption("Overlays adjust the resilience stability score and decomposition breakdown.")
     st.sidebar.markdown("---")
     st.sidebar.caption("All data is synthetic and processed locally.")
 
     if st.session_state.get("landing_view") == "your_data":
-        tab_your_data, tab_demo = st.tabs(["🔒 Your Data", "📊 Demo"])
+        tab_your_data, tab_demo = st.tabs(["Your Data", "Demo"])
     else:
-        tab_demo, tab_your_data = st.tabs(["📊 Demo", "🔒 Your Data"])
+        tab_demo, tab_your_data = st.tabs(["Demo", "Your Data"])
 
     with tab_demo:
         data = _load_insights(selected)
         demo_chat_key = f"chat_history_demo_{selected}"
         demo_processing = st.session_state.get(f"processing_{demo_chat_key}", False)
         _render_dashboard(
-            data,
-            chat_key=demo_chat_key,
-            orb_fast=demo_processing,
-            behavioral_overlay=behavioral_overlay,
-            macro_overlay=macro_overlay,
+            data, chat_key=demo_chat_key, orb_fast=demo_processing,
+            behavioral_overlay=behavioral_overlay, macro_overlay=macro_overlay,
         )
 
     with tab_your_data:
-        st.markdown('<div class="hero-wrap"><h1 class="hero-title">Analyze Your Own Exported Data</h1></div>', unsafe_allow_html=True)
-        st.subheader("Your files never leave this session. Nothing is stored.")
-
-        chatgpt_file = st.file_uploader("ChatGPT or Claude export", type=["json", "zip"], key="upload_chatgpt")
-        st.caption("Export from chatgpt.com → Settings → Data Controls → Export")
-
-        txn_file = st.file_uploader("Bank transactions (any CSV)", type=["csv"], key="upload_txn")
-        st.caption("Works with Chase, BofA, Amex, Mint, or any bank CSV export")
-
-        cal_file = st.file_uploader("Google Calendar", type=["ics"], key="upload_cal")
-        st.caption("Export from calendar.google.com → Settings → Export")
+        st.markdown(
+            '<div class="ll-hero ll-animate">'
+            '<h1 class="ll-hero-name">Analyze Your Own Data</h1>'
+            '<div class="ll-hero-sub">Your files never leave this session. Nothing is stored.</div>'
+            '<hr class="ll-hero-rule" />'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
         st.markdown(
-            '<div class="consent-banner">🔒 Local processing only. Your raw data is never sent anywhere. '
-            "Only anonymized insight summaries are sent to the AI for chat Q&amp;A.</div>",
+            '<div class="ll-upload"><div class="ll-upload-label">Conversations</div>'
+            '<div class="ll-upload-hint">ChatGPT or Claude export &mdash; .json or .zip</div></div>',
+            unsafe_allow_html=True,
+        )
+        chatgpt_file = st.file_uploader("ChatGPT or Claude export", type=["json", "zip"], key="upload_chatgpt", label_visibility="collapsed")
+
+        st.markdown(
+            '<div class="ll-upload"><div class="ll-upload-label">Bank Transactions</div>'
+            '<div class="ll-upload-hint">Any bank CSV &mdash; Chase, BofA, Amex, Mint, etc.</div></div>',
+            unsafe_allow_html=True,
+        )
+        txn_file = st.file_uploader("Bank transactions (any CSV)", type=["csv"], key="upload_txn", label_visibility="collapsed")
+
+        st.markdown(
+            '<div class="ll-upload"><div class="ll-upload-label">Calendar</div>'
+            '<div class="ll-upload-hint">Google Calendar .ics export</div></div>',
+            unsafe_allow_html=True,
+        )
+        cal_file = st.file_uploader("Google Calendar", type=["ics"], key="upload_cal", label_visibility="collapsed")
+
+        st.markdown(
+            '<div class="ll-consent">'
+            'Local processing only. Your raw data is never sent anywhere. '
+            'Only anonymized insight summaries are sent to the AI for chat Q&amp;A.</div>',
             unsafe_allow_html=True,
         )
 
@@ -1235,7 +1474,7 @@ def main() -> None:
         _render_your_data_placeholder(has_upload=has_upload, orb_fast=your_orb_fast)
 
         if st.session_state.get("your_data_analyzing"):
-            with st.spinner("Reading your data..."):
+            with st.spinner("Reading your data\u2026"):
                 st.session_state["your_data_payload"] = compute_insights_from_uploads(chatgpt_file, txn_file, cal_file)
             st.session_state["your_data_analyzing"] = False
             st.rerun()
@@ -1243,15 +1482,12 @@ def main() -> None:
         your_data_payload = st.session_state.get("your_data_payload")
         if your_data_payload:
             if not your_data_payload.get("insights"):
-                st.info("Upload parsing coming soon — ChatGPT parser is next.")
+                st.info("Upload parsing coming soon \u2014 ChatGPT parser is next.")
             else:
                 your_processing = st.session_state.get(f"processing_{your_chat_key}", False)
                 _render_dashboard(
-                    your_data_payload,
-                    chat_key=your_chat_key,
-                    orb_fast=your_processing,
-                    behavioral_overlay=behavioral_overlay,
-                    macro_overlay=macro_overlay,
+                    your_data_payload, chat_key=your_chat_key, orb_fast=your_processing,
+                    behavioral_overlay=behavioral_overlay, macro_overlay=macro_overlay,
                 )
 
 
