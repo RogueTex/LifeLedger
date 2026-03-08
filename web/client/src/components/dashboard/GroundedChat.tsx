@@ -10,9 +10,9 @@ interface Message {
 
 const SUGGESTED = [
   "What drives my spending spikes?",
-  "How stable are my finances?",
+  "Which subscriptions should I cancel?",
   "What are my biggest anxiety themes?",
-  "How can I reduce regret spending?",
+  "When do I overspend the most?",
 ];
 
 export default function GroundedChat({ personaId }: { personaId: string }) {
@@ -47,7 +47,7 @@ export default function GroundedChat({ personaId }: { personaId: string }) {
   };
 
   return (
-    <div className="glass-panel border-border/50 rounded-xl h-[440px] flex flex-col">
+    <div className="glass-panel border-border/50 rounded-xl h-[calc(100vh-8rem)] min-h-[440px] max-h-[700px] flex flex-col">
       <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
         <Bot className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-display font-medium">Cross-Source Insight Chat</h3>
@@ -137,7 +137,7 @@ export default function GroundedChat({ personaId }: { personaId: string }) {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your financial resilience..."
+            placeholder="Ask about your spending patterns, subscriptions, stress..."
             disabled={loading}
             className="flex-1 bg-card/50 border border-border/50 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50"
           />

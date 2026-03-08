@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, Database } from "lucide-react";
+import { ArrowRight, Play, Database, Upload } from "lucide-react";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -81,14 +81,14 @@ export default function Welcome() {
         >
           <button
             className="h-14 px-8 text-lg rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(160,255,210,0.4)] hover:shadow-[0_0_30px_rgba(160,255,210,0.6)] font-medium flex items-center gap-2 cursor-pointer"
-            onClick={() => setLocation("/dashboard?tab=data")}
+            onClick={() => setLocation("/your-data")}
           >
-            Start Now <ArrowRight className="w-5 h-5" />
+            <Upload className="w-5 h-5" /> Analyze My Data
           </button>
 
           <button
             className="h-14 px-8 text-lg rounded-full border border-border/50 bg-background/50 backdrop-blur-md hover:bg-accent/10 hover:text-accent hover:border-accent/30 transition-all font-medium flex items-center gap-2 text-foreground cursor-pointer"
-            onClick={() => setLocation("/dashboard?tab=overview")}
+            onClick={() => setLocation("/dashboard")}
           >
             <Play className="w-5 h-5" /> View Demo
           </button>

@@ -53,10 +53,10 @@ data/raw/persona_pXX/*.jsonl
 - **`src/features/stress_scorer.py`** — Calendar-derived daily stress scores with smoothing.
 - **`src/features/spend_tagger.py`** — Discretionary spend tagging and weekly totals.
 - **`src/features/correlation.py`** — Stress/spend correlation with spike week detection. Tests multiple alignments (same-week, prior-week) and selects strongest valid signal.
-- **`src/features/resilience_model.py`** — Stability, volatility, runway, regret risk, macro-adjusted decomposition. Uses CPI YoY with fallback chain: provided series → local cache → FRED fetch → synthetic fallback.
+- **`src/features/resilience_model.py`** — (Legacy, no longer used by insight engine.) Stability, volatility, runway, regret risk, macro-adjusted decomposition.
 - **`src/insights/insight_engine.py`** — End-to-end insight computation, schema validation (`v1_locked`), and cache writer. Theme extraction uses `THEME_LEXICON`.
 - **`src/insights/narrative_gen.py`** — GPT-4o-mini narrative generation with retry/backoff (3 attempts), 12K char payload truncation, temp 0.3.
-- **`src/ui/app.py`** — Streamlit dashboard: welcome gate, KPI cards, timeline chart, spike evidence cards, resilience panel with overlay toggles, grounded chat. CSS vars: `--bg`, `--card`, `--accent`, `--warn`, `--positive`.
+- **`src/ui/app.py`** — Streamlit dashboard: welcome gate, KPI cards, timeline chart, spike evidence cards, subscription panel, day-of-week chart, worry timeline chart, grounded chat. CSS vars: `--bg`, `--card`, `--accent`, `--warn`, `--positive`.
 
 ### Personas used
 - **p01 (Jordan Lee)** — Burnout + home savings. Primary demo: stress-spend correlation, goal velocity, anxiety themes.
@@ -70,8 +70,8 @@ Top-level keys: `profile`, `consent`, `lifelog`, `conversations`, `emails`, `cal
 ### Insight contract (`schema_version: v1_locked`)
 Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `dollar_impact`. Do not modify the schema without explicit versioning.
 
-### Resilience insight IDs
-`resilience_stability`, `resilience_volatility_index`, `resilience_liquidity_runway_forecast`, `resilience_regret_risk_signal`, `resilience_decomposition`.
+### Actionable insight IDs
+`subscription_creep`, `expensive_day_of_week`, `post_payday_surge`, `worry_timeline`.
 
 ## Important Conventions
 

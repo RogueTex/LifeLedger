@@ -1,5 +1,5 @@
 import { findInsight, fmt, type InsightPayload } from "@/lib/api";
-import { TrendingUp, AlertTriangle, CheckCircle, Shield, Target, Zap } from "lucide-react";
+import { TrendingUp, AlertTriangle, CheckCircle, Target, CreditCard, CalendarDays, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 
 const container = {
@@ -19,36 +19,15 @@ interface Card {
 }
 
 export default function StrengthsWeaknesses({ payload }: { payload: InsightPayload }) {
-  const stability = findInsight(payload, "resilience_stability");
-  const volatility = findInsight(payload, "resilience_volatility_index");
   const goal = findInsight(payload, "months_to_goal");
   const stress = findInsight(payload, "stress_spend_correlation");
-  const regret = findInsight(payload, "resilience_regret_risk_signal");
+  const sub = findInsight(payload, "subscription_creep");
+  const surge = findInsight(payload, "post_payday_surge");
+  const dow = findInsight(payload, "expensive_day_of_week");
   const rate = findInsight(payload, "invoice_rate_risk");
 
-  // Derive strengths from data
   const strengths: Card[] = [];
   const weaknesses: Card[] = [];
-
-  // Stability check
-  if (stability) {
-    const score = stability.stability_score || 0;
-    if (score >= 50) {
-      strengths.push({
-        title: "Financial Stability",
-        description: `Stability score of ${fmt(score, 1)}/100 indicates a solid financial foundation with manageable structural loads.`,
-        impact: `${fmt(score, 0)}/100`,
-        icon: Shield,
-      });
-    } else {
-      weaknesses.push({
-        title: "Stability Pressure",
-        description: `Stability score of ${fmt(score, 1)}/100 suggests structural financial pressure that needs attention.`,
-        impact: `${fmt(score, 0)}/100`,
-        icon: Shield,
-      });
-    }
-  }
 
   // Goal velocity
   if (goal) {
@@ -70,7 +49,7 @@ export default function StrengthsWeaknesses({ payload }: { payload: InsightPaylo
     }
   }
 
-  // Correlation — low correlation is actually good (spending not driven by stress)
+  // Correlation
   if (stress) {
     const r = stress.correlation_coefficient || 0;
     if (r < 0.3) {
@@ -83,52 +62,68 @@ export default function StrengthsWeaknesses({ payload }: { payload: InsightPaylo
     } else {
       weaknesses.push({
         title: "Stress-Driven Spending",
-        description: `Correlation of ${fmt(r, 2)} between stress and spending. High-pressure weeks drive discretionary increases of ~$${fmt(stress.dollar_impact, 0)}.`,
-        impact: `+$${fmt(stress.dollar_impact, 0)}/spike`,
+        description: `Correlation of ${fmt(r, 2)} between stress and spending. High-pressure weeks drive discretionary increases.`,
+        impact: stress.dollar_impact ? `+$${fmt(stress.dollar_impact, 0)}/spike` : `r=${fmt(r, 2)}`,
         icon: AlertTriangle,
       });
     }
   }
 
-  // Volatility
-  if (volatility) {
-    const vol = volatility.volatility_index || 0;
-    if (vol < 40) {
+  // Subscriptions
+  if (sub) {
+    const monthly = sub.monthly_total || 0;
+    if (monthly > 150) {
+      weaknesses.push({
+        title: "Subscription Creep",
+        description: `${(sub.subscriptions || []).length} recurring charges totaling $${fmt(monthly, 0)}/mo ($${fmt(monthly * 12, 0)}/yr). Review for unused services.`,
+        impact: `$${fmt(monthly, 0)}/mo`,
+        icon: CreditCard,
+      });
+    } else if (monthly > 0) {
       strengths.push({
-        title: "Consistent Patterns",
-        description: "Low spending volatility indicates predictable, well-managed financial behavior.",
-        impact: `Vol: ${fmt(vol, 0)}`,
-        icon: TrendingUp,
-      });
-    } else {
-      weaknesses.push({
-        title: "High Volatility",
-        description: `Volatility index of ${fmt(vol, 0)}/100 shows significant week-to-week spending swings.`,
-        impact: `Vol: ${fmt(vol, 0)}`,
-        icon: Zap,
+        title: "Subscriptions Under Control",
+        description: `Only $${fmt(monthly, 0)}/mo in recurring charges across ${(sub.subscriptions || []).length} services.`,
+        impact: `$${fmt(monthly, 0)}/mo`,
+        icon: CreditCard,
       });
     }
   }
 
-  // Regret risk
-  if (regret) {
-    const rr = regret.regret_risk_signal || 0;
-    if (rr > 40) {
+  // Post-payday
+  if (surge) {
+    if (surge.detected) {
       weaknesses.push({
-        title: "Regret Risk",
-        description: `Regret risk signal of ${fmt(rr, 0)}/100 — stress-amplified spending near income dates may lead to regret.`,
-        impact: `${fmt(rr, 0)}/100`,
-        icon: AlertTriangle,
+        title: "Post-Payday Surge",
+        description: `${surge.surge_pct}% of spending happens within 3 days of payday. Consider a 24-hour cooling period.`,
+        impact: `${surge.surge_pct}% concentrated`,
+        icon: Wallet,
+      });
+    } else if (surge.surge_pct != null) {
+      strengths.push({
+        title: "Even Spending Distribution",
+        description: "No significant post-payday spending surge. Your spending is well-distributed across pay cycles.",
+        impact: `${surge.surge_pct}% post-payday`,
+        icon: CheckCircle,
       });
     }
+  }
+
+  // Day of week
+  if (dow && dow.pct_above_average > 50) {
+    weaknesses.push({
+      title: `${dow.expensive_day} Spending`,
+      description: `You spend ${dow.pct_above_average}% more on ${dow.expensive_day}s than your daily average. Pre-planning could help.`,
+      impact: `${dow.pct_above_average}% above avg`,
+      icon: CalendarDays,
+    });
   }
 
   // Undercharging
-  if (rate && (rate.implied_hourly_rate || 0) < (rate.freelancer_baseline || 65)) {
+  if (rate?.flagged) {
     weaknesses.push({
       title: "Undercharging Risk",
       description: rate.finding || "Implied hourly rate falls below market baseline.",
-      impact: `-$${fmt(rate.dollar_impact, 0)}/mo`,
+      impact: rate.dollar_impact ? `-$${fmt(rate.dollar_impact, 0)}` : "Flagged",
       icon: AlertTriangle,
     });
   }

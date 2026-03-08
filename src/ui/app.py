@@ -25,9 +25,9 @@ PERSONA_OPTIONS = {
 
 _SUGGESTED_QUESTIONS = [
     "What drives my spending spikes?",
-    "How stable are my finances?",
+    "Which subscriptions should I cancel?",
     "What are my biggest anxiety themes?",
-    "How can I reduce regret spending?",
+    "When do I overspend the most?",
 ]
 
 
@@ -1089,109 +1089,129 @@ def _render_spike_details(stress_insight: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Resilience Panel
+# Subscription Panel
 # ---------------------------------------------------------------------------
-def _render_resilience_panel(
-    stability_insight: dict[str, Any] | None,
-    volatility_insight: dict[str, Any] | None,
-    liquidity_insight: dict[str, Any] | None,
-    regret_insight: dict[str, Any] | None,
-    decomposition_insight: dict[str, Any] | None,
-    behavioral_overlay: bool,
-    macro_overlay: bool,
-) -> None:
-    if not stability_insight:
+def _render_subscription_panel(sub_insight: dict[str, Any]) -> None:
+    subs = sub_insight.get("subscriptions") or []
+    if not subs:
+        _render_insight_card("Subscriptions", sub_insight)
         return
 
-    overlay_scores = stability_insight.get("overlay_scores") or {}
-    baseline_score = overlay_scores.get("baseline_without_overlays", stability_insight.get("stability_score"))
+    monthly = sub_insight.get("monthly_total", 0.0)
+    yearly = round(monthly * 12, 2)
+    col1, col2 = st.columns(2)
+    col1.metric("Monthly Subscriptions", f"${_fmt_number(monthly, 2)}")
+    col2.metric("Yearly Cost", f"${_fmt_number(yearly, 2)}")
 
-    if behavioral_overlay and macro_overlay:
-        adjusted_score = overlay_scores.get("with_behavioral_and_macro", stability_insight.get("stability_score_with_macro"))
-    elif behavioral_overlay and not macro_overlay:
-        adjusted_score = overlay_scores.get("with_behavioral_only", stability_insight.get("stability_score"))
-    elif (not behavioral_overlay) and macro_overlay:
-        adjusted_score = overlay_scores.get("with_macro_only", stability_insight.get("stability_score_with_macro"))
-    else:
-        adjusted_score = baseline_score
+    rows: list[str] = []
+    for sub in subs[:8]:
+        name = escape(str(sub.get("name", "Unknown")))
+        amt = _fmt_number(sub.get("amount"), 2)
+        count = sub.get("occurrences", 0)
+        rows.append(
+            f'<div class="ll-tx">'
+            f'<span class="ll-tx-name">{name} <span style="color:var(--text-tertiary);font-size:11px;">({count}x)</span></span>'
+            f'<span class="ll-tx-amt">${amt}/mo</span></div>'
+        )
 
-    volatility_value = None if not volatility_insight else volatility_insight.get("volatility_index")
-    runway_days = None if not liquidity_insight else liquidity_insight.get("liquidity_runway_days")
-    regret_value = None if not regret_insight else regret_insight.get("regret_risk_signal")
-
-    active = []
-    if behavioral_overlay:
-        active.append("Behavioral")
-    if macro_overlay:
-        active.append("Macro")
-    active_text = " + ".join(active) if active else "None"
     st.markdown(
-        f'<div class="ll-overlay-help">'
-        f'<strong>Active overlays:</strong> {escape(active_text)} &mdash; '
-        f'Toggle in the sidebar to isolate behavioral patterns from macro pressure. '
-        f'Baseline excludes all overlays.</div>',
+        f'<div class="ll-insight" style="padding:1.2rem 1.4rem;">{"".join(rows)}</div>',
         unsafe_allow_html=True,
     )
+    actions = sub_insight.get("recommended_next_actions") or []
+    if actions:
+        st.markdown(_render_actions_pills([str(a) for a in actions]), unsafe_allow_html=True)
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Baseline Stability", _fmt_number(baseline_score, 1))
-    col2.metric("Adjusted Stability", _fmt_number(adjusted_score, 1))
-    col3.metric("Volatility Index", _fmt_number(volatility_value, 1))
-    col4.metric("Runway (days)", _fmt_number(runway_days, 1))
-    st.caption(f"Regret risk signal: {_fmt_number(regret_value, 1)} / 100")
 
-    decomposition = dict((decomposition_insight or {}).get("decomposition_percentages") or {})
-    if decomposition:
-        if not behavioral_overlay:
-            decomposition["behavioral"] = 0.0
-        if not macro_overlay:
-            decomposition["macro_pressure"] = 0.0
-        decomposition_rows = [
-            ("Behavioral", float(decomposition.get("behavioral", 0.0))),
-            ("Structural Fixed Load", float(decomposition.get("structural_fixed_load", 0.0))),
-            ("Income Instability", float(decomposition.get("income_instability", 0.0))),
-            ("Macro Pressure", float(decomposition.get("macro_pressure", 0.0))),
-        ]
-        labels = [row[0] for row in decomposition_rows]
-        values = [row[1] for row in decomposition_rows]
-        fig = go.Figure(
-            go.Bar(
-                x=values, y=labels, orientation="h",
-                marker_color=["#c9a55c", "#f87171", "#4ade80", "#f59e0b"],
-                text=[f"{v:.1f}%" for v in values],
-                textposition="outside",
-                textfont={"family": "Plus Jakarta Sans", "size": 11, "color": "#8a8590"},
-            )
+# ---------------------------------------------------------------------------
+# Day of Week Chart
+# ---------------------------------------------------------------------------
+def _render_dow_chart(dow_insight: dict[str, Any]) -> None:
+    by_day = dow_insight.get("by_day") or {}
+    if not by_day:
+        _render_insight_card("Day of Week", dow_insight)
+        return
+
+    expensive = dow_insight.get("expensive_day")
+    days = list(by_day.keys())
+    values = list(by_day.values())
+    colors = ["#c9a55c" if d == expensive else "rgba(201,165,92,0.3)" for d in days]
+
+    fig = go.Figure(
+        go.Bar(
+            x=days, y=values,
+            marker_color=colors,
+            text=[f"${v:.0f}" for v in values],
+            textposition="outside",
+            textfont={"family": "Plus Jakarta Sans", "size": 11, "color": "#8a8590"},
         )
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(20,20,24,0.6)",
-            font={"family": "Plus Jakarta Sans, system-ui", "color": "#8a8590"},
-            height=260,
-            margin={"l": 48, "r": 40, "t": 10, "b": 30},
-            xaxis_title="Contribution (%)",
-        )
-        fig.update_xaxes(range=[0, max(100.0, max(values) * 1.25)], gridcolor="rgba(255,255,255,0.04)")
-        fig.update_yaxes(gridcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig, use_container_width=True)
+    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(20,20,24,0.6)",
+        font={"family": "Plus Jakarta Sans, system-ui", "color": "#8a8590"},
+        height=280,
+        margin={"l": 40, "r": 20, "t": 10, "b": 40},
+        yaxis_title="Avg Spend ($)",
+    )
+    fig.update_xaxes(gridcolor="rgba(0,0,0,0)", tickfont={"color": "#8a8590", "size": 11})
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.04)", tickfont={"color": "#5a5660", "size": 10})
+    st.plotly_chart(fig, use_container_width=True)
 
-    levers = list((decomposition_insight or {}).get("top_structural_levers") or stability_insight.get("top_structural_levers") or [])
-    if levers:
-        st.markdown('<div class="ll-label" style="margin-top:0.5rem">Top Structural Levers</div>', unsafe_allow_html=True)
-        for idx, lever in enumerate(levers[:3], start=1):
-            title = escape(str(lever.get("title") or f"Lever {idx}"))
-            why = escape(str(lever.get("why") or ""))
-            action = escape(str(lever.get("action") or ""))
-            st.markdown(
-                f"""
-                <div class="ll-insight" style="padding:1rem 1.2rem; margin-bottom:0.5rem;">
-                  <div class="ll-insight-headline" style="font-size:1rem;">{idx}. {title}</div>
-                  <div class="ll-insight-body" style="margin-bottom:0.25rem;">{why}</div>
-                  <div class="ll-insight-body" style="color:var(--text-primary); margin-bottom:0;">Action: {action}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+
+# ---------------------------------------------------------------------------
+# Worry Timeline Chart
+# ---------------------------------------------------------------------------
+def _render_worry_chart(worry_insight: dict[str, Any]) -> None:
+    timeline = worry_insight.get("timeline") or []
+    if not timeline:
+        return
+
+    weeks = [r["year_week"] for r in timeline]
+    mentions = [r["worry_mentions"] for r in timeline]
+    spend = [r.get("discretionary_spend", 0.0) for r in timeline]
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(
+        go.Bar(
+            x=weeks, y=mentions,
+            marker_color="rgba(248,113,113,0.6)",
+            name="Worry Mentions",
+        ),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=weeks, y=spend, mode="lines+markers",
+            line={"color": "#c9a55c", "width": 2},
+            marker={"size": 4, "color": "#c9a55c"},
+            name="Discretionary Spend",
+        ),
+        secondary_y=True,
+    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(20,20,24,0.6)",
+        font={"family": "Plus Jakarta Sans, system-ui", "color": "#8a8590"},
+        height=300,
+        margin={"l": 48, "r": 48, "t": 16, "b": 44},
+        legend={"orientation": "h", "y": -0.18, "font": {"color": "#8a8590", "size": 11}},
+    )
+    fig.update_xaxes(gridcolor="rgba(255,255,255,0.04)", tickfont={"color": "#5a5660", "size": 10})
+    fig.update_yaxes(
+        title_text="Worry Mentions", gridcolor="rgba(255,255,255,0.04)",
+        tickfont={"color": "#5a5660", "size": 10},
+        title_font={"color": "#5a5660", "size": 11},
+        secondary_y=False,
+    )
+    fig.update_yaxes(
+        title_text="Spend ($)", overlaying="y", side="right",
+        gridcolor="rgba(0,0,0,0)",
+        tickfont={"color": "#5a5660", "size": 10},
+        title_font={"color": "#5a5660", "size": 11},
+        secondary_y=True,
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1274,7 +1294,7 @@ def compute_insights_from_uploads(chatgpt_file: Any, txn_file: Any, cal_file: An
 # ---------------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------------
-def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behavioral_overlay: bool, macro_overlay: bool) -> None:
+def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, **_kwargs: Any) -> None:
     profile_name = data.get("profile_name") or "Your Data"
     _render_header(profile_name, orb_fast=orb_fast)
 
@@ -1282,11 +1302,10 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behav
     theme_insight = _find_insight(data, "top_anxiety_themes")
     goal_insight = _find_insight(data, "months_to_goal")
     rate_insight = _find_insight(data, "invoice_rate_risk")
-    resilience_stability = _find_insight(data, "resilience_stability")
-    resilience_volatility = _find_insight(data, "resilience_volatility_index")
-    resilience_liquidity = _find_insight(data, "resilience_liquidity_runway_forecast")
-    resilience_regret = _find_insight(data, "resilience_regret_risk_signal")
-    resilience_decomposition = _find_insight(data, "resilience_decomposition")
+    sub_insight = _find_insight(data, "subscription_creep")
+    dow_insight = _find_insight(data, "expensive_day_of_week")
+    surge_insight = _find_insight(data, "post_payday_surge")
+    worry_insight = _find_insight(data, "worry_timeline")
 
     _render_kpi_row(stress_insight, goal_insight, theme_insight)
     _section_spacer()
@@ -1305,6 +1324,28 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behav
         _render_spike_details(stress_insight)
         _section_spacer()
 
+    if worry_insight and worry_insight.get("total_worry_mentions", 0) > 0:
+        _section_label("Worry Timeline — AI Conversations x Spending")
+        _render_insight_card("Cross-Source Insight", worry_insight)
+        _render_worry_chart(worry_insight)
+        _section_spacer()
+
+    if sub_insight:
+        _section_label("Subscription Audit")
+        _render_subscription_panel(sub_insight)
+        _section_spacer()
+
+    if dow_insight and dow_insight.get("expensive_day"):
+        _section_label("Your Spending by Day of Week")
+        _render_insight_card("Day of Week", dow_insight)
+        _render_dow_chart(dow_insight)
+        _section_spacer()
+
+    if surge_insight:
+        _section_label("Post-Payday Pattern")
+        _render_insight_card("Payday Surge", surge_insight)
+        _section_spacer()
+
     if theme_insight:
         _section_label("Recurring Themes")
         _render_insight_card("Recurring Themes", theme_insight)
@@ -1320,15 +1361,6 @@ def _render_dashboard(data: dict[str, Any], chat_key: str, orb_fast: bool, behav
         match_count = len(rate_insight.get("matches") or [])
         support = f"Low-rate matches detected: {match_count}. Estimated leakage: ${_fmt_number(rate_insight.get('dollar_impact'), 2)}."
         _render_insight_card("Rate Risk", rate_insight, support_override=support)
-        _section_spacer()
-
-    if resilience_stability:
-        _section_label("Financial Resilience Model")
-        _render_resilience_panel(
-            resilience_stability, resilience_volatility, resilience_liquidity,
-            resilience_regret, resilience_decomposition,
-            behavioral_overlay=behavioral_overlay, macro_overlay=macro_overlay,
-        )
         _section_spacer()
 
     _section_label("Data Story")
@@ -1392,10 +1424,6 @@ def main() -> None:
     )
 
     st.sidebar.markdown("---")
-    behavioral_overlay = st.sidebar.toggle("Behavioral Overlay", value=True)
-    macro_overlay = st.sidebar.toggle("Macro Overlay", value=True)
-    st.sidebar.caption("Overlays adjust the resilience stability score and decomposition breakdown.")
-    st.sidebar.markdown("---")
     st.sidebar.caption("All data is synthetic and processed locally.")
 
     if st.session_state.get("landing_view") == "your_data":
@@ -1407,10 +1435,7 @@ def main() -> None:
         data = _load_insights(selected)
         demo_chat_key = f"chat_history_demo_{selected}"
         demo_processing = st.session_state.get(f"processing_{demo_chat_key}", False)
-        _render_dashboard(
-            data, chat_key=demo_chat_key, orb_fast=demo_processing,
-            behavioral_overlay=behavioral_overlay, macro_overlay=macro_overlay,
-        )
+        _render_dashboard(data, chat_key=demo_chat_key, orb_fast=demo_processing)
 
     with tab_your_data:
         st.markdown(
@@ -1485,10 +1510,7 @@ def main() -> None:
                 st.info("Upload parsing coming soon \u2014 ChatGPT parser is next.")
             else:
                 your_processing = st.session_state.get(f"processing_{your_chat_key}", False)
-                _render_dashboard(
-                    your_data_payload, chat_key=your_chat_key, orb_fast=your_processing,
-                    behavioral_overlay=behavioral_overlay, macro_overlay=macro_overlay,
-                )
+                _render_dashboard(your_data_payload, chat_key=your_chat_key, orb_fast=your_processing)
 
 
 if __name__ == "__main__":
