@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileUp, Zap, X, FileText, Calendar, MessageSquare, Loader2, AlertCircle } from "lucide-react";
 import { uploadFiles, type UploadFile, type InsightPayload } from "@/lib/api";
+import type { UserContext } from "./UserContextForm";
 
 interface SelectedFile {
   file: File;
@@ -10,6 +11,7 @@ interface SelectedFile {
 
 interface Props {
   onInsightsReady?: (payload: InsightPayload) => void;
+  userContext?: UserContext | null;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -38,7 +40,7 @@ const TYPE_META = {
   conversations: { label: "Conversations", icon: MessageSquare, color: "text-purple-400" },
 } as const;
 
-export default function DataUploadSection({ onInsightsReady }: Props) {
+export default function DataUploadSection({ onInsightsReady, userContext }: Props) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +107,7 @@ export default function DataUploadSection({ onInsightsReady }: Props) {
         const data = await fileToBase64(file);
         filesToUpload.push({ name: file.name, type, data });
       }
-      const payload = await uploadFiles(filesToUpload);
+      const payload = await uploadFiles(filesToUpload, userContext ?? undefined);
       onInsightsReady?.(payload);
     } catch (err: any) {
       setError(err.message || "Analysis failed. Please try again.");

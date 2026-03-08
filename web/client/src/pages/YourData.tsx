@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, MessageCircle, X } from "lucide-react";
 import LogoMark from "@/components/LogoMark";
 import DataUploadSection from "@/components/dashboard/DataUploadSection";
+import UserContextForm, { type UserContext } from "@/components/dashboard/UserContextForm";
 import KPICards from "@/components/dashboard/KPICards";
 import TimelineChart from "@/components/dashboard/TimelineChart";
 import SpikeEvidence from "@/components/dashboard/SpikeEvidence";
@@ -14,12 +15,13 @@ import PostPaydaySurge from "@/components/dashboard/PostPaydaySurge";
 import BehavioralInsights from "@/components/dashboard/BehavioralInsights";
 import StrengthsWeaknesses from "@/components/dashboard/StrengthsWeaknesses";
 import GroundedChatUpload from "@/components/dashboard/GroundedChatUpload";
-import type { InsightPayload } from "@/lib/api";
+import { findInsight, type InsightPayload } from "@/lib/api";
 
 export default function YourData() {
   const [, setLocation] = useLocation();
   const [payload, setPayload] = useState<InsightPayload | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [userContext, setUserContext] = useState<UserContext | null>(null);
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
@@ -80,7 +82,9 @@ export default function YourData() {
             </p>
           </motion.div>
 
-          <DataUploadSection onInsightsReady={setPayload} />
+          <DataUploadSection onInsightsReady={setPayload} userContext={userContext} />
+
+          <UserContextForm onSubmit={setUserContext} className="mb-8" />
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -116,19 +120,38 @@ export default function YourData() {
               </p>
             </motion.div>
 
-            <div className="space-y-8">
-              <KPICards payload={payload} />
-              <TimelineChart payload={payload} />
-              <StrengthsWeaknesses payload={payload} />
-              <WorryTimeline payload={payload} />
-              <SpikeEvidence payload={payload} />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SubscriptionPanel payload={payload} />
-                <PostPaydaySurge payload={payload} />
-              </div>
-              <DayOfWeekChart payload={payload} />
-              <BehavioralInsights payload={payload} />
-            </div>
+            {(() => {
+              const stress = findInsight(payload, "stress_spend_correlation");
+              const worry = findInsight(payload, "worry_timeline");
+              const sub = findInsight(payload, "subscription_creep");
+              const surge = findInsight(payload, "post_payday_surge");
+              const dow = findInsight(payload, "expensive_day_of_week");
+
+              const hasTimeline = (stress?.weekly_series || []).length > 0;
+              const hasWorry = (worry?.total_worry_mentions || 0) > 0;
+              const hasSpikes = (stress?.spike_weeks || []).length > 0;
+              const hasSubs = (sub?.subscriptions || []).length > 0;
+              const hasSurge = surge?.surge_ratio != null;
+              const hasDow = dow?.expensive_day != null;
+
+              return (
+                <div className="space-y-8">
+                  <KPICards payload={payload} />
+                  {hasTimeline && <TimelineChart payload={payload} />}
+                  <StrengthsWeaknesses payload={payload} />
+                  {hasWorry && <WorryTimeline payload={payload} />}
+                  {hasSpikes && <SpikeEvidence payload={payload} />}
+                  {(hasSubs || hasSurge) && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {hasSubs && <SubscriptionPanel payload={payload} />}
+                      {hasSurge && <PostPaydaySurge payload={payload} />}
+                    </div>
+                  )}
+                  {hasDow && <DayOfWeekChart payload={payload} />}
+                  <BehavioralInsights payload={payload} />
+                </div>
+              );
+            })()}
           </main>
 
           {chatOpen && (

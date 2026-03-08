@@ -32,8 +32,13 @@ python3 scripts/generate_demo_backups.py
 # Demo dry run checklist
 ./scripts/demo_dry_run.sh
 
-# Run the React web app (dev mode)
-cd web && npm run dev
+# Run the React web app (dev mode) — must start as TWO SEPARATE processes
+# Terminal 1: API server
+cd web && npx tsx server/index.ts
+# Terminal 2: Vite frontend
+cd web && npx vite --host
+# API runs on :5000, frontend on :5173. Vite proxies /api to :5000.
+# IMPORTANT: Do NOT combine these with bash `&` — they must be separate processes or Vite returns 404.
 
 # TypeScript type check (React app)
 cd web && npx tsc --noEmit
@@ -88,6 +93,24 @@ Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `do
 ### Actionable insight IDs
 `subscription_creep`, `expensive_day_of_week`, `post_payday_surge`, `worry_timeline`.
 
+## UX & Content Rules
+
+### No slop — only show what the data supports
+- **Never render an insight card, chart, or KPI if the underlying data is empty or insufficient.** If there are no subscriptions, don't show the subscription panel. If there's no stress-spend correlation data, don't show the timeline chart.
+- Dashboard components must check for meaningful data before rendering (e.g. `weekly_series.length > 0`, `subscriptions.length > 0`, `expensive_day != null`).
+- KPI cards grid should adapt to however many cards have real data — no empty placeholder cards.
+- Findings must describe what was actually found, not generic advice. If nothing was found, say so briefly (e.g. "No recurring charges found") and don't pad with filler.
+
+### Plain language everywhere — no jargon
+- **All user-facing text must be conversational and intuitive.** No "correlation coefficient", "r-value", "p-value", "statistically significant", "Pearson", "alignment", "insufficient variance", "lag_used".
+- Write findings like you're explaining to a friend: "Busy weeks tend to push your spending up" not "Weak positive relationship using same_week_raw alignment (statistically significant)".
+- The AI chat system prompt enforces this too — see `narrative_gen.py SYSTEM_PROMPT`.
+- Evidence arrays should be human-readable: "Based on 12 weeks of spending data" not "Correlation coefficient: 0.42".
+
+### User context collection
+- The app should provide a way for users to input personal financial context: income, savings goals, current savings, debt. This enriches insights like savings velocity and payday patterns.
+- This can be a simple form on the YourData page or conversational prompts in the chat.
+
 ## Important Conventions
 
 - After changing feature or insight logic, always regenerate cached insights and verify with `pytest`.
@@ -95,3 +118,4 @@ Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `do
 - Use `escape()` for user content in HTML within the Streamlit app.
 - Environment requires one of `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `OPENAI_API_KEY` in `.env` for narrative chat. Groq keys start with `gsk_`.
 - All persona data is 100% synthetic. Delete after March 31, 2026 per hackathon rules.
+- On Windows, `NODE_ENV=x cmd` doesn't work and `npm run dev` will fail. Start the two dev servers as separate processes (not combined with `&`): `npx tsx server/index.ts` (API on :5000) and `npx vite --host` (frontend on :5173).

@@ -876,6 +876,7 @@ def compute_insights_from_dataframes(
     transactions_df: pd.DataFrame | None = None,
     calendar_df: pd.DataFrame | None = None,
     conversations_df: pd.DataFrame | None = None,
+    user_context: dict | None = None,
 ) -> dict[str, Any]:
     """Compute insights from user-uploaded DataFrames (no persona file needed)."""
     if transactions_df is None:
@@ -900,30 +901,36 @@ def compute_insights_from_dataframes(
         mean = float(math_row.get("mean", 0.0))
         avoidable_spend += max(0.0, spend - mean)
 
+    insufficient = bool(correlation.get("insufficient_variance"))
+    if insufficient:
+        stress_finding = "We don't have enough spending and calendar data yet to spot a pattern here."
+        stress_what = "Add more calendar events and transactions so we can look for patterns."
+    elif correlation_value is not None and correlation_value > 0.3:
+        stress_finding = f"Busy, stressful weeks tend to push your spending up. During your top spike weeks, you spent about ${avoidable_spend:.0f} more than usual."
+        stress_what = "Stress spending is when a rough week leads to extra purchases \u2014 comfort food, impulse buys, retail therapy."
+    else:
+        stress_finding = "Good news \u2014 your spending stays pretty steady regardless of how hectic your week gets."
+        stress_what = "Stress spending is when a rough week leads to extra purchases \u2014 comfort food, impulse buys, retail therapy."
+
     stress_insight = {
         "id": "stress_spend_correlation",
         "title": "Stress and discretionary spend pattern",
-        "finding": correlation.get("interpretation"),
+        "finding": stress_finding,
         "evidence": [
-            f"Correlation coefficient: {correlation_value:.2f}" if correlation_value is not None else "Correlation coefficient unavailable",
-            f"Spike weeks detected: {len(spikes)}",
-            correlation.get("suggestion"),
+            f"Based on {len(spikes)} spike weeks detected",
+            "Compared your calendar busyness against weekly spending",
         ],
         "dollar_impact": round(avoidable_spend, 2) if avoidable_spend > 0 else None,
         "correlation_coefficient": correlation_value,
         "p_value": correlation.get("p_value"),
-        "insufficient_variance": bool(correlation.get("insufficient_variance")),
+        "insufficient_variance": insufficient,
         "lag_used": correlation.get("lag_used"),
         "weekly_series": correlation.get("weekly_series", []),
         "spike_weeks": spikes,
-        "what_this_means": (
-            "Your spending peaks are likely linked to stressful weeks."
-            if not correlation.get("insufficient_variance")
-            else "There is not enough week-to-week variation yet to estimate a stable stress/spend relationship."
-        ),
+        "what_this_means": stress_what,
         "recommended_next_actions": [
-            "Review the highest-spend week and pre-plan one lower-cost alternative activity.",
-            "Block one recovery hour in the prior week when calendar stress is high.",
+            "On heavy calendar weeks, set a quick spending limit before the week starts.",
+            "Pick one go-to free activity for stressful days instead of shopping.",
         ],
     }
 
@@ -932,17 +939,21 @@ def compute_insights_from_dataframes(
         "id": "top_anxiety_themes",
         "title": "Recurring anxiety themes",
         "finding": (
-            f"Most repeated themes: {theme_text}."
+            f"The topics that come up most in your conversations: {theme_text}."
             if anxiety_themes
-            else "No recurring anxiety theme was detected from current conversation text and tags."
+            else "No recurring themes found \u2014 upload AI conversation exports to see what's on your mind."
         ),
         "evidence": [
-            f"Theme rows analyzed: {len(anxiety_themes)}",
-            "Themes are extracted from conversation tags plus lexicon matches in message text.",
+            f"Scanned {len(conversations_df) if not conversations_df.empty else 0} conversation messages",
+            "Matched against common stress and money topics",
         ],
         "dollar_impact": None,
         "top_themes": anxiety_themes,
-        "what_this_means": "These themes explain where emotional load is most persistent.",
+        "what_this_means": (
+            "These are the things you talk about most with AI assistants \u2014 they show where your mental energy goes."
+            if anxiety_themes
+            else "Once you upload ChatGPT or Claude exports, we can spot what topics keep coming back."
+        ),
         "recommended_next_actions": [
             "Choose one recurring theme and schedule a concrete mitigation task this week.",
             "Use weekly check-ins to track whether theme frequency is dropping.",
@@ -956,27 +967,25 @@ def compute_insights_from_dataframes(
         "id": "subscription_creep",
         "title": "Subscription creep",
         "finding": (
-            f"You have {len(sub_list)} recurring charges totaling ${sub_data['monthly_total']}/mo: {sub_names}."
+            f"You have {len(sub_list)} recurring charges adding up to ${sub_data['monthly_total']}/month (${round(sub_data['monthly_total'] * 12, 2)}/year): {sub_names}."
             if sub_list
-            else "No recurring subscription charges detected."
+            else "No recurring charges found in your transactions."
         ),
         "evidence": [
-            f"Subscriptions detected: {len(sub_list)}",
-            f"Monthly total: ${sub_data['monthly_total']}",
-            f"Yearly cost: ${round(sub_data['monthly_total'] * 12, 2)}",
+            f"Found {len(sub_list)} charges that repeat on a monthly cycle",
+            f"Total yearly cost: ${round(sub_data['monthly_total'] * 12, 2)}",
         ],
         "dollar_impact": round(sub_data["monthly_total"] * 12, 2) if sub_data["monthly_total"] > 0 else None,
         "subscriptions": sub_list,
         "monthly_total": sub_data["monthly_total"],
         "what_this_means": (
-            "These charges repeat every month whether you use the service or not. "
-            "Review each one and cancel anything you haven't used in the last 30 days."
+            "Subscriptions are easy to forget about. If you haven't used a service in the last month, it's probably worth canceling."
             if sub_list
-            else "No recurring patterns found in your transaction history."
+            else "Either you don't have subscriptions or they didn't show up in the data we got."
         ),
         "recommended_next_actions": [
-            "Open each subscription and check your last login date.",
-            "Cancel one subscription you haven't used in 30 days.",
+            "Check when you last used each subscription \u2014 cancel anything over 30 days.",
+            "Set a calendar reminder to review subscriptions every 3 months.",
         ],
     }
 
@@ -986,12 +995,12 @@ def compute_insights_from_dataframes(
         "id": "expensive_day_of_week",
         "title": "Your expensive day of the week",
         "finding": (
-            f"You spend the most on {expensive_day}s — ${dow_data.get('expensive_day_avg', 0):.2f} avg vs ${dow_data.get('overall_daily_avg', 0):.2f} overall ({dow_data.get('pct_above_average', 0):.0f}% above average)."
+            f"You tend to spend the most on {expensive_day}s \u2014 about ${dow_data.get('expensive_day_avg', 0):.2f} on average, which is {dow_data.get('pct_above_average', 0):.0f}% more than other days."
             if expensive_day
-            else "Not enough transaction data to determine day-of-week patterns."
+            else "Not enough transactions to see a day-of-week pattern yet."
         ),
         "evidence": [
-            f"Average by day: {', '.join(f'{d}: ${v:.2f}' for d, v in dow_data.get('by_day', {}).items())}",
+            f"Average spending by day: {', '.join(f'{d}: ${v:.2f}' for d, v in dow_data.get('by_day', {}).items())}",
             f"Cheapest day: {dow_data.get('cheapest_day', 'N/A')}",
         ],
         "dollar_impact": None,
@@ -1000,13 +1009,13 @@ def compute_insights_from_dataframes(
         "cheapest_day": dow_data.get("cheapest_day"),
         "pct_above_average": dow_data.get("pct_above_average"),
         "what_this_means": (
-            f"{expensive_day} is when you're most likely to overspend. Knowing this lets you plan ahead."
+            f"Knowing your expensive day helps you plan ahead \u2014 try meal prepping or pre-planning activities for {expensive_day}s."
             if expensive_day
-            else "Add more transaction history to unlock this pattern."
+            else "Upload more transactions and we'll find your pattern."
         ),
         "recommended_next_actions": [
-            f"Set a {expensive_day} spending cap and check it before buying." if expensive_day else "Upload more transaction data.",
-            f"Pre-plan {expensive_day} meals or activities to avoid impulse purchases." if expensive_day else "Keep tracking.",
+            f"Set a {expensive_day} budget and check it before any purchase." if expensive_day else "Upload more transaction data.",
+            f"Plan your {expensive_day} meals or activities ahead of time." if expensive_day else "Keep tracking.",
         ],
     }
 
@@ -1015,28 +1024,29 @@ def compute_insights_from_dataframes(
         "id": "post_payday_surge",
         "title": "Post-payday spending surge",
         "finding": (
-            f"{surge_data.get('surge_pct', 0)}% of your spending happens within 3 days of getting paid (${surge_data.get('post_payday_total', 0):.2f} of ${surge_data.get('total_spend', 0):.2f})."
+            f"{surge_data.get('surge_pct', 0)}% of your spending happens within 3 days of getting paid \u2014 that's ${surge_data.get('post_payday_total', 0):.2f} out of ${surge_data.get('total_spend', 0):.2f} total."
             if surge_data.get("detected")
             else (
-                f"No significant post-payday surge — {surge_data.get('surge_pct', 0)}% of spending is in the 3-day post-payday window."
+                f"Your spending is spread pretty evenly through the pay cycle \u2014 no big post-payday splurges."
                 if surge_data.get("surge_ratio") is not None
-                else "Could not detect income deposits to analyze payday patterns."
+                else "We couldn't spot any income deposits to check for payday patterns."
             )
         ),
         "evidence": [
-            f"Paydays detected: {surge_data.get('payday_count', 0)}",
-            f"Post-payday spend: ${surge_data.get('post_payday_total', 0)}",
-            f"Total spend: ${surge_data.get('total_spend', 0)}",
-            f"Surge ratio: {surge_data.get('surge_pct', 0)}%",
+            f"Found {surge_data.get('payday_count', 0)} paydays in your data",
+            f"Checked spending in the 3 days after each payday",
         ],
         "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
         "detected": surge_data.get("detected", False),
         "surge_pct": surge_data.get("surge_pct"),
         "what_this_means": (
-            "You spend heavily right after payday, which can leave you tight before the next one. "
-            "This is a common pattern — awareness is the first step."
+            "A lot of people spend heavily right after payday. If that's you, try moving savings out first before you start spending."
             if surge_data.get("detected")
-            else "Your spending is relatively evenly distributed across the pay cycle."
+            else (
+                "You've got good spending discipline across your pay cycle."
+                if surge_data.get("surge_ratio") is not None
+                else "Upload bank transactions that include direct deposits or paychecks."
+            )
         ),
         "recommended_next_actions": [
             "Wait 24 hours after payday before any non-essential purchase.",
@@ -1052,26 +1062,24 @@ def compute_insights_from_dataframes(
         "id": "worry_timeline",
         "title": "When you worry most (AI conversations x spending)",
         "finding": (
-            f"You mentioned financial/emotional worries {worry_data['total_worry_mentions']} times in AI conversations. "
-            f"Peak worry: week {peak_week}"
+            f"You brought up money or stress worries {worry_data['total_worry_mentions']} times in your AI conversations. "
+            f"The heaviest week was {peak_week}"
             + (f" (${peak_spend:.2f} spent that week)." if peak_spend else ".")
             if peak_week
-            else "No worry-related conversations detected in your AI chat exports."
+            else "No worry-related conversations found. Upload ChatGPT or Claude exports to unlock this."
         ),
         "evidence": [
-            f"Total worry mentions: {worry_data.get('total_worry_mentions', 0)}",
-            f"Weeks with worry signals: {sum(1 for w in worry_timeline if w['worry_mentions'] > 0)}",
-            "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data.",
+            f"Scanned conversations for money, stress, and anxiety keywords",
+            f"Found worry signals in {sum(1 for w in worry_timeline if w['worry_mentions'] > 0)} different weeks",
         ],
         "dollar_impact": None,
         "timeline": worry_timeline,
         "peak_worry_week": peak_week,
         "total_worry_mentions": worry_data.get("total_worry_mentions", 0),
         "what_this_means": (
-            "Your AI conversations reveal when stress peaks. Overlaying this with spending shows "
-            "whether worry translates into spending changes — something no single data source can show alone."
+            "Your AI conversations reveal when stress peaks. We overlay this with spending to see if worrying leads to spending changes."
             if worry_data.get("total_worry_mentions", 0) > 0
-            else "Upload ChatGPT or Claude exports to unlock this cross-source insight."
+            else "This insight connects your emotional state to your spending \u2014 it needs AI conversation exports to work."
         ),
         "recommended_next_actions": [
             "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
@@ -1079,9 +1087,84 @@ def compute_insights_from_dataframes(
         ],
     }
 
+    # --- Months to goal (enriched by user context) ---
+    savings_goal: float | None = None
+    current_savings: float | None = None
+    avg_net_monthly_savings: float | None = None
+    monthly_debt: float | None = None
+    estimation_mode = "not_available"
+    inference_notes: list[str] = []
+
+    if user_context:
+        if user_context.get("savingsGoal") is not None:
+            savings_goal = float(user_context["savingsGoal"])
+        if user_context.get("currentSavings") is not None:
+            current_savings = float(user_context["currentSavings"])
+        if user_context.get("income") is not None:
+            yearly_income = float(user_context["income"])
+            avg_net_monthly_savings = round((yearly_income / 12.0) * 0.10, 2)
+            estimation_mode = "user_context_income_10pct"
+            inference_notes.append("Estimated monthly savings as 10% of stated annual income.")
+        if user_context.get("monthlyDebt") is not None:
+            monthly_debt = float(user_context["monthlyDebt"])
+            if avg_net_monthly_savings is not None:
+                avg_net_monthly_savings = max(0.0, avg_net_monthly_savings - monthly_debt)
+                inference_notes.append(f"Adjusted net savings by subtracting ${monthly_debt:.0f}/mo debt payments.")
+
+    if current_savings is None and savings_goal is not None:
+        current_savings = 0.0
+        inference_notes.append("Assumed current savings baseline as 0 since not provided.")
+
+    months_to_goal: float | None = None
+    if (
+        savings_goal is not None
+        and current_savings is not None
+        and avg_net_monthly_savings is not None
+        and avg_net_monthly_savings > 0
+    ):
+        months_to_goal = (savings_goal - current_savings) / avg_net_monthly_savings
+        estimation_mode = "user_context"
+
+    months_finding = (
+        f"At the current pace, your goal is about {months_to_goal:.1f} months away."
+        if months_to_goal is not None
+        else "Add your income and savings goal above to see how long it will take to reach your target."
+    )
+    remaining_to_goal = None
+    if savings_goal is not None and current_savings is not None:
+        remaining_to_goal = round(max(0.0, savings_goal - current_savings), 2)
+
+    goal_insight = {
+        "id": "months_to_goal",
+        "title": "Savings goal velocity",
+        "finding": months_finding,
+        "evidence": [
+            f"Savings goal: ${savings_goal:.0f}" if savings_goal is not None else "Savings goal: not provided",
+            f"Current savings: ${current_savings:.0f}" if current_savings is not None else "Current savings: not provided",
+            f"Estimated monthly savings: ${avg_net_monthly_savings:.0f}" if avg_net_monthly_savings is not None else "Monthly savings: not enough data",
+            *inference_notes,
+        ],
+        "dollar_impact": remaining_to_goal,
+        "months_to_goal": months_to_goal,
+        "savings_goal": savings_goal,
+        "current_savings": current_savings,
+        "avg_net_monthly_savings": avg_net_monthly_savings,
+        "estimation_mode": estimation_mode,
+        "what_this_means": (
+            "This is a rough timeline based on your stated income and goal. Reducing expenses or debt speeds it up."
+            if months_to_goal is not None
+            else "Fill in your financial details in the form above to unlock a savings timeline projection."
+        ),
+        "recommended_next_actions": [
+            "Set a weekly auto-transfer to savings on payday.",
+            "Review one expense category to find room to save more.",
+        ],
+    }
+
     insights: list[dict[str, Any]] = [
         stress_insight,
         themes_insight,
+        goal_insight,
         subscription_insight,
         dow_insight,
         surge_insight,

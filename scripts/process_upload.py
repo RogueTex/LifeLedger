@@ -56,10 +56,13 @@ def main() -> None:
     calendar_df = pd.concat(cal_frames, ignore_index=True) if cal_frames else None
     conversations_df = pd.concat(conv_frames, ignore_index=True) if conv_frames else None
 
+    user_context = payload.get("userContext") or None
+
     result = compute_insights_from_dataframes(
         transactions_df=transactions_df,
         calendar_df=calendar_df,
         conversations_df=conversations_df,
+        user_context=user_context,
     )
 
     print(json.dumps(result))

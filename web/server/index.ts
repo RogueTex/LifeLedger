@@ -34,7 +34,7 @@ app.get("/api/insights/:personaId", (req, res) => {
 
 // POST /api/upload — process uploaded files and return insights
 app.post("/api/upload", async (req, res) => {
-  const { files } = req.body;
+  const { files, userContext } = req.body;
   if (!files || !Array.isArray(files) || files.length === 0) {
     res.status(400).json({ error: "No files provided" });
     return;
@@ -47,7 +47,7 @@ app.post("/api/upload", async (req, res) => {
       cwd: path.resolve(OUTPUTS_DIR, ".."),
     });
 
-    const inputPayload = JSON.stringify({ files });
+    const inputPayload = JSON.stringify({ files, userContext: userContext || null });
     py.stdin.write(inputPayload);
     py.stdin.end();
 

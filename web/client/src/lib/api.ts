@@ -47,11 +47,22 @@ export interface UploadFile {
   data: string; // base64
 }
 
-export async function uploadFiles(files: UploadFile[]): Promise<InsightPayload> {
+export interface UserContextPayload {
+  income?: number;
+  savingsGoal?: number;
+  currentSavings?: number;
+  monthlyDebt?: number;
+}
+
+export async function uploadFiles(files: UploadFile[], userContext?: UserContextPayload): Promise<InsightPayload> {
+  const body: Record<string, any> = { files };
+  if (userContext && Object.keys(userContext).length > 0) {
+    body.userContext = userContext;
+  }
   const res = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ files }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Upload failed" }));
