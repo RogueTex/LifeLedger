@@ -1,7 +1,7 @@
 {
   "schema_version": "v1_locked",
-  "metric_layer_version": "actionable_v2",
-  "generated_at": "2026-03-06T23:08:06.199996+00:00",
+  "metric_layer_version": null,
+  "generated_at": "2026-03-09T23:41:15.831451+00:00",
   "persona": "p05",
   "profile_name": "Theo Nakamura",
   "consent": {
@@ -522,6 +522,381 @@
       ]
     },
     {
+      "id": "subscription_creep",
+      "title": "Subscription creep",
+      "finding": "You have 10 recurring charges totaling $3242.48/mo: $2,200.00 - client invoice pay, $600.00 - client invoice payme, $200.00 - School of Motion sub, $116.00 - credit card minimum , $55.00 - Whole Foods - groceri.",
+      "evidence": [
+        "Subscriptions detected: 10",
+        "Monthly total: $3242.48",
+        "Yearly cost: $38909.76"
+      ],
+      "dollar_impact": 38909.76,
+      "subscriptions": [
+        {
+          "name": "$2,200.00 - client invoice payment received - revenue",
+          "amount": 2200.0,
+          "occurrences": 13,
+          "avg_gap_days": 39.1
+        },
+        {
+          "name": "$600.00 - client invoice payment received - revenue",
+          "amount": 600.0,
+          "occurrences": 13,
+          "avg_gap_days": 42.4
+        },
+        {
+          "name": "$200.00 - School of Motion subscription - learning",
+          "amount": 200.0,
+          "occurrences": 11,
+          "avg_gap_days": 53.7
+        },
+        {
+          "name": "$116.00 - credit card minimum - debt",
+          "amount": 116.0,
+          "occurrences": 7,
+          "avg_gap_days": 61.7
+        },
+        {
+          "name": "$55.00 - Whole Foods - groceries",
+          "amount": 55.0,
+          "occurrences": 17,
+          "avg_gap_days": 36.4
+        },
+        {
+          "name": "$22.00 - skating gear - hobbies",
+          "amount": 22.0,
+          "occurrences": 9,
+          "avg_gap_days": 67.4
+        },
+        {
+          "name": "$18.00 - Uber - transportation",
+          "amount": 18.0,
+          "occurrences": 7,
+          "avg_gap_days": 84.2
+        },
+        {
+          "name": "$12.99 - Adobe CC - subscriptions",
+          "amount": 12.99,
+          "occurrences": 8,
+          "avg_gap_days": 57.0
+        },
+        {
+          "name": "$9.99 - Figma - subscriptions",
+          "amount": 9.99,
+          "occurrences": 8,
+          "avg_gap_days": 85.1
+        },
+        {
+          "name": "$8.50 - coffee - food",
+          "amount": 8.5,
+          "occurrences": 9,
+          "avg_gap_days": 39.8
+        }
+      ],
+      "monthly_total": 3242.48,
+      "what_this_means": "These charges repeat every month whether you use the service or not. Review each one and cancel anything you haven't used in the last 30 days.",
+      "recommended_next_actions": [
+        "Open each subscription and check your last login date.",
+        "Cancel one subscription you haven't used in 30 days."
+      ]
+    },
+    {
+      "id": "expensive_day_of_week",
+      "title": "Your expensive day of the week",
+      "finding": "You spend the most on Sundays \u2014 $711.63 avg vs $408.77 overall (74% above average).",
+      "evidence": [
+        "Average by day: Monday: $500.26, Tuesday: $314.02, Wednesday: $141.16, Thursday: $371.14, Friday: $233.45, Saturday: $589.71, Sunday: $711.63",
+        "Cheapest day: Wednesday"
+      ],
+      "dollar_impact": null,
+      "by_day": {
+        "Monday": 500.26,
+        "Tuesday": 314.02,
+        "Wednesday": 141.16,
+        "Thursday": 371.14,
+        "Friday": 233.45,
+        "Saturday": 589.71,
+        "Sunday": 711.63
+      },
+      "expensive_day": "Sunday",
+      "cheapest_day": "Wednesday",
+      "pct_above_average": 74.0,
+      "what_this_means": "Sunday is when you're most likely to overspend. Knowing this lets you plan ahead.",
+      "recommended_next_actions": [
+        "Set a Sunday spending cap and check it before buying.",
+        "Pre-plan Sunday meals or activities to avoid impulse purchases."
+      ]
+    },
+    {
+      "id": "post_payday_surge",
+      "title": "Post-payday spending surge",
+      "finding": "Could not detect income deposits to analyze payday patterns.",
+      "evidence": [
+        "Paydays detected: 0",
+        "Post-payday spend: $0",
+        "Total spend: $0",
+        "Surge ratio: 0%"
+      ],
+      "dollar_impact": null,
+      "detected": false,
+      "surge_pct": null,
+      "what_this_means": "Your spending is relatively evenly distributed across the pay cycle.",
+      "recommended_next_actions": [
+        "Wait 24 hours after payday before any non-essential purchase.",
+        "Auto-transfer savings on payday before you can spend it."
+      ]
+    },
+    {
+      "id": "worry_timeline",
+      "title": "When you worry most (AI conversations x spending)",
+      "finding": "You mentioned financial/emotional worries 3 times in AI conversations. Peak worry: week 2024-03.",
+      "evidence": [
+        "Total worry mentions: 3",
+        "Weeks with worry signals: 3",
+        "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data."
+      ],
+      "dollar_impact": null,
+      "timeline": [
+        {
+          "year_week": "2024-03",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-09",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-15",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-22",
+          "worry_mentions": 1,
+          "discretionary_spend": 14.5
+        },
+        {
+          "year_week": "2024-30",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-37",
+          "worry_mentions": 0,
+          "discretionary_spend": 8.5
+        },
+        {
+          "year_week": "2024-45",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-51",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        }
+      ],
+      "peak_worry_week": "2024-03",
+      "total_worry_mentions": 3,
+      "what_this_means": "Your AI conversations reveal when stress peaks. Overlaying this with spending shows whether worry translates into spending changes \u2014 something no single data source can show alone.",
+      "recommended_next_actions": [
+        "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
+        "Use your AI assistant to journal about financial stress instead of spending through it."
+      ]
+    },
+    {
+      "id": "stress_category_shift",
+      "title": "How stress changes where you spend",
+      "finding": "When your calendar gets busy, your subscriptions spending jumps 802% ($138.25/week vs $15.32 on calm weeks).",
+      "evidence": [
+        "Compared 27 weeks of spending by stress level",
+        "Split weeks into high-stress vs low-stress based on calendar density"
+      ],
+      "dollar_impact": 491.72,
+      "has_data": true,
+      "categories": [
+        {
+          "category": "subscriptions",
+          "high_stress_avg": 138.25,
+          "low_stress_avg": 15.32,
+          "shift_pct": 802.0
+        },
+        {
+          "category": "coffee",
+          "high_stress_avg": 10.2,
+          "low_stress_avg": 8.5,
+          "shift_pct": 20.0
+        },
+        {
+          "category": "dining",
+          "high_stress_avg": 14.5,
+          "low_stress_avg": 14.5,
+          "shift_pct": 0.0
+        }
+      ],
+      "what_this_means": "This shows which spending habits change when life gets hectic.",
+      "recommended_next_actions": [
+        "Pre-plan your subscriptions for busy weeks.",
+        "Review which categories spike and set limits for hectic weeks."
+      ]
+    },
+    {
+      "id": "spending_velocity",
+      "title": "How fast you spend each pay period",
+      "finding": "Need at least 2 paydays to measure spending pace.",
+      "evidence": [
+        "Analyzed 0 pay periods",
+        "Not enough pay periods detected"
+      ],
+      "dollar_impact": null,
+      "has_data": false,
+      "first_half_pct": null,
+      "second_half_pct": null,
+      "is_front_loaded": null,
+      "periods_analyzed": null,
+      "what_this_means": "Need income deposits in transaction data.",
+      "recommended_next_actions": [
+        "Try a daily spending allowance.",
+        "Move savings to a separate account on payday."
+      ]
+    },
+    {
+      "id": "recovery_spending",
+      "title": "Reward spending after stressful weeks",
+      "finding": "After your most stressful weeks, spending the following week is 233% higher ($67.73 vs $20.37 after calm weeks).",
+      "evidence": [
+        "Compared spending after 19 high-stress weeks vs the rest",
+        "Overall weekly average: $38.76"
+      ],
+      "dollar_impact": 550.43,
+      "has_data": true,
+      "is_recovery_detected": true,
+      "recovery_pct": 233.0,
+      "recovery_weeks": [
+        {
+          "stress_week": "2024-20",
+          "stress_level": 0.143,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-21",
+          "stress_level": 0.143,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 14.5
+        },
+        {
+          "stress_week": "2024-22",
+          "stress_level": 0.214,
+          "stress_week_spend": 14.5,
+          "next_week_spend": 209.99
+        },
+        {
+          "stress_week": "2024-23",
+          "stress_level": 0.214,
+          "stress_week_spend": 209.99,
+          "next_week_spend": 200.0
+        },
+        {
+          "stress_week": "2024-25",
+          "stress_level": 0.214,
+          "stress_week_spend": 200.0,
+          "next_week_spend": 18.49
+        },
+        {
+          "stress_week": "2024-27",
+          "stress_level": 0.143,
+          "stress_week_spend": 18.49,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-28",
+          "stress_level": 0.143,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 200.0
+        },
+        {
+          "stress_week": "2024-38",
+          "stress_level": 0.143,
+          "stress_week_spend": 26.5,
+          "next_week_spend": 200.0
+        },
+        {
+          "stress_week": "2024-39",
+          "stress_level": 0.143,
+          "stress_week_spend": 200.0,
+          "next_week_spend": 18.0
+        },
+        {
+          "stress_week": "2024-40",
+          "stress_level": 0.143,
+          "stress_week_spend": 18.0,
+          "next_week_spend": 12.99
+        },
+        {
+          "stress_week": "2024-41",
+          "stress_level": 0.143,
+          "stress_week_spend": 12.99,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-42",
+          "stress_level": 0.143,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 200.0
+        },
+        {
+          "stress_week": "2024-52",
+          "stress_level": 0.143,
+          "stress_week_spend": 17.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-01",
+          "stress_level": 0.143,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 12.99
+        },
+        {
+          "stress_week": "2025-02",
+          "stress_level": 0.25,
+          "stress_week_spend": 12.99,
+          "next_week_spend": 200.0
+        },
+        {
+          "stress_week": "2025-03",
+          "stress_level": 0.286,
+          "stress_week_spend": 200.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-04",
+          "stress_level": 0.286,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-05",
+          "stress_level": 0.286,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-06",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        }
+      ],
+      "what_this_means": "'Treat yourself' spending \u2014 after a rough week, the next week's purchases go up as a reward.",
+      "recommended_next_actions": [
+        "Plan a free reward activity for the weekend after tough weeks.",
+        "Set a post-stress spending cap."
+      ]
+    },
+    {
       "id": "invoice_rate_risk",
       "title": "Freelance rate risk",
       "finding": "Detected invoices that imply hourly rates below the $65 baseline.",
@@ -780,182 +1155,6 @@
       "recommended_next_actions": [
         "Set a minimum acceptable hourly floor before sending the next quote.",
         "Package scope in tiers so clients can trade scope instead of rate."
-      ]
-    },
-    {
-      "id": "subscription_creep",
-      "title": "Subscription creep",
-      "finding": "You have 6 recurring charges totaling $187.94/mo: Adobe Creative Cloud, Figma Pro, Notion, Spotify, ChatGPT Plus, GitHub Copilot.",
-      "evidence": [
-        "Subscriptions detected: 6",
-        "Monthly total: $187.94",
-        "Yearly cost: $2255.28"
-      ],
-      "dollar_impact": 2255.28,
-      "subscriptions": [
-        {
-          "name": "Adobe Creative Cloud",
-          "amount": 59.99,
-          "occurrences": 11,
-          "avg_gap_days": 30.3
-        },
-        {
-          "name": "Figma Professional",
-          "amount": 45.0,
-          "occurrences": 10,
-          "avg_gap_days": 30.1
-        },
-        {
-          "name": "Notion Team",
-          "amount": 20.0,
-          "occurrences": 12,
-          "avg_gap_days": 30.0
-        },
-        {
-          "name": "Spotify Premium",
-          "amount": 12.99,
-          "occurrences": 12,
-          "avg_gap_days": 30.2
-        },
-        {
-          "name": "ChatGPT Plus",
-          "amount": 29.99,
-          "occurrences": 9,
-          "avg_gap_days": 30.5
-        },
-        {
-          "name": "GitHub Copilot",
-          "amount": 19.97,
-          "occurrences": 11,
-          "avg_gap_days": 30.1
-        }
-      ],
-      "monthly_total": 187.94,
-      "what_this_means": "As a freelancer, tool subscriptions add up fast. Are you billing clients enough to cover these overhead costs?",
-      "recommended_next_actions": [
-        "Check which tools you actually used in the last 30 days.",
-        "Bundle tool costs into your client rate \u2014 these are business expenses."
-      ]
-    },
-    {
-      "id": "expensive_day_of_week",
-      "title": "Your expensive day of the week",
-      "finding": "You spend the most on Wednesdays \u2014 $52.40 avg vs $31.60 overall (66% above average).",
-      "evidence": [
-        "Average by day: Monday: $28.50, Tuesday: $24.30, Wednesday: $52.40, Thursday: $35.10, Friday: $38.20, Saturday: $22.90, Sunday: $19.80",
-        "Cheapest day: Sunday"
-      ],
-      "dollar_impact": null,
-      "by_day": {
-        "Monday": 28.5,
-        "Tuesday": 24.3,
-        "Wednesday": 52.4,
-        "Thursday": 35.1,
-        "Friday": 38.2,
-        "Saturday": 22.9,
-        "Sunday": 19.8
-      },
-      "expensive_day": "Wednesday",
-      "cheapest_day": "Sunday",
-      "pct_above_average": 66.0,
-      "what_this_means": "Wednesday is when you're most likely to overspend. As a freelancer, this might correlate with mid-week burnout.",
-      "recommended_next_actions": [
-        "Set a Wednesday spending cap and check it before buying.",
-        "Pre-plan Wednesday meals or activities to avoid impulse purchases."
-      ]
-    },
-    {
-      "id": "post_payday_surge",
-      "title": "Post-payday spending surge",
-      "finding": "No significant post-payday surge \u2014 18.5% of spending is in the 3-day post-payday window.",
-      "evidence": [
-        "Paydays detected: 7",
-        "Post-payday spend: $892.40",
-        "Total spend: $4824.00",
-        "Surge ratio: 18.5%"
-      ],
-      "dollar_impact": null,
-      "detected": false,
-      "surge_pct": 18.5,
-      "what_this_means": "Your spending is relatively evenly distributed across the pay cycle. As a freelancer with irregular income, this is a good sign.",
-      "recommended_next_actions": [
-        "Keep the discipline \u2014 irregular income makes post-payday splurges riskier.",
-        "Auto-transfer 20% of each invoice payment to savings on receipt."
-      ]
-    },
-    {
-      "id": "worry_timeline",
-      "title": "When you worry most (AI conversations x spending)",
-      "finding": "You mentioned financial/emotional worries 22 times in AI conversations. Peak worry: week 2025-04 ($45.00 spent that week).",
-      "evidence": [
-        "Total worry mentions: 22",
-        "Weeks with worry signals: 11",
-        "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data."
-      ],
-      "dollar_impact": null,
-      "timeline": [
-        {
-          "year_week": "2024-46",
-          "worry_mentions": 2,
-          "discretionary_spend": 30.0
-        },
-        {
-          "year_week": "2024-48",
-          "worry_mentions": 3,
-          "discretionary_spend": 0.0
-        },
-        {
-          "year_week": "2024-50",
-          "worry_mentions": 1,
-          "discretionary_spend": 25.0
-        },
-        {
-          "year_week": "2025-01",
-          "worry_mentions": 2,
-          "discretionary_spend": 0.0
-        },
-        {
-          "year_week": "2025-03",
-          "worry_mentions": 3,
-          "discretionary_spend": 40.0
-        },
-        {
-          "year_week": "2025-04",
-          "worry_mentions": 4,
-          "discretionary_spend": 45.0
-        },
-        {
-          "year_week": "2025-05",
-          "worry_mentions": 2,
-          "discretionary_spend": 55.0
-        },
-        {
-          "year_week": "2025-06",
-          "worry_mentions": 1,
-          "discretionary_spend": 35.0
-        },
-        {
-          "year_week": "2025-08",
-          "worry_mentions": 2,
-          "discretionary_spend": 60.0
-        },
-        {
-          "year_week": "2025-09",
-          "worry_mentions": 1,
-          "discretionary_spend": 20.0
-        },
-        {
-          "year_week": "2025-10",
-          "worry_mentions": 1,
-          "discretionary_spend": 0.0
-        }
-      ],
-      "peak_worry_week": "2025-04",
-      "total_worry_mentions": 22,
-      "what_this_means": "Your AI conversations reveal when stress peaks. Client stress and ADHD-related worries cluster in specific weeks, and spending follows.",
-      "recommended_next_actions": [
-        "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
-        "Use your AI assistant to journal about financial stress instead of spending through it."
       ]
     }
   ]

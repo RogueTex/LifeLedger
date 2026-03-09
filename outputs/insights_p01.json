@@ -1,7 +1,7 @@
 {
   "schema_version": "v1_locked",
-  "metric_layer_version": "actionable_v2",
-  "generated_at": "2026-03-06T23:08:06.109128+00:00",
+  "metric_layer_version": null,
+  "generated_at": "2026-03-09T23:41:15.739344+00:00",
   "persona": "p01",
   "profile_name": "Jordan Lee",
   "consent": {
@@ -541,40 +541,82 @@
     {
       "id": "subscription_creep",
       "title": "Subscription creep",
-      "finding": "You have 4 recurring charges totaling $234.96/mo: Netflix/Spotify/Hulu bundle, Gym membership, Cloud storage, Meal kit delivery.",
+      "finding": "You have 11 recurring charges totaling $4047.49/mo: $2,100.00 - rent - housing, $1,200.00 - savings transfer -, $200.00 - therapy copay - heal, $142.00 - groceries - food, $128.00 - Apple - tech.",
       "evidence": [
-        "Subscriptions detected: 4",
-        "Monthly total: $234.96",
-        "Yearly cost: $2819.52"
+        "Subscriptions detected: 11",
+        "Monthly total: $4047.49",
+        "Yearly cost: $48569.88"
       ],
-      "dollar_impact": 2819.52,
+      "dollar_impact": 48569.88,
       "subscriptions": [
         {
-          "name": "Netflix/Spotify/Hulu bundle",
-          "amount": 89.99,
-          "occurrences": 12,
-          "avg_gap_days": 30.2
+          "name": "$2,100.00 - rent - housing",
+          "amount": 2100.0,
+          "occurrences": 13,
+          "avg_gap_days": 37.5
         },
         {
-          "name": "Gym membership - Equinox",
-          "amount": 79.99,
-          "occurrences": 10,
-          "avg_gap_days": 30.5
+          "name": "$1,200.00 - savings transfer - savings",
+          "amount": 1200.0,
+          "occurrences": 4,
+          "avg_gap_days": 77.7
         },
         {
-          "name": "iCloud storage 2TB",
-          "amount": 14.99,
-          "occurrences": 11,
-          "avg_gap_days": 30.1
+          "name": "$200.00 - therapy copay - health",
+          "amount": 200.0,
+          "occurrences": 16,
+          "avg_gap_days": 35.6
         },
         {
-          "name": "HelloFresh meal kit",
-          "amount": 49.99,
+          "name": "$142.00 - groceries - food",
+          "amount": 142.0,
+          "occurrences": 5,
+          "avg_gap_days": 87.2
+        },
+        {
+          "name": "$128.00 - Apple - tech",
+          "amount": 128.0,
           "occurrences": 8,
-          "avg_gap_days": 31.0
+          "avg_gap_days": 74.9
+        },
+        {
+          "name": "$85.00 - Easy Tiger - social",
+          "amount": 85.0,
+          "occurrences": 9,
+          "avg_gap_days": 69.1
+        },
+        {
+          "name": "$68.00 - electric bill - utilities",
+          "amount": 68.0,
+          "occurrences": 14,
+          "avg_gap_days": 39.3
+        },
+        {
+          "name": "$55.00 - Whole Foods - groceries",
+          "amount": 55.0,
+          "occurrences": 7,
+          "avg_gap_days": 83.5
+        },
+        {
+          "name": "$32.00 - BookPeople - books",
+          "amount": 32.0,
+          "occurrences": 7,
+          "avg_gap_days": 87.3
+        },
+        {
+          "name": "$22.50 - Lululemon - fitness",
+          "amount": 22.5,
+          "occurrences": 17,
+          "avg_gap_days": 28.5
+        },
+        {
+          "name": "$14.99 - Notion subscription - productivity",
+          "amount": 14.99,
+          "occurrences": 6,
+          "avg_gap_days": 47.4
         }
       ],
-      "monthly_total": 234.96,
+      "monthly_total": 4047.49,
       "what_this_means": "These charges repeat every month whether you use the service or not. Review each one and cancel anything you haven't used in the last 30 days.",
       "recommended_next_actions": [
         "Open each subscription and check your last login date.",
@@ -584,44 +626,44 @@
     {
       "id": "expensive_day_of_week",
       "title": "Your expensive day of the week",
-      "finding": "You spend the most on Fridays \u2014 $47.82 avg vs $28.15 overall (70% above average).",
+      "finding": "You spend the most on Mondays \u2014 $783.13 avg vs $345.68 overall (127% above average).",
       "evidence": [
-        "Average by day: Monday: $22.10, Tuesday: $18.50, Wednesday: $25.30, Thursday: $31.20, Friday: $47.82, Saturday: $35.40, Sunday: $16.75",
-        "Cheapest day: Sunday"
+        "Average by day: Monday: $783.13, Tuesday: $328.43, Wednesday: $267.64, Thursday: $265.13, Friday: $337.73, Saturday: $209.77, Sunday: $227.93",
+        "Cheapest day: Saturday"
       ],
       "dollar_impact": null,
       "by_day": {
-        "Monday": 22.1,
-        "Tuesday": 18.5,
-        "Wednesday": 25.3,
-        "Thursday": 31.2,
-        "Friday": 47.82,
-        "Saturday": 35.4,
-        "Sunday": 16.75
+        "Monday": 783.13,
+        "Tuesday": 328.43,
+        "Wednesday": 267.64,
+        "Thursday": 265.13,
+        "Friday": 337.73,
+        "Saturday": 209.77,
+        "Sunday": 227.93
       },
-      "expensive_day": "Friday",
-      "cheapest_day": "Sunday",
-      "pct_above_average": 70.0,
-      "what_this_means": "Friday is when you're most likely to overspend. Knowing this lets you plan ahead.",
+      "expensive_day": "Monday",
+      "cheapest_day": "Saturday",
+      "pct_above_average": 127.0,
+      "what_this_means": "Monday is when you're most likely to overspend. Knowing this lets you plan ahead.",
       "recommended_next_actions": [
-        "Set a Friday spending cap and check it before buying.",
-        "Pre-plan Friday meals or activities to avoid impulse purchases."
+        "Set a Monday spending cap and check it before buying.",
+        "Pre-plan Monday meals or activities to avoid impulse purchases."
       ]
     },
     {
       "id": "post_payday_surge",
       "title": "Post-payday spending surge",
-      "finding": "34.2% of your spending happens within 3 days of getting paid ($1,847.30 of $5,401.20).",
+      "finding": "Could not detect income deposits to analyze payday patterns.",
       "evidence": [
-        "Paydays detected: 12",
-        "Post-payday spend: $1847.30",
-        "Total spend: $5401.20",
-        "Surge ratio: 34.2%"
+        "Paydays detected: 0",
+        "Post-payday spend: $0",
+        "Total spend: $0",
+        "Surge ratio: 0%"
       ],
-      "dollar_impact": 1847.3,
-      "detected": true,
-      "surge_pct": 34.2,
-      "what_this_means": "You spend heavily right after payday, which can leave you tight before the next one. This is a common pattern \u2014 awareness is the first step.",
+      "dollar_impact": null,
+      "detected": false,
+      "surge_pct": null,
+      "what_this_means": "Your spending is relatively evenly distributed across the pay cycle.",
       "recommended_next_actions": [
         "Wait 24 hours after payday before any non-essential purchase.",
         "Auto-transfer savings on payday before you can spend it."
@@ -630,61 +672,249 @@
     {
       "id": "worry_timeline",
       "title": "When you worry most (AI conversations x spending)",
-      "finding": "You mentioned financial/emotional worries 14 times in AI conversations. Peak worry: week 2025-07 ($89.99 spent that week).",
+      "finding": "You mentioned financial/emotional worries 4 times in AI conversations. Peak worry: week 2024-05.",
       "evidence": [
-        "Total worry mentions: 14",
-        "Weeks with worry signals: 8",
+        "Total worry mentions: 4",
+        "Weeks with worry signals: 4",
         "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data."
       ],
       "dollar_impact": null,
       "timeline": [
         {
-          "year_week": "2024-50",
-          "worry_mentions": 2,
-          "discretionary_spend": 0.0
-        },
-        {
-          "year_week": "2024-51",
-          "worry_mentions": 3,
-          "discretionary_spend": 0.0
-        },
-        {
-          "year_week": "2025-02",
-          "worry_mentions": 1,
-          "discretionary_spend": 0.0
-        },
-        {
-          "year_week": "2025-04",
-          "worry_mentions": 2,
-          "discretionary_spend": 0.0
-        },
-        {
-          "year_week": "2025-06",
-          "worry_mentions": 1,
-          "discretionary_spend": 89.99
-        },
-        {
-          "year_week": "2025-07",
-          "worry_mentions": 3,
-          "discretionary_spend": 89.99
-        },
-        {
-          "year_week": "2025-08",
-          "worry_mentions": 1,
+          "year_week": "2024-03",
+          "worry_mentions": 0,
           "discretionary_spend": 85.0
         },
         {
-          "year_week": "2025-09",
+          "year_week": "2024-05",
           "worry_mentions": 1,
-          "discretionary_spend": 85.0
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-12",
+          "worry_mentions": 0,
+          "discretionary_spend": 48.5
+        },
+        {
+          "year_week": "2024-17",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-24",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-31",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-36",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-43",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-46",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
+        },
+        {
+          "year_week": "2024-52",
+          "worry_mentions": 0,
+          "discretionary_spend": 0.0
         }
       ],
-      "peak_worry_week": "2025-07",
-      "total_worry_mentions": 14,
+      "peak_worry_week": "2024-05",
+      "total_worry_mentions": 4,
       "what_this_means": "Your AI conversations reveal when stress peaks. Overlaying this with spending shows whether worry translates into spending changes \u2014 something no single data source can show alone.",
       "recommended_next_actions": [
         "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
         "Use your AI assistant to journal about financial stress instead of spending through it."
+      ]
+    },
+    {
+      "id": "stress_category_shift",
+      "title": "How stress changes where you spend",
+      "finding": "When your calendar gets busy, your subscriptions spending jumps 100% ($59.99/week vs $29.98 on calm weeks).",
+      "evidence": [
+        "Compared 14 weeks of spending by stress level",
+        "Split weeks into high-stress vs low-stress based on calendar density"
+      ],
+      "dollar_impact": 120.04,
+      "has_data": true,
+      "categories": [
+        {
+          "category": "subscriptions",
+          "high_stress_avg": 59.99,
+          "low_stress_avg": 29.98,
+          "shift_pct": 100.0
+        },
+        {
+          "category": "dining",
+          "high_stress_avg": 66.75,
+          "low_stress_avg": 66.75,
+          "shift_pct": 0.0
+        }
+      ],
+      "what_this_means": "This shows which spending habits change when life gets hectic.",
+      "recommended_next_actions": [
+        "Pre-plan your subscriptions for busy weeks.",
+        "Review which categories spike and set limits for hectic weeks."
+      ]
+    },
+    {
+      "id": "spending_velocity",
+      "title": "How fast you spend each pay period",
+      "finding": "Need at least 2 paydays to measure spending pace.",
+      "evidence": [
+        "Analyzed 0 pay periods",
+        "Not enough pay periods detected"
+      ],
+      "dollar_impact": null,
+      "has_data": false,
+      "first_half_pct": null,
+      "second_half_pct": null,
+      "is_front_loaded": null,
+      "periods_analyzed": null,
+      "what_this_means": "Need income deposits in transaction data.",
+      "recommended_next_actions": [
+        "Try a daily spending allowance.",
+        "Move savings to a separate account on payday."
+      ]
+    },
+    {
+      "id": "recovery_spending",
+      "title": "Reward spending after stressful weeks",
+      "finding": "Your spending doesn't change much after stressful weeks.",
+      "evidence": [
+        "Compared spending after 18 high-stress weeks vs the rest",
+        "Overall weekly average: $17.28"
+      ],
+      "dollar_impact": null,
+      "has_data": true,
+      "is_recovery_detected": false,
+      "recovery_pct": -17.0,
+      "recovery_weeks": [
+        {
+          "stress_week": "2024-16",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-17",
+          "stress_level": 0.238,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-18",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-32",
+          "stress_level": 0.25,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-33",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 14.99
+        },
+        {
+          "stress_week": "2024-35",
+          "stress_level": 0.214,
+          "stress_week_spend": 14.99,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-37",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-46",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-50",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2024-51",
+          "stress_level": 0.286,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-03",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-04",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-06",
+          "stress_level": 0.214,
+          "stress_week_spend": 89.99,
+          "next_week_spend": 89.99
+        },
+        {
+          "stress_week": "2025-07",
+          "stress_level": 0.286,
+          "stress_week_spend": 89.99,
+          "next_week_spend": 85.0
+        },
+        {
+          "stress_week": "2025-08",
+          "stress_level": 0.286,
+          "stress_week_spend": 85.0,
+          "next_week_spend": 85.0
+        },
+        {
+          "stress_week": "2025-09",
+          "stress_level": 0.286,
+          "stress_week_spend": 85.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-10",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        },
+        {
+          "stress_week": "2025-11",
+          "stress_level": 0.214,
+          "stress_week_spend": 0.0,
+          "next_week_spend": 0.0
+        }
+      ],
+      "what_this_means": "No recovery spending pattern detected.",
+      "recommended_next_actions": [
+        "Plan a free reward activity for the weekend after tough weeks.",
+        "Set a post-stress spending cap."
       ]
     }
   ]

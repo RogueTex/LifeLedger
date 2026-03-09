@@ -277,6 +277,22 @@ def _detect_subscriptions(transactions_df: pd.DataFrame) -> dict[str, Any]:
         return {"subscriptions": [], "monthly_total": 0.0}
 
     df = transactions_df.copy()
+
+    # Exclude income-tagged rows so contract deposits / paychecks are not
+    # misclassified as recurring subscription charges.
+    if "tags" in df.columns:
+        def _has_income_tag(tags: object) -> bool:
+            if isinstance(tags, list):
+                return "income" in tags
+            if isinstance(tags, str):
+                return "income" in tags
+            return False
+        income_mask = df["tags"].apply(_has_income_tag)
+        df = df[~income_mask].copy()
+
+    if df.empty:
+        return {"subscriptions": [], "monthly_total": 0.0}
+
     amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0).abs()
     df["_abs_amount"] = amount
 
