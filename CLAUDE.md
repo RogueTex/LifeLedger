@@ -4,34 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LifeLedger is a personal finance intelligence engine built for the **Data Portability Hackathon 2026, Track 3**. It ingests exported personal data (transactions, calendar, emails, AI conversations, lifelog) to surface behavioral patterns — the thesis being that financial behavior is driven by stress, emotional state, and calendar pressure.
+LifeLedger is a personal finance intelligence engine built for the **Data Portability Hackathon 2026, Track 3**. It fuses exported personal data (transactions, calendar, emails, AI conversations, lifelog) to surface behavioral patterns invisible in any single source — the thesis being that financial behavior is driven by stress, emotional state, and calendar pressure.
 
-**Tech stack:** Python 3.12, pandas, Streamlit, Plotly, narrative generation (Groq/OpenRouter/OpenAI), rule-based + statistical features. React + Express web UI in `web/`.
+**Tech stack:** Python 3.12, pandas, React 19 + TypeScript + Vite, Express 5, Recharts, Tailwind CSS, Framer Motion, narrative generation (Groq/OpenRouter/OpenAI via BYOK or `.env`), rule-based + statistical features.
 
 ## Commands
 
 ```bash
-# Run the Streamlit app
-streamlit run src/ui/app.py
-
-# Run tests (42 pytest cases)
-pytest tests/test_features.py
-
-# Run a single test
-pytest tests/test_features.py::test_name -v
-
-# Regenerate insight caches (required after feature/insight logic changes)
-python3 -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p05')"
-
-# Compile check all modules
-python3 -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/features/resilience_model.py src/insights/insight_engine.py src/insights/narrative_gen.py src/ui/app.py
-
-# Refresh demo backups
-python3 scripts/generate_demo_backups.py
-
-# Demo dry run checklist
-./scripts/demo_dry_run.sh
-
 # Run the React web app (dev mode) — must start as TWO SEPARATE processes
 # Terminal 1: API server
 cd web && npx tsx server/index.ts
@@ -42,41 +21,66 @@ cd web && npx vite --host
 
 # TypeScript type check (React app)
 cd web && npx tsc --noEmit
+
+# Run tests (42 pytest cases)
+pytest tests/test_features.py
+
+# Run a single test
+pytest tests/test_features.py::test_name -v
+
+# Compile check all modules
+python -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/features/resilience_model.py src/insights/insight_engine.py src/insights/narrative_gen.py
+
+# Regenerate insight caches (required after feature/insight logic changes — needs persona data in data/raw/)
+python -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p05')"
+
+# Streamlit app (legacy, kept for reference)
+streamlit run src/ui/app.py
 ```
 
 ## Architecture
 
 ### Data flow pipeline
 ```
-data/raw/persona_pXX/*.jsonl
-  → src/loaders/persona_loader.py (normalize → unified timeline DataFrame)
-  → src/features/ (stress_scorer → spend_tagger → correlation → resilience_model)
-  → src/insights/insight_engine.py (compute insights → validate schema → write JSON cache)
-  → outputs/insights_pXX.json (frozen cache, used by UI)
-  → src/ui/app.py (Streamlit dashboard reads cached insights)
-  → src/insights/narrative_gen.py (chat answers from cached insight JSON)
+Demo personas (frozen caches):
+  outputs/insights_pXX.json → GET /api/insights/:id → React dashboard renders
 
-User uploads (React app):
-web/client/src/components/dashboard/DataUploadSection.tsx (file selection + drag-drop)
-  → POST /api/upload (base64 JSON payload, no multer)
-  → scripts/process_upload.py (stdin JSON → upload_parser → compute_insights_from_dataframes)
-  → insight JSON returned to client → dashboard renders
+User uploads (live compute):
+  web/client/src/components/dashboard/DataUploadSection.tsx (file selection + drag-drop)
+    → POST /api/upload (base64 JSON payload, no multer)
+    → scripts/process_upload.py (stdin JSON → upload_parser → compute_insights_from_dataframes)
+    → insight JSON returned to client → dashboard renders
+
+AI chat (BYOK supported):
+  GroundedChat/GroundedChatUpload → POST /api/chat or /api/chat/upload
+    → server passes BYOK key as env var override → narrative_gen.py
+    → chat grounded strictly in precomputed insight JSON (never raw data)
 ```
 
 ### Key modules
 
 - **`src/loaders/persona_loader.py`** — Loads JSON/JSONL persona data, normalizes schemas, builds unified timeline with columns: `ts`, `date`, `week`, `year_week` (format: `YYYY-WW`), `tags`, `refs`, `amount`, `text`, `source`.
-- **`src/loaders/upload_parser.py`** — Parses user-uploaded files: bank CSV (Chase/BofA/Amex/Mint), Google Calendar ICS, ChatGPT/Claude JSON/ZIP exports.
+- **`src/loaders/upload_parser.py`** — Parses user-uploaded files: bank CSV (Chase/BofA/Amex/Mint/Discover), Google Calendar ICS, ChatGPT/Claude JSON/ZIP exports.
 - **`src/features/stress_scorer.py`** — Calendar-derived daily stress scores with smoothing.
-- **`src/features/spend_tagger.py`** — Discretionary spend tagging and weekly totals.
-- **`src/features/correlation.py`** — Stress/spend correlation with spike week detection. Tests multiple alignments (same-week, prior-week) and selects strongest valid signal.
-- **`src/features/resilience_model.py`** — (Legacy, no longer used by insight engine.) Stability, volatility, runway, regret risk, macro-adjusted decomposition.
-- **`src/insights/insight_engine.py`** — End-to-end insight computation, schema validation (`v1_locked`), and cache writer. Theme extraction uses `THEME_LEXICON`. `compute_insights_from_dataframes()` runs the full pipeline on raw DataFrames (for user uploads, no persona file needed).
+- **`src/features/spend_tagger.py`** — 9-category discretionary spend tagging and weekly totals.
+- **`src/features/correlation.py`** — Stress/spend correlation with 4-alignment testing and 3-tier spike detection.
+- **`src/features/resilience_model.py`** — (Legacy, no longer used by insight engine.)
+- **`src/insights/insight_engine.py`** — End-to-end insight computation (10 insight types for uploads, 7+1 for personas), schema validation (`v1_locked`), and cache writer. `compute_insights_from_dataframes()` runs the full pipeline on raw DataFrames.
 - **`src/insights/narrative_gen.py`** — Narrative generation with retry/backoff (3 attempts), 12K char payload truncation, temp 0.3. Checks `GROQ_API_KEY` → `OPENROUTER_API_KEY` → `OPENAI_API_KEY` in priority order.
-- **`src/ui/app.py`** — Streamlit dashboard: welcome gate, KPI cards, timeline chart, spike evidence cards, subscription panel, day-of-week chart, worry timeline chart, grounded chat. CSS vars: `--bg`, `--card`, `--accent`, `--warn`, `--positive`.
-- **`web/server/index.ts`** — Express API: `/api/personas`, `/api/insights/:id`, `/api/chat`, `/api/upload`, `/api/chat/upload`.
+- **`web/server/index.ts`** — Express API: `/api/personas`, `/api/insights/:id`, `/api/chat`, `/api/upload`, `/api/chat/upload`. Supports BYOK keys via `byoKeyEnv()` helper.
 - **`web/client/src/`** — React SPA: Welcome → Dashboard (demo personas) or YourData (user uploads). Uses wouter routing, TanStack Query, Recharts, Framer Motion.
 - **`scripts/process_upload.py`** — Bridge script: reads base64 file payload from stdin, parses via `upload_parser`, runs `compute_insights_from_dataframes`, outputs JSON.
+
+### Insight IDs (all data-contingent — only render when data supports them)
+
+**Core (all personas + uploads):**
+`stress_spend_correlation`, `top_anxiety_themes`, `months_to_goal`, `subscription_creep`, `expensive_day_of_week`, `post_payday_surge`, `worry_timeline`
+
+**Upload-only (require cross-source data):**
+`stress_category_shift` (calendar + transactions), `spending_velocity` (transactions with paydays), `recovery_spending` (calendar + transactions, 6+ weeks)
+
+**Persona-specific:**
+`invoice_rate_risk` (p05 only — emails + calendar)
 
 ### Personas used
 - **p01 (Jordan Lee)** — Burnout + home savings. Primary demo: stress-spend correlation, goal velocity, anxiety themes.
@@ -88,15 +92,13 @@ web/client/src/components/dashboard/DataUploadSection.tsx (file selection + drag
 Top-level keys: `profile`, `consent`, `lifelog`, `conversations`, `emails`, `calendar`, `social_posts`, `transactions`, `files_index`. The `year_week` format is strictly `YYYY-WW`.
 
 ### Insight contract (`schema_version: v1_locked`)
-Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `dollar_impact`. Do not modify the schema without explicit versioning.
-
-### Actionable insight IDs
-`subscription_creep`, `expensive_day_of_week`, `post_payday_surge`, `worry_timeline`.
+Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `dollar_impact`. New insights add `has_data` (boolean) for conditional rendering. Do not modify the schema without explicit versioning.
 
 ## UX & Content Rules
 
 ### No slop — only show what the data supports
 - **Never render an insight card, chart, or KPI if the underlying data is empty or insufficient.** If there are no subscriptions, don't show the subscription panel. If there's no stress-spend correlation data, don't show the timeline chart.
+- New insights use `has_data` field — components check `if (!insight || !insight.has_data) return null`.
 - Dashboard components must check for meaningful data before rendering (e.g. `weekly_series.length > 0`, `subscriptions.length > 0`, `expensive_day != null`).
 - KPI cards grid should adapt to however many cards have real data — no empty placeholder cards.
 - Findings must describe what was actually found, not generic advice. If nothing was found, say so briefly (e.g. "No recurring charges found") and don't pad with filler.
@@ -108,14 +110,18 @@ Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `do
 - Evidence arrays should be human-readable: "Based on 12 weeks of spending data" not "Correlation coefficient: 0.42".
 
 ### User context collection
-- The app should provide a way for users to input personal financial context: income, savings goals, current savings, debt. This enriches insights like savings velocity and payday patterns.
-- This can be a simple form on the YourData page or conversational prompts in the chat.
+- The app provides a form on the YourData page for users to input personal financial context: income, savings goals, current savings, debt. This enriches insights like savings velocity and payday patterns.
+
+### BYOK (Bring Your Own Key)
+- Users can enter their own API key (Groq, OpenRouter, or OpenAI) directly in the chat panel via `ApiKeyConfig.tsx`.
+- Keys are session-only — never persisted to disk or sent anywhere except the LLM provider.
+- Server passes BYOK keys as env var overrides to Python subprocesses.
 
 ## Important Conventions
 
 - After changing feature or insight logic, always regenerate cached insights and verify with `pytest`.
 - Frozen caches in `outputs/` are what the UI reads — the app does not recompute insights live for demo personas.
-- Use `escape()` for user content in HTML within the Streamlit app.
-- Environment requires one of `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `OPENAI_API_KEY` in `.env` for narrative chat. Groq keys start with `gsk_`.
+- Environment requires one of `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `OPENAI_API_KEY` in `.env` for narrative chat — OR users can BYOK in the chat UI.
+- Groq keys start with `gsk_`. Uses OpenAI-compatible endpoint at `https://api.groq.com/openai/v1`.
 - All persona data is 100% synthetic. Delete after March 31, 2026 per hackathon rules.
-- On Windows, `NODE_ENV=x cmd` doesn't work and `npm run dev` will fail. Start the two dev servers as separate processes (not combined with `&`): `npx tsx server/index.ts` (API on :5000) and `npx vite --host` (frontend on :5173).
+- On Windows, `NODE_ENV=x cmd` doesn't work. Start the two dev servers as separate processes (not combined with `&`): `npx tsx server/index.ts` (API on :5000) and `npx vite --host` (frontend on :5173).

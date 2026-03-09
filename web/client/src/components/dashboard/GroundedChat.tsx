@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { sendChat } from "@/lib/api";
+import { sendChat, type BYOKey } from "@/lib/api";
 import { Bot, Send, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ApiKeyConfig, { type ApiKeyState } from "./ApiKeyConfig";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,6 +20,7 @@ export default function GroundedChat({ personaId }: { personaId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiKey, setApiKey] = useState<ApiKeyState | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +36,8 @@ export default function GroundedChat({ personaId }: { personaId: string }) {
     setLoading(true);
 
     try {
-      const answer = await sendChat(q, personaId);
+      const byoKey: BYOKey | null = apiKey?.key ? apiKey : null;
+      const answer = await sendChat(q, personaId, byoKey);
       setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
     } catch {
       setMessages((prev) => [
@@ -52,6 +55,8 @@ export default function GroundedChat({ personaId }: { personaId: string }) {
         <Bot className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-display font-medium">Cross-Source Insight Chat</h3>
       </div>
+
+      <ApiKeyConfig value={apiKey} onChange={setApiKey} />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (

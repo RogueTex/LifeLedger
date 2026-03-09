@@ -31,11 +31,18 @@ export async function fetchInsights(personaId: string): Promise<InsightPayload> 
   return res.json();
 }
 
-export async function sendChat(question: string, personaId: string): Promise<string> {
+export interface BYOKey {
+  provider: "groq" | "openrouter" | "openai";
+  key: string;
+}
+
+export async function sendChat(question: string, personaId: string, byoKey?: BYOKey | null): Promise<string> {
+  const body: Record<string, any> = { question, personaId };
+  if (byoKey?.key) body.byoKey = byoKey;
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, personaId }),
+    body: JSON.stringify(body),
   });
   const data = await res.json();
   return data.answer || "No response.";
@@ -71,11 +78,13 @@ export async function uploadFiles(files: UploadFile[], userContext?: UserContext
   return res.json();
 }
 
-export async function sendChatUpload(question: string, insights: InsightPayload): Promise<string> {
+export async function sendChatUpload(question: string, insights: InsightPayload, byoKey?: BYOKey | null): Promise<string> {
+  const body: Record<string, any> = { question, insights };
+  if (byoKey?.key) body.byoKey = byoKey;
   const res = await fetch("/api/chat/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, insights }),
+    body: JSON.stringify(body),
   });
   const data = await res.json();
   return data.answer || "No response.";

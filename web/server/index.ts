@@ -73,9 +73,22 @@ app.post("/api/upload", async (req, res) => {
   }
 });
 
+// Build env overrides for BYOK keys
+function byoKeyEnv(byoKey?: { provider: string; key: string }): Record<string, string> {
+  if (!byoKey?.key) return {};
+  const map: Record<string, string> = {
+    groq: "GROQ_API_KEY",
+    openrouter: "OPENROUTER_API_KEY",
+    openai: "OPENAI_API_KEY",
+  };
+  const envVar = map[byoKey.provider];
+  if (!envVar) return {};
+  return { [envVar]: byoKey.key };
+}
+
 // POST /api/chat/upload — chat against user-uploaded insights (no persona file needed)
 app.post("/api/chat/upload", async (req, res) => {
-  const { question, insights } = req.body;
+  const { question, insights, byoKey } = req.body;
   if (!question || !insights) {
     res.status(400).json({ error: "Missing question or insights" });
     return;
@@ -95,7 +108,7 @@ data = json.loads(sys.stdin.read())
 answer = generate_narrative(data["question"], data["insights"])
 print(json.dumps({"answer": answer}))
 `,
-    ], { cwd: projectRoot });
+    ], { cwd: projectRoot, env: { ...process.env, ...byoKeyEnv(byoKey) } });
 
     py.stdin.write(JSON.stringify({ question, insights }));
     py.stdin.end();
@@ -123,7 +136,7 @@ print(json.dumps({"answer": answer}))
 
 // POST /api/chat — proxy to narrative gen (calls Python)
 app.post("/api/chat", async (req, res) => {
-  const { question, personaId } = req.body;
+  const { question, personaId, byoKey } = req.body;
   if (!question || !personaId) {
     res.status(400).json({ error: "Missing question or personaId" });
     return;
@@ -148,7 +161,7 @@ question = ${JSON.stringify(question)}
 answer = generate_narrative(question, data)
 print(json.dumps({"answer": answer}))
 `,
-    ]);
+    ], { env: { ...process.env, ...byoKeyEnv(byoKey) } });
 
     let stdout = "";
     let stderr = "";

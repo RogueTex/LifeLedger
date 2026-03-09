@@ -9,7 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from ..features.correlation import compute_correlation
+from ..features.correlation import compute_correlation, _weekly_stress
 from ..features.spend_tagger import tag_spend
 from ..features.stress_scorer import compute_stress
 from ..loaders.persona_loader import load_persona
@@ -360,7 +360,7 @@ def _compute_day_of_week_spend(transactions_df: pd.DataFrame) -> dict[str, Any]:
 
 
 _INFLOW_KEYWORDS = re.compile(
-    r"(income|salary|payroll|paycheck|deposit|direct dep|transfer in|refund|bonus)", re.IGNORECASE,
+    r"(?:income|salary|payroll|paycheck|deposit|direct dep|transfer in|refund|bonus)", re.IGNORECASE,
 )
 
 
@@ -478,6 +478,237 @@ def _compute_worry_timeline(conversations_df: pd.DataFrame, weekly_spend_df: pd.
         "peak_worry_week": peak["year_week"] if peak and peak["worry_mentions"] > 0 else None,
         "peak_worry_spend": peak.get("discretionary_spend") if peak else None,
         "total_worry_mentions": total,
+    }
+
+
+def _compute_stress_category_shift(
+    tagged_df: pd.DataFrame,
+    weekly_stress: pd.DataFrame,
+) -> dict[str, Any]:
+    """Compare discretionary category spending on high-stress vs low-stress weeks."""
+    if tagged_df is None or tagged_df.empty:
+        return {"has_data": False}
+    if weekly_stress is None or weekly_stress.empty or "weekly_stress_avg" not in weekly_stress.columns:
+        return {"has_data": False}
+
+    df = tagged_df.copy()
+    if "year_week" not in df.columns or "spend_tags" not in df.columns:
+        return {"has_data": False}
+
+    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0).abs()
+    df["_amount"] = amount
+    # Only discretionary
+    df = df[df.get("is_discretionary", False) == True].copy()
+    if df.empty:
+        return {"has_data": False}
+
+    # Explode spend_tags so each tag gets its own row
+    df = df.explode("spend_tags").dropna(subset=["spend_tags"]).copy()
+    df = df[df["spend_tags"].astype(str).str.strip().str.len() > 0]
+    if df.empty:
+        return {"has_data": False}
+
+    # Build stress lookup
+    stress_lookup = dict(zip(weekly_stress["year_week"], weekly_stress["weekly_stress_avg"]))
+    df["_stress"] = df["year_week"].map(stress_lookup)
+    df = df.dropna(subset=["_stress"])
+    if len(df["year_week"].unique()) < 4:
+        return {"has_data": False}
+
+    median_stress = float(df["_stress"].median())
+    if median_stress <= 0:
+        return {"has_data": False}
+
+    df["_stress_level"] = df["_stress"].apply(lambda s: "high" if s >= median_stress else "low")
+
+    # Compute per-category weekly average in each stress tier
+    grouped = (
+        df.groupby(["spend_tags", "_stress_level", "year_week"])["_amount"]
+        .sum()
+        .reset_index()
+        .groupby(["spend_tags", "_stress_level"])["_amount"]
+        .mean()
+        .reset_index()
+    )
+
+    pivot = grouped.pivot(index="spend_tags", columns="_stress_level", values="_amount").fillna(0.0)
+    if "high" not in pivot.columns or "low" not in pivot.columns:
+        return {"has_data": False}
+
+    pivot["shift_pct"] = ((pivot["high"] - pivot["low"]) / pivot["low"].replace(0, float("nan"))) * 100
+    pivot = pivot.dropna(subset=["shift_pct"])
+    if pivot.empty:
+        return {"has_data": False}
+
+    # Only keep categories with meaningful spend on both sides
+    pivot = pivot[(pivot["high"] > 1.0) | (pivot["low"] > 1.0)]
+    if pivot.empty:
+        return {"has_data": False}
+
+    categories = []
+    for tag, row in pivot.sort_values("shift_pct", ascending=False).iterrows():
+        categories.append({
+            "category": str(tag),
+            "high_stress_avg": round(float(row["high"]), 2),
+            "low_stress_avg": round(float(row["low"]), 2),
+            "shift_pct": round(float(row["shift_pct"]), 0),
+        })
+
+    biggest = categories[0] if categories else None
+    return {
+        "has_data": True,
+        "categories": categories,
+        "biggest_shift": biggest,
+        "weeks_analyzed": int(len(df["year_week"].unique())),
+    }
+
+
+def _compute_spending_velocity(transactions_df: pd.DataFrame) -> dict[str, Any]:
+    """Measure how fast discretionary spending accumulates within each pay period."""
+    if transactions_df is None or transactions_df.empty:
+        return {"has_data": False}
+
+    df = transactions_df.copy()
+    ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
+    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0)
+    df["_ts"] = ts
+    df["_amount"] = amount.abs()
+    df = df.dropna(subset=["_ts"])
+
+    text_cols = ("text", "description", "merchant", "memo")
+    texts = pd.Series([""] * len(df), index=df.index)
+    for col in text_cols:
+        if col in df.columns:
+            texts = texts + " " + df[col].fillna("").astype(str)
+    df["_text"] = texts.str.lower()
+
+    # Detect paydays
+    inflow_mask = df["_text"].str.contains(_INFLOW_KEYWORDS, na=False) | (amount > 0)
+    large_inflow = df["_amount"] > 500
+    paydays = df[inflow_mask & large_inflow]["_ts"].dropna().sort_values().tolist()
+
+    if len(paydays) < 2:
+        return {"has_data": False}
+
+    # Get outflow transactions
+    is_discretionary = df.get("is_discretionary", pd.Series(False, index=df.index))
+    outflows = df[is_discretionary == True].copy() if is_discretionary.any() else df[~(inflow_mask & large_inflow)].copy()
+    outflows = outflows.dropna(subset=["_ts"]).sort_values("_ts")
+
+    if outflows.empty:
+        return {"has_data": False}
+
+    # For each pay period, compute what % of spend is in first half vs second half
+    first_half_totals: list[float] = []
+    second_half_totals: list[float] = []
+    period_totals: list[float] = []
+
+    for i in range(len(paydays) - 1):
+        period_start = paydays[i]
+        period_end = paydays[i + 1]
+        period_days = (period_end - period_start).days
+        if period_days < 7:
+            continue
+        midpoint = period_start + pd.Timedelta(days=period_days / 2)
+
+        period_txns = outflows[(outflows["_ts"] > period_start) & (outflows["_ts"] <= period_end)]
+        if period_txns.empty:
+            continue
+
+        total = float(period_txns["_amount"].sum())
+        first_half = float(period_txns[period_txns["_ts"] <= midpoint]["_amount"].sum())
+        second_half = total - first_half
+
+        if total > 0:
+            first_half_totals.append(first_half / total * 100)
+            second_half_totals.append(second_half / total * 100)
+            period_totals.append(total)
+
+    if not first_half_totals:
+        return {"has_data": False}
+
+    avg_first_half_pct = round(sum(first_half_totals) / len(first_half_totals), 0)
+    avg_second_half_pct = round(sum(second_half_totals) / len(second_half_totals), 0)
+    is_front_loaded = avg_first_half_pct > 60
+
+    return {
+        "has_data": True,
+        "first_half_pct": avg_first_half_pct,
+        "second_half_pct": avg_second_half_pct,
+        "is_front_loaded": is_front_loaded,
+        "periods_analyzed": len(first_half_totals),
+        "avg_period_spend": round(sum(period_totals) / len(period_totals), 2),
+    }
+
+
+def _compute_recovery_spending(
+    weekly_spend_df: pd.DataFrame,
+    weekly_stress: pd.DataFrame,
+) -> dict[str, Any]:
+    """Detect if spending increases the week after high-stress periods (decompression spending)."""
+    if weekly_spend_df is None or weekly_spend_df.empty:
+        return {"has_data": False}
+    if weekly_stress is None or weekly_stress.empty or "weekly_stress_avg" not in weekly_stress.columns:
+        return {"has_data": False}
+
+    merged = weekly_stress.merge(
+        weekly_spend_df[["year_week", "weekly_discretionary_total"]],
+        on="year_week", how="inner",
+    ).sort_values("year_week").reset_index(drop=True)
+
+    if len(merged) < 6:
+        return {"has_data": False}
+
+    # Add next-week spending
+    merged["next_week_spend"] = merged["weekly_discretionary_total"].shift(-1)
+    merged = merged.dropna(subset=["next_week_spend"])
+
+    if merged.empty:
+        return {"has_data": False}
+
+    # Top 25% stress weeks = "high stress"
+    stress_threshold = float(merged["weekly_stress_avg"].quantile(0.75))
+    if stress_threshold <= 0:
+        return {"has_data": False}
+
+    high_stress = merged[merged["weekly_stress_avg"] >= stress_threshold]
+    low_stress = merged[merged["weekly_stress_avg"] < stress_threshold]
+
+    if high_stress.empty or low_stress.empty:
+        return {"has_data": False}
+
+    avg_next_after_high = float(high_stress["next_week_spend"].mean())
+    avg_next_after_low = float(low_stress["next_week_spend"].mean())
+    overall_avg = float(merged["weekly_discretionary_total"].mean())
+
+    if overall_avg <= 0:
+        return {"has_data": False}
+
+    recovery_pct = round(((avg_next_after_high - avg_next_after_low) / avg_next_after_low) * 100, 0) if avg_next_after_low > 0 else 0.0
+    above_avg_pct = round(((avg_next_after_high - overall_avg) / overall_avg) * 100, 0)
+    is_recovery_detected = recovery_pct > 15 and avg_next_after_high > overall_avg
+
+    # Build the weekly data with recovery flags
+    high_stress_weeks = set(high_stress["year_week"].tolist())
+    recovery_weeks: list[dict[str, Any]] = []
+    for _, row in high_stress.iterrows():
+        recovery_weeks.append({
+            "stress_week": str(row["year_week"]),
+            "stress_level": round(float(row["weekly_stress_avg"]), 3),
+            "stress_week_spend": round(float(row["weekly_discretionary_total"]), 2),
+            "next_week_spend": round(float(row["next_week_spend"]), 2),
+        })
+
+    return {
+        "has_data": True,
+        "is_recovery_detected": is_recovery_detected,
+        "recovery_pct": recovery_pct,
+        "above_avg_pct": above_avg_pct,
+        "avg_next_after_high_stress": round(avg_next_after_high, 2),
+        "avg_next_after_low_stress": round(avg_next_after_low, 2),
+        "overall_avg_spend": round(overall_avg, 2),
+        "high_stress_weeks_count": int(len(high_stress)),
+        "recovery_weeks": recovery_weeks,
     }
 
 
@@ -814,6 +1045,120 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         ],
     }
 
+    # --- Stress category shift (cross-source: calendar stress x transaction categories) ---
+    weekly_stress_persona = _weekly_stress(stress_df)
+    cat_shift_data_p = _compute_stress_category_shift(tagged_df, weekly_stress_persona)
+    biggest_p = cat_shift_data_p.get("biggest_shift")
+    cat_shift_insight = {
+        "id": "stress_category_shift",
+        "title": "How stress changes where you spend",
+        "finding": (
+            f"When your calendar gets busy, your {biggest_p['category'].replace('_', ' ')} spending "
+            f"{'jumps' if biggest_p['shift_pct'] > 0 else 'drops'} {abs(biggest_p['shift_pct']):.0f}% "
+            f"(${biggest_p['high_stress_avg']:.2f}/week vs ${biggest_p['low_stress_avg']:.2f} on calm weeks)."
+            if biggest_p and biggest_p.get("shift_pct", 0) != 0
+            else "Not enough data to compare spending categories across stress levels."
+        ),
+        "evidence": [
+            f"Compared {cat_shift_data_p.get('weeks_analyzed', 0)} weeks of spending by stress level",
+            "Split weeks into high-stress vs low-stress based on calendar density",
+        ],
+        "dollar_impact": (
+            round(abs(biggest_p["high_stress_avg"] - biggest_p["low_stress_avg"]) * 4, 2)
+            if biggest_p and abs(biggest_p.get("shift_pct", 0)) > 10
+            else None
+        ),
+        "has_data": cat_shift_data_p.get("has_data", False),
+        "categories": cat_shift_data_p.get("categories", []),
+        "what_this_means": (
+            "This shows which spending habits change when life gets hectic."
+            if cat_shift_data_p.get("has_data")
+            else "Need both calendar and transaction data to unlock this."
+        ),
+        "recommended_next_actions": [
+            f"Pre-plan your {biggest_p['category'].replace('_', ' ')} for busy weeks."
+            if biggest_p else "Upload more data.",
+            "Stock up on easy meal options before a packed calendar week."
+            if biggest_p and biggest_p.get("category") in ("dining", "food_delivery")
+            else "Review which categories spike and set limits for hectic weeks.",
+        ],
+    }
+
+    velocity_data_p = _compute_spending_velocity(transactions_df)
+    velocity_insight = {
+        "id": "spending_velocity",
+        "title": "How fast you spend each pay period",
+        "finding": (
+            f"{velocity_data_p['first_half_pct']:.0f}% of your discretionary spending happens in the first half of each pay period."
+            if velocity_data_p.get("has_data")
+            else "Need at least 2 paydays to measure spending pace."
+        ),
+        "evidence": [
+            f"Analyzed {velocity_data_p.get('periods_analyzed', 0)} pay periods",
+            f"Average spend per period: ${velocity_data_p.get('avg_period_spend', 0):.2f}"
+            if velocity_data_p.get("has_data") else "Not enough pay periods detected",
+        ],
+        "dollar_impact": None,
+        "has_data": velocity_data_p.get("has_data", False),
+        "first_half_pct": velocity_data_p.get("first_half_pct"),
+        "second_half_pct": velocity_data_p.get("second_half_pct"),
+        "is_front_loaded": velocity_data_p.get("is_front_loaded"),
+        "periods_analyzed": velocity_data_p.get("periods_analyzed"),
+        "what_this_means": (
+            "You're front-loading your spending."
+            if velocity_data_p.get("is_front_loaded")
+            else "Your spending is spread fairly evenly." if velocity_data_p.get("has_data")
+            else "Need income deposits in transaction data."
+        ),
+        "recommended_next_actions": [
+            "Try a daily spending allowance.",
+            "Move savings to a separate account on payday.",
+        ],
+    }
+
+    recovery_data_p = _compute_recovery_spending(weekly_spend_df, weekly_stress_persona)
+    recovery_insight = {
+        "id": "recovery_spending",
+        "title": "Reward spending after stressful weeks",
+        "finding": (
+            f"After your most stressful weeks, spending the following week is {recovery_data_p['recovery_pct']:.0f}% higher "
+            f"(${recovery_data_p['avg_next_after_high_stress']:.2f} vs ${recovery_data_p['avg_next_after_low_stress']:.2f} after calm weeks)."
+            if recovery_data_p.get("is_recovery_detected")
+            else (
+                "Your spending doesn't change much after stressful weeks."
+                if recovery_data_p.get("has_data")
+                else "Need more weeks of data to detect this pattern."
+            )
+        ),
+        "evidence": [
+            f"Compared spending after {recovery_data_p.get('high_stress_weeks_count', 0)} high-stress weeks vs the rest",
+            f"Overall weekly average: ${recovery_data_p.get('overall_avg_spend', 0):.2f}",
+        ],
+        "dollar_impact": (
+            round(
+                (recovery_data_p["avg_next_after_high_stress"] - recovery_data_p["overall_avg_spend"])
+                * recovery_data_p["high_stress_weeks_count"],
+                2,
+            )
+            if recovery_data_p.get("is_recovery_detected")
+            else None
+        ),
+        "has_data": recovery_data_p.get("has_data", False),
+        "is_recovery_detected": recovery_data_p.get("is_recovery_detected", False),
+        "recovery_pct": recovery_data_p.get("recovery_pct"),
+        "recovery_weeks": recovery_data_p.get("recovery_weeks", []),
+        "what_this_means": (
+            "'Treat yourself' spending \u2014 after a rough week, the next week's purchases go up as a reward."
+            if recovery_data_p.get("is_recovery_detected")
+            else "No recovery spending pattern detected." if recovery_data_p.get("has_data")
+            else "Need both calendar and transaction data."
+        ),
+        "recommended_next_actions": [
+            "Plan a free reward activity for the weekend after tough weeks.",
+            "Set a post-stress spending cap.",
+        ],
+    }
+
     insights: list[dict[str, Any]] = [
         stress_insight,
         themes_insight,
@@ -822,6 +1167,9 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         dow_insight,
         surge_insight,
         worry_insight,
+        cat_shift_insight,
+        velocity_insight,
+        recovery_insight,
     ]
 
     if persona_id == "p05":
@@ -1161,6 +1509,132 @@ def compute_insights_from_dataframes(
         ],
     }
 
+    # --- Stress category shift (cross-source: calendar stress x transaction categories) ---
+    weekly_stress_for_new = _weekly_stress(stress_df)
+    cat_shift_data = _compute_stress_category_shift(tagged_df, weekly_stress_for_new)
+    biggest = cat_shift_data.get("biggest_shift")
+    cat_shift_insight = {
+        "id": "stress_category_shift",
+        "title": "How stress changes where you spend",
+        "finding": (
+            f"When your calendar gets busy, your {biggest['category'].replace('_', ' ')} spending "
+            f"{'jumps' if biggest['shift_pct'] > 0 else 'drops'} {abs(biggest['shift_pct']):.0f}% "
+            f"(${biggest['high_stress_avg']:.2f}/week vs ${biggest['low_stress_avg']:.2f} on calm weeks)."
+            if biggest and biggest.get("shift_pct", 0) != 0
+            else "Not enough data to compare spending categories across stress levels yet."
+        ),
+        "evidence": [
+            f"Compared {cat_shift_data.get('weeks_analyzed', 0)} weeks of spending by stress level",
+            "Split weeks into high-stress vs low-stress based on your calendar density",
+        ],
+        "dollar_impact": (
+            round(abs(biggest["high_stress_avg"] - biggest["low_stress_avg"]) * 4, 2)
+            if biggest and abs(biggest.get("shift_pct", 0)) > 10
+            else None
+        ),
+        "has_data": cat_shift_data.get("has_data", False),
+        "categories": cat_shift_data.get("categories", []),
+        "what_this_means": (
+            "This shows which spending habits change when life gets hectic \u2014 it's not just about spending more, "
+            "it's about spending differently."
+            if cat_shift_data.get("has_data")
+            else "Upload both bank transactions and calendar data to unlock this cross-source insight."
+        ),
+        "recommended_next_actions": [
+            f"Pre-plan your {biggest['category'].replace('_', ' ')} for busy weeks to avoid the stress markup."
+            if biggest else "Upload more data.",
+            "Stock up on easy meal options before a packed calendar week."
+            if biggest and biggest.get("category") in ("dining", "food_delivery")
+            else "Review which categories spike and set limits for hectic weeks.",
+        ],
+    }
+
+    # --- Spending velocity (how fast you burn through discretionary budget) ---
+    velocity_data = _compute_spending_velocity(transactions_df)
+    velocity_insight = {
+        "id": "spending_velocity",
+        "title": "How fast you spend each pay period",
+        "finding": (
+            f"{velocity_data['first_half_pct']:.0f}% of your discretionary spending happens in the first half of each pay period, "
+            f"leaving {velocity_data['second_half_pct']:.0f}% for the second half."
+            if velocity_data.get("has_data")
+            else "We need at least 2 paydays in your data to measure spending pace."
+        ),
+        "evidence": [
+            f"Analyzed {velocity_data.get('periods_analyzed', 0)} pay periods",
+            f"Average spend per period: ${velocity_data.get('avg_period_spend', 0):.2f}"
+            if velocity_data.get("has_data") else "Not enough pay periods detected",
+        ],
+        "dollar_impact": None,
+        "has_data": velocity_data.get("has_data", False),
+        "first_half_pct": velocity_data.get("first_half_pct"),
+        "second_half_pct": velocity_data.get("second_half_pct"),
+        "is_front_loaded": velocity_data.get("is_front_loaded"),
+        "periods_analyzed": velocity_data.get("periods_analyzed"),
+        "what_this_means": (
+            "You're front-loading your spending \u2014 burning through most of your budget early, "
+            "which can leave you stretched before the next paycheck."
+            if velocity_data.get("is_front_loaded")
+            else (
+                "Your spending is spread fairly evenly through each pay period \u2014 that's solid cash flow management."
+                if velocity_data.get("has_data")
+                else "Upload bank transactions with direct deposits to unlock this insight."
+            )
+        ),
+        "recommended_next_actions": [
+            "Try a daily spending allowance: divide your discretionary budget by days in the period.",
+            "Move savings to a separate account on payday so you only see spendable cash.",
+        ],
+    }
+
+    # --- Recovery spending (decompression purchases after stressful weeks) ---
+    recovery_data = _compute_recovery_spending(weekly_spend_df, weekly_stress_for_new)
+    recovery_insight = {
+        "id": "recovery_spending",
+        "title": "Reward spending after stressful weeks",
+        "finding": (
+            f"After your most stressful weeks, spending the following week is {recovery_data['recovery_pct']:.0f}% higher "
+            f"(${recovery_data['avg_next_after_high_stress']:.2f} vs ${recovery_data['avg_next_after_low_stress']:.2f} after calm weeks)."
+            if recovery_data.get("is_recovery_detected")
+            else (
+                "Your spending doesn't change much after stressful weeks \u2014 you keep a steady pace."
+                if recovery_data.get("has_data")
+                else "Need more weeks of overlapping calendar and spending data to detect this pattern."
+            )
+        ),
+        "evidence": [
+            f"Compared spending after {recovery_data.get('high_stress_weeks_count', 0)} high-stress weeks vs the rest",
+            f"Overall weekly average: ${recovery_data.get('overall_avg_spend', 0):.2f}",
+        ],
+        "dollar_impact": (
+            round(
+                (recovery_data["avg_next_after_high_stress"] - recovery_data["overall_avg_spend"])
+                * recovery_data["high_stress_weeks_count"],
+                2,
+            )
+            if recovery_data.get("is_recovery_detected")
+            else None
+        ),
+        "has_data": recovery_data.get("has_data", False),
+        "is_recovery_detected": recovery_data.get("is_recovery_detected", False),
+        "recovery_pct": recovery_data.get("recovery_pct"),
+        "recovery_weeks": recovery_data.get("recovery_weeks", []),
+        "what_this_means": (
+            "This is 'treat yourself' spending \u2014 after a rough week, the next week's purchases go up as a reward. "
+            "It's a different pattern from stress spending (which happens during the stressful week itself)."
+            if recovery_data.get("is_recovery_detected")
+            else (
+                "You don't seem to have a recovery spending pattern \u2014 your spending stays consistent regardless of last week's stress."
+                if recovery_data.get("has_data")
+                else "Upload both bank and calendar data covering at least 6 weeks to check for this pattern."
+            )
+        ),
+        "recommended_next_actions": [
+            "Plan a free reward activity for the weekend after tough weeks \u2014 a hike, a movie night, cooking something nice.",
+            "Set a post-stress spending cap so you can still treat yourself without overdoing it.",
+        ],
+    }
+
     insights: list[dict[str, Any]] = [
         stress_insight,
         themes_insight,
@@ -1169,6 +1643,9 @@ def compute_insights_from_dataframes(
         dow_insight,
         surge_insight,
         worry_insight,
+        cat_shift_insight,
+        velocity_insight,
+        recovery_insight,
     ]
 
     result = {

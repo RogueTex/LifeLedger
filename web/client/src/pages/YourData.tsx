@@ -15,6 +15,9 @@ import PostPaydaySurge from "@/components/dashboard/PostPaydaySurge";
 import BehavioralInsights from "@/components/dashboard/BehavioralInsights";
 import StrengthsWeaknesses from "@/components/dashboard/StrengthsWeaknesses";
 import GroundedChatUpload from "@/components/dashboard/GroundedChatUpload";
+import StressCategoryShift from "@/components/dashboard/StressCategoryShift";
+import SpendingVelocity from "@/components/dashboard/SpendingVelocity";
+import RecoverySpending from "@/components/dashboard/RecoverySpending";
 import { findInsight, type InsightPayload } from "@/lib/api";
 
 export default function YourData() {
@@ -133,6 +136,9 @@ export default function YourData() {
               const hasSubs = (sub?.subscriptions || []).length > 0;
               const hasSurge = surge?.surge_ratio != null;
               const hasDow = dow?.expensive_day != null;
+              const hasCatShift = findInsight(payload, "stress_category_shift")?.has_data;
+              const hasVelocity = findInsight(payload, "spending_velocity")?.has_data;
+              const hasRecovery = findInsight(payload, "recovery_spending")?.has_data;
 
               return (
                 <div className="space-y-8">
@@ -145,6 +151,13 @@ export default function YourData() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {hasSubs && <SubscriptionPanel payload={payload} />}
                       {hasSurge && <PostPaydaySurge payload={payload} />}
+                    </div>
+                  )}
+                  {hasCatShift && <StressCategoryShift payload={payload} />}
+                  {(hasVelocity || hasRecovery) && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {hasVelocity && <SpendingVelocity payload={payload} />}
+                      {hasRecovery && <RecoverySpending payload={payload} />}
                     </div>
                   )}
                   {hasDow && <DayOfWeekChart payload={payload} />}

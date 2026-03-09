@@ -14,7 +14,10 @@ import PostPaydaySurge from "@/components/dashboard/PostPaydaySurge";
 import BehavioralInsights from "@/components/dashboard/BehavioralInsights";
 import GroundedChat from "@/components/dashboard/GroundedChat";
 import StrengthsWeaknesses from "@/components/dashboard/StrengthsWeaknesses";
-import { fetchPersonas, fetchInsights, type InsightPayload, type Persona } from "@/lib/api";
+import StressCategoryShift from "@/components/dashboard/StressCategoryShift";
+import SpendingVelocity from "@/components/dashboard/SpendingVelocity";
+import RecoverySpending from "@/components/dashboard/RecoverySpending";
+import { fetchPersonas, fetchInsights, findInsight, type InsightPayload, type Persona } from "@/lib/api";
 
 export default function Dashboard() {
   const search = useSearch();
@@ -158,6 +161,11 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <SubscriptionPanel payload={payload} />
                     <PostPaydaySurge payload={payload} />
+                  </div>
+                  <StressCategoryShift payload={payload} />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <SpendingVelocity payload={payload} />
+                    <RecoverySpending payload={payload} />
                   </div>
                   <DayOfWeekChart payload={payload} />
                   <BehavioralInsights payload={payload} />
