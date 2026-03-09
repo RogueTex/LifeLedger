@@ -2,13 +2,18 @@ import express from "express";
 import { createServer } from "http";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const httpServer = createServer(app);
 
 app.use(express.json({ limit: "50mb" }));
 
-const OUTPUTS_DIR = path.resolve(import.meta.dirname, "..", "..", "outputs");
+const SERVER_DIR =
+  typeof __dirname !== "undefined"
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url));
+const OUTPUTS_DIR = path.resolve(SERVER_DIR, "..", "..", "outputs");
 
 // GET /api/personas — list available personas
 app.get("/api/personas", (_req, res) => {
@@ -186,7 +191,7 @@ print(json.dumps({"answer": answer}))
 
 // In dev, vite handles static files via proxy. In prod, serve built files.
 if (process.env.NODE_ENV === "production") {
-  const publicDir = path.resolve(import.meta.dirname, "..", "dist", "public");
+  const publicDir = path.resolve(SERVER_DIR, "..", "dist", "public");
   app.use(express.static(publicDir));
   app.get("*", (_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));

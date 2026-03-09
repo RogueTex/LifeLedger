@@ -8,7 +8,9 @@ cat <<'EOF'
 LifeLedger 2-minute dry run
 
 Exact click flow:
-1. Launch app: streamlit run src/ui/app.py
+1. Launch app:
+   - Terminal 1: cd web && npm run dev
+   - Terminal 2: cd web && npx vite --host
 2. Sidebar -> Persona: select "Jordan Lee — Burnout + Home Savings" (p01)
 3. Scroll through:
    - KPI cards (correlation/months/themes)

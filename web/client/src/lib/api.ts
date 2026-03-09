@@ -96,7 +96,7 @@ export function findInsight(payload: InsightPayload | null, id: string): Insight
 }
 
 export function fmt(value: any, digits = 2): string {
-  if (value == null) return "N/A";
+  if (value == null) return "—";
   const n = Number(value);
-  return isNaN(n) ? "N/A" : n.toFixed(digits);
+  return isNaN(n) ? "—" : n.toFixed(digits);
 }

@@ -9,7 +9,7 @@
 **Deadline:** March 9, 2026 | **Track:** Data Portability Hackathon 2026, Track 3
 
 ### Done
-- [x] Persona data, loaders, features, insight engine, Streamlit UI
+- [x] Persona data, loaders, features, insight engine, web dashboard
 - [x] Cached insights (`outputs/insights_p01.json`, `outputs/insights_p05.json`)
 - [x] Welcome gate, KPI cards, timeline chart, spike evidence cards
 - [x] Data Story + consent/privacy card
@@ -29,7 +29,7 @@
 
 ## UI Improvements
 
-*Main app: `src/ui/app.py`*
+*Main app: `web/client/src`*
 
 | # | Area | Location | Suggestion |
 |---|------|----------|------------|
@@ -46,7 +46,7 @@
 
 Create a project skill at `.cursor/skills/lifeledger-ui/SKILL.md` so the agent knows the UI stack:
 
-- Stack: Streamlit, Plotly, custom CSS in `_inject_global_style()`
+- Stack: React, Recharts, Tailwind CSS, Framer Motion
 - CSS vars: `--bg`, `--card`, `--accent`, `--warn`, `--positive`
 - Always use `escape()` for user content in HTML
 - Test with both p01 and p05 personas
@@ -59,7 +59,7 @@ Create a project skill at `.cursor/skills/lifeledger-ui/SKILL.md` so the agent k
 
 | # | File | Issue | Suggestion |
 |---|------|-------|------------|
-| ~~1~~ | ~~`src/ui/app.py`~~ | ~~`compute_insights_from_uploads()` is a stub~~ | ~~Done~~ — Parsers in `src/loaders/upload_parser.py`; pipeline wired in `app.py`. Handles Chase/BofA/Amex/Mint CSV, ICS, ChatGPT ZIP/JSON. |
+| ~~1~~ | ~~Upload analysis flow~~ | ~~`compute_insights_from_uploads()` is a stub~~ | ~~Done~~ — Parsers in `src/loaders/upload_parser.py`; pipeline wired in `scripts/process_upload.py`. Handles Chase/BofA/Amex/Mint CSV, ICS, ChatGPT ZIP/JSON. |
 | ~~2~~ | ~~`src/insights/narrative_gen.py`~~ | ~~No retry/backoff~~ | ~~Done~~ — 3 retries with 1s/2s/4s backoff, 12K char truncation, safe response parsing, temp 0.3. |
 | 3 | `src/insights/insight_engine.py` | Theme lexicon limited | Add more freelancer/ADHD phrases to `THEME_LEXICON`; improve invoice regex for varied email formats |
 
@@ -82,7 +82,7 @@ Create a project skill at `.cursor/skills/lifeledger-ui/SKILL.md` so the agent k
 
 ```bash
 # Run app
-streamlit run src/ui/app.py
+cd web && npm run dev
 
 # Regenerate insight cache (after feature/insight logic changes)
 python3 -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p05')"
@@ -94,7 +94,7 @@ python3 scripts/generate_demo_backups.py
 ./scripts/demo_dry_run.sh
 
 # Compile check
-python3 -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/insights/insight_engine.py src/insights/narrative_gen.py src/ui/app.py
+python3 -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/insights/insight_engine.py src/insights/narrative_gen.py
 ```
 
 ---

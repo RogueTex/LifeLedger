@@ -20,9 +20,26 @@ export default function KPICards({ payload }: { payload: InsightPayload }) {
   const dow = findInsight(payload, "expensive_day_of_week");
 
   const cards: ReactNode[] = [];
+  const isJordanDemo = payload.persona === "p01";
+  const isTheoDemo = payload.persona === "p05";
+  const isDemoPersona = isJordanDemo || isTheoDemo;
+  const monthsToGoal = Number(goal?.months_to_goal ?? 0);
+  const avgMonthlySavings = Number(goal?.avg_net_monthly_savings ?? 0);
+  const remainingToGoal = Math.max(0, Number(goal?.savings_goal ?? 0) - Number(goal?.current_savings ?? 0));
+  const needsPerMonthFor24mo = remainingToGoal > 0 ? remainingToGoal / 24 : 0;
+  const monthlyGapTo24mo = Math.max(0, needsPerMonthFor24mo - avgMonthlySavings);
+  const monthsReadable =
+    monthsToGoal >= 12
+      ? `${Math.floor(monthsToGoal / 12)}y ${Math.round(monthsToGoal % 12)}m`
+      : `${Math.round(monthsToGoal)}m`;
 
   // Stress x Spend card (only if no rate insight and correlation exists)
   if (!rate && stress?.correlation_coefficient != null) {
+    const r = Number(stress.correlation_coefficient || 0);
+    const stressSignal =
+      r >= 0.5 ? "Strong link: stress spikes often coincide with higher spend." :
+      r >= 0.3 ? "Moderate link: busier/stressful weeks tend to increase discretionary spend." :
+      "Light link: stress has limited impact on discretionary spending.";
     cards.push(
       <motion.div variants={item} key="stress">
         <div className="glass-panel kpi-gradient-border bg-card/40 border-border/50 overflow-hidden relative rounded-xl p-5">
@@ -34,12 +51,15 @@ export default function KPICards({ payload }: { payload: InsightPayload }) {
           </p>
           <div className="flex items-baseline gap-2">
             <h3 className="text-3xl font-display font-medium text-foreground">
-              {fmt(stress.correlation_coefficient, 2)}
+              {fmt(r, 2)}
             </h3>
             <span className="text-sm text-muted-foreground">r</span>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground leading-tight">
-            {stress.lag_used === "same_week_raw" ? "Same-week" : "Prior-week"} alignment
+            {stressSignal}
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground leading-tight">
+            {stress.lag_used === "same_week_raw" ? "Compared in the same week" : "Compared to the week after stress"}
             {stress.p_value != null && ` · p=${fmt(stress.p_value, 3)}`}
           </p>
         </div>
@@ -136,10 +156,16 @@ export default function KPICards({ payload }: { payload: InsightPayload }) {
           </p>
           <div className="flex items-baseline gap-2">
             <h3 className="text-3xl font-display font-medium text-foreground">
-              {fmt(goal.months_to_goal, 1)}
+              {isDemoPersona ? monthsReadable : fmt(goal.months_to_goal, 1)}
             </h3>
-            <span className="text-sm text-muted-foreground">months</span>
+            <span className="text-sm text-muted-foreground">{isDemoPersona ? "to goal" : "months"}</span>
           </div>
+          {isDemoPersona && avgMonthlySavings > 0 && remainingToGoal > 0 && (
+            <p className="mt-1 text-[11px] text-muted-foreground leading-tight">
+              Saving about ${fmt(avgMonthlySavings, 0)}/mo now.
+              {monthlyGapTo24mo > 0 && ` Add about $${fmt(monthlyGapTo24mo, 0)}/mo to hit this in ~24 months.`}
+            </p>
+          )}
           {goal.savings_goal && (
             <div className="mt-2 w-full bg-secondary/50 rounded-full h-1.5 overflow-hidden">
               <div

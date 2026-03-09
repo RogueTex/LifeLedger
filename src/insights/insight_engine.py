@@ -364,6 +364,37 @@ _INFLOW_KEYWORDS = re.compile(
 )
 
 
+def _detect_paydays(
+    df: pd.DataFrame,
+    amount: pd.Series,
+    text_series: pd.Series,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Split transactions into probable paydays and probable spend rows.
+
+    Handles both signed datasets (debits negative, credits positive) and
+    unsigned exports where all amounts are positive.
+    """
+    signed_amount = pd.to_numeric(amount, errors="coerce").fillna(0.0)
+    abs_amount = signed_amount.abs()
+    has_positive = bool((signed_amount > 0).any())
+    has_negative = bool((signed_amount < 0).any())
+
+    keyword_inflow = text_series.str.contains(_INFLOW_KEYWORDS, na=False)
+
+    if has_positive and has_negative:
+        # Signed data: positive rows are plausible inflows, with keyword/size support.
+        payday_mask = (signed_amount > 0) & (keyword_inflow | (abs_amount > 500))
+        outflows = df[signed_amount < 0].copy()
+    else:
+        # Unsigned data: only trust inflows with explicit payroll/deposit-like keywords.
+        payday_mask = keyword_inflow
+        outflows = df[~payday_mask].copy()
+
+    paydays = df[payday_mask].copy()
+    return paydays, outflows
+
+
 def _compute_post_payday_surge(transactions_df: pd.DataFrame) -> dict[str, Any]:
     """Detect spending concentration in the 3 days after income deposits."""
     if transactions_df is None or transactions_df.empty:
@@ -382,18 +413,13 @@ def _compute_post_payday_surge(transactions_df: pd.DataFrame) -> dict[str, Any]:
             texts = texts + " " + df[col].fillna("").astype(str)
     df["_text"] = texts.str.lower()
 
-    # Identify paydays (inflow transactions)
-    inflow_mask = df["_text"].str.contains(_INFLOW_KEYWORDS, na=False) | (amount > 0)
-    # Also check for large positive amounts as income proxy
-    large_inflow = df["_amount"] > 500
-    paydays = df[inflow_mask & large_inflow].copy()
+    paydays, outflows = _detect_paydays(df, amount, df["_text"])
     paydays = paydays.dropna(subset=["_ts"])
 
     if paydays.empty:
         return {"detected": False, "surge_ratio": None, "payday_count": 0}
 
     # For each payday, sum spending in the next 3 days
-    outflows = df[amount < 0].copy() if (amount < 0).any() else df[~(inflow_mask & large_inflow)].copy()
     outflows = outflows.dropna(subset=["_ts"])
 
     if outflows.empty:
@@ -582,17 +608,15 @@ def _compute_spending_velocity(transactions_df: pd.DataFrame) -> dict[str, Any]:
             texts = texts + " " + df[col].fillna("").astype(str)
     df["_text"] = texts.str.lower()
 
-    # Detect paydays
-    inflow_mask = df["_text"].str.contains(_INFLOW_KEYWORDS, na=False) | (amount > 0)
-    large_inflow = df["_amount"] > 500
-    paydays = df[inflow_mask & large_inflow]["_ts"].dropna().sort_values().tolist()
+    paydays_df, outflows_guess = _detect_paydays(df, amount, df["_text"])
+    paydays = paydays_df["_ts"].dropna().sort_values().tolist()
 
     if len(paydays) < 2:
         return {"has_data": False}
 
     # Get outflow transactions
     is_discretionary = df.get("is_discretionary", pd.Series(False, index=df.index))
-    outflows = df[is_discretionary == True].copy() if is_discretionary.any() else df[~(inflow_mask & large_inflow)].copy()
+    outflows = df[is_discretionary == True].copy() if is_discretionary.any() else outflows_guess.copy()
     outflows = outflows.dropna(subset=["_ts"]).sort_values("_ts")
 
     if outflows.empty:

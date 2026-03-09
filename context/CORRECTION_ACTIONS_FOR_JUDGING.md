@@ -67,7 +67,7 @@ Use this as the implementation checklist before final submission.
 ## H) Final QA Gates
 
 - [ ] `python3 -m py_compile` passes for all modules.
-- [ ] `streamlit run src/ui/app.py` works without import/runtime errors.
+- [ ] `cd web && npm run dev` starts API + frontend without runtime errors.
 - [ ] p01: meaningful stress/spend narrative visible.
 - [ ] p05: undercharging signal visible (or explicit not-found explanation).
 - [ ] At least 5 benchmark chat questions return grounded answers.

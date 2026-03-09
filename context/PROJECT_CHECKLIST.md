@@ -6,7 +6,7 @@ Deadline: March 9, 2026
 ## 1) Current Snapshot (As Of 2026-03-06)
 
 - [x] Persona data for `p01` and `p05` is present in `data/raw/`
-- [x] Loader, features, insight engine, narrative generator, Streamlit UI implemented
+- [x] Loader, features, insight engine, narrative generator, web dashboard implemented
 - [x] Validation notebook scaffold (`notebooks/eda.ipynb`) created with required cells
 - [x] Cached insights generated: `outputs/insights_p01.json`, `outputs/insights_p05.json`
 - [x] Schema and export docs moved to structured locations (`schemas/`, `context/docs/`)
@@ -56,7 +56,7 @@ Source Drive:
 | Prompt 2 | Loader + timeline | ✅ Done | Loader contract locked (`profile`, `consent`, normalized source keys, strict `year_week`). |
 | Prompt 3 | Features | ✅ Done | Correlation reliability improved and spike evidence payload enriched. |
 | Prompt 4 | Insight engine + narrative | ✅ Done | Insight schema locked + validated before save; inference fallbacks and expanded explainability added. |
-| Prompt 5 | Streamlit app | ✅ Done | UI + metrics + timeline chart + always-visible spike cards + chat integrated, plus welcome transition gate and resilience overlays. |
+| Prompt 5 | Web app | ✅ Done | UI + metrics + timeline chart + always-visible spike cards + chat integrated, plus welcome transition gate and resilience overlays. |
 | Prompt 6 | Validation notebook | ✅ Done | Notebook file contains required 8-cell flow. |
 
 ## 4) High-Priority Gaps
@@ -79,11 +79,11 @@ Source Drive:
 ## 6) Validation Commands
 
 ```bash
-python3 -m py_compile src/loaders/persona_loader.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/features/resilience_model.py src/insights/insight_engine.py src/insights/narrative_gen.py src/ui/app.py
+python3 -m py_compile src/loaders/persona_loader.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/features/resilience_model.py src/insights/insight_engine.py src/insights/narrative_gen.py
 ```
 
 ```bash
-streamlit run src/ui/app.py
+cd web && npm run dev
 ```
 
 ```python
@@ -96,7 +96,7 @@ save_insights("p05")
 
 - [x] `outputs/insights_p01.json` exists
 - [x] `outputs/insights_p05.json` exists
-- [x] Streamlit app starts
+- [x] Web app starts
 - [x] Correlation for p01 is meaningful (target `r >= 0.3`) 
 - [x] Spike-week explainers are populated with rich examples
 - [x] Weekly trend chart renders with spike highlights
@@ -113,7 +113,7 @@ save_insights("p05")
 - [x] Owner A: Loader/schema contract alignment
 - [x] Owner B: Feature tuning + spike evidence enrichment
 - [x] Owner C: Insight output contract + narrative QA
-- [x] Owner D: Streamlit polish + chart/explainer UX
+- [x] Owner D: dashboard polish + chart/explainer UX
 - [x] Owner E: Demo script + rehearsal + submission packaging
 
 ## 9) Key Schema Reference

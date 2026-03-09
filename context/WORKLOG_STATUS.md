@@ -10,7 +10,7 @@ Last updated: 2026-03-06
 | Feature tuning (stress/spend/corr) | Team | Complete | Re-validate if stress/spend heuristics change | None |
 | Insight schema normalization | Team | Complete | Maintain `v1_locked` fields and validator in save path | None |
 | Financial resilience metric layer | Team | Complete | Keep `resilience_v1` formulas documented and additive to locked schema | None |
-| Streamlit UX polish | Team | Complete | Run quick UI smoke check before demo | None |
+| Dashboard UX polish | Team | Complete | Run quick UI smoke check before demo | None |
 | Demo prep | Team | Complete | Final live-key QA on benchmark chat prompts | Live key availability |
 
 ## Completed Recently
@@ -22,7 +22,7 @@ Last updated: 2026-03-06
 - Added months-to-goal fallback inference (`estimation_mode`) from profile goal/income text when direct fields are missing.
 - Expanded anxiety theme extraction with text lexicon matching for freelancer/ADHD/self-doubt signals.
 - Improved undercharging detection with calendar-hours fallback when invoice emails lack explicit hours.
-- Updated Streamlit UI to locked schema only, added Data Story + consent/privacy card, better fallback messaging, and recommended actions.
+- Updated dashboard UI to locked schema only, added Data Story + consent/privacy card, better fallback messaging, and recommended actions.
 - Regenerated/froze `outputs/insights_p01.json` and `outputs/insights_p05.json`.
 - Added demo hardening assets: `scripts/demo_dry_run.sh`, `scripts/generate_demo_backups.py`, and `outputs/demo_backups/`.
 - Validated app startup and persona cache paths successfully.
@@ -46,9 +46,9 @@ Last updated: 2026-03-06
 - `months_to_goal` now computes for both personas via fallback inference when explicit profile fields are absent.
 - Spike evidence renders for both personas (`>=1` week each) with calendar linkage fallback.
 - `p05` undercharging signal now flags with invoice+calendar evidence and leakage estimate.
-- Streamlit startup validation passed.
-- Streamlit startup validation passed after resilience/UI integration.
-- Local UI audit on `http://localhost:8501` completed; major clutter bug (raw HTML row rendering in spike cards) fixed and revalidated via screenshot pass.
+- Web app startup validation passed.
+- Web app startup validation passed after resilience/UI integration.
+- Local UI audit on `http://localhost:5173` completed; major clutter bug (raw HTML row rendering in spike cards) fixed and revalidated via screenshot pass.
 
 ## Next PR Suggestions
 
@@ -61,6 +61,6 @@ Last updated: 2026-03-06
 - [x] Run py_compile check for modified modules
 - [x] Regenerate `outputs/insights_p01.json` and `outputs/insights_p05.json` if logic changed
 - [ ] Refresh backup panel snapshots via `python3 scripts/generate_demo_backups.py`
-- [x] Run Streamlit app once and verify no startup errors
+- [x] Run web app once and verify no startup errors
 - [x] Update this file with status and blocker changes
 - [ ] Include screenshots or terminal proof in PR description

@@ -117,7 +117,6 @@ lifeledger/
 │   ├── insights/
 │   │   ├── insight_engine.py               # End-to-end insight computation + schema validation
 │   │   └── narrative_gen.py                # LLM narrative generation (Groq → OpenRouter → OpenAI)
-│   └── ui/app.py                           # Streamlit dashboard (legacy, kept for reference)
 ├── scripts/
 │   ├── process_upload.py                   # Bridge: stdin JSON → upload_parser → insights → stdout
 │   ├── demo_dry_run.sh                     # 2-minute timed demo runbook

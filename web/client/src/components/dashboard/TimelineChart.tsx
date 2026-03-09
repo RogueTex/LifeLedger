@@ -8,6 +8,13 @@ import {
 export default function TimelineChart({ payload }: { payload: InsightPayload }) {
   const stress = findInsight(payload, "stress_spend_correlation");
   const series = stress?.weekly_series || [];
+  const r = Number(stress?.correlation_coefficient || 0);
+  const plainEnglish =
+    r >= 0.5
+      ? "When stress goes up, discretionary spending usually rises too."
+      : r >= 0.3
+        ? "Higher-stress weeks often come with higher discretionary spending."
+        : "Stress and discretionary spending move somewhat independently.";
 
   if (series.length === 0) {
     return null;
@@ -50,7 +57,7 @@ export default function TimelineChart({ payload }: { payload: InsightPayload }) 
         Stress-Spend Correlation Timeline
       </h3>
       <p className="text-sm text-muted-foreground mb-4">
-        {stress?.finding}
+        {plainEnglish} {stress?.finding}
       </p>
       <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">

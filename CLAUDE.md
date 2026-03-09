@@ -34,8 +34,8 @@ python -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py 
 # Regenerate insight caches (required after feature/insight logic changes — needs persona data in data/raw/)
 python -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p05')"
 
-# Streamlit app (legacy, kept for reference)
-streamlit run src/ui/app.py
+# Start web app
+cd web && npm run dev
 ```
 
 ## Architecture

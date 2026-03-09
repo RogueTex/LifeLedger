@@ -3,7 +3,7 @@
 ## Where Metrics Are Computed
 - Core formulas: `src/features/resilience_model.py` (`compute_resilience_metrics`)
 - Insight wiring: `src/insights/insight_engine.py` (resilience insight IDs)
-- UI overlays: `src/ui/app.py` (Behavioral Overlay, Macro Overlay)
+- UI overlays: `web/client/src/components/dashboard/ResiliencePanel.tsx`
 
 ## Formulas
 - Volatility Index (0-100):

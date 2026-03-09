@@ -4,3 +4,15 @@ data/raw/
 __pycache__/
 *.pyc
 .DS_Store
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.vite/
+dist/
+build/
+node_modules/
+video/
+*.log
