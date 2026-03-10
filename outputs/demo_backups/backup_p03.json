@@ -1,7 +1,7 @@
 {
   "schema_version": "v1_locked",
   "metric_layer_version": null,
-  "generated_at": "2026-03-09T23:41:15.927472+00:00",
+  "generated_at": "2026-03-10T00:05:24.602185+00:00",
   "persona": "p03",
   "profile_name": "Sasha Moreno",
   "consent": {
@@ -27,13 +27,13 @@
       "title": "Stress and discretionary spend pattern",
       "finding": "Moderate positive relationship between stress and discretionary spend using `same_week_raw` alignment (statistically significant).",
       "evidence": [
-        "Correlation coefficient: 0.62",
+        "Correlation coefficient: 0.66",
         "Spike weeks detected: 1",
         "Track discretionary categories weekly and compare against stressful calendar periods."
       ],
-      "dollar_impact": 230.07,
-      "correlation_coefficient": 0.622407764868085,
-      "p_value": 3.015967282144656e-05,
+      "dollar_impact": 253.62,
+      "correlation_coefficient": 0.659983829683487,
+      "p_value": 6.551341218348713e-06,
       "insufficient_variance": false,
       "lag_used": "same_week_raw",
       "weekly_series": [
@@ -67,7 +67,7 @@
         },
         {
           "year_week": "2024-06",
-          "weekly_discretionary_total": 15.49,
+          "weekly_discretionary_total": 46.48,
           "weekly_stress_avg": 0.1429,
           "weekly_stress_raw_avg": 0.25,
           "is_spike_week": false
@@ -88,7 +88,7 @@
         },
         {
           "year_week": "2024-10",
-          "weekly_discretionary_total": 289.94,
+          "weekly_discretionary_total": 320.93,
           "weekly_stress_avg": 0.2381,
           "weekly_stress_raw_avg": 0.3333,
           "is_spike_week": true
@@ -109,7 +109,7 @@
         },
         {
           "year_week": "2024-14",
-          "weekly_discretionary_total": 10.99,
+          "weekly_discretionary_total": 41.98,
           "weekly_stress_avg": 0.125,
           "weekly_stress_raw_avg": 0.0,
           "is_spike_week": false
@@ -123,7 +123,7 @@
         },
         {
           "year_week": "2024-19",
-          "weekly_discretionary_total": 209.59,
+          "weekly_discretionary_total": 224.58,
           "weekly_stress_avg": 0.2619,
           "weekly_stress_raw_avg": 0.6667,
           "is_spike_week": false
@@ -144,7 +144,7 @@
         },
         {
           "year_week": "2024-23",
-          "weekly_discretionary_total": 10.99,
+          "weekly_discretionary_total": 41.98,
           "weekly_stress_avg": 0.2857,
           "weekly_stress_raw_avg": 0.1667,
           "is_spike_week": false
@@ -165,7 +165,7 @@
         },
         {
           "year_week": "2024-27",
-          "weekly_discretionary_total": 10.99,
+          "weekly_discretionary_total": 41.98,
           "weekly_stress_avg": 0.0714,
           "weekly_stress_raw_avg": 0.0,
           "is_spike_week": false
@@ -200,7 +200,7 @@
         },
         {
           "year_week": "2024-32",
-          "weekly_discretionary_total": 15.49,
+          "weekly_discretionary_total": 46.48,
           "weekly_stress_avg": 0.5,
           "weekly_stress_raw_avg": 0.5,
           "is_spike_week": false
@@ -221,7 +221,7 @@
         },
         {
           "year_week": "2024-36",
-          "weekly_discretionary_total": 10.99,
+          "weekly_discretionary_total": 41.98,
           "weekly_stress_avg": 0.1429,
           "weekly_stress_raw_avg": 0.25,
           "is_spike_week": false
@@ -242,7 +242,7 @@
         },
         {
           "year_week": "2024-40",
-          "weekly_discretionary_total": 10.99,
+          "weekly_discretionary_total": 41.98,
           "weekly_stress_avg": 0.5714,
           "weekly_stress_raw_avg": 0.0,
           "is_spike_week": false
@@ -263,7 +263,7 @@
         },
         {
           "year_week": "2024-45",
-          "weekly_discretionary_total": 79.32,
+          "weekly_discretionary_total": 110.31,
           "weekly_stress_avg": 0.1905,
           "weekly_stress_raw_avg": 0.5,
           "is_spike_week": false
@@ -284,7 +284,7 @@
         },
         {
           "year_week": "2024-49",
-          "weekly_discretionary_total": 10.99,
+          "weekly_discretionary_total": 41.98,
           "weekly_stress_avg": 0.1429,
           "weekly_stress_raw_avg": 0.0,
           "is_spike_week": false
@@ -307,7 +307,7 @@
       "spike_weeks": [
         {
           "year_week": "2024-10",
-          "weekly_discretionary_total": 289.94,
+          "weekly_discretionary_total": 320.93,
           "top_transactions": [
             {
               "date": "2024-03-08",
@@ -372,15 +372,15 @@
             }
           ],
           "threshold_math": {
-            "week_spend": 289.94,
-            "mean": 59.87,
+            "week_spend": 320.93,
+            "mean": 67.31,
             "std": 76.52,
-            "threshold": 59.87,
+            "threshold": 67.31,
             "prior_week_stress": null
           },
           "prior_week": "2024-09",
           "prior_week_stress": null,
-          "evidence": "Week 2024-10 spend $289.94 crossed threshold $59.87; prior week stress was N/A."
+          "evidence": "Week 2024-10 spend $320.93 crossed threshold $67.31; prior week stress was N/A."
         }
       ],
       "what_this_means": "Your spending peaks are likely linked to stressful weeks.",
@@ -392,36 +392,40 @@
     {
       "id": "top_anxiety_themes",
       "title": "Recurring anxiety themes",
-      "finding": "Most repeated themes: money (4), career (3), burnout (3).",
+      "finding": "Most repeated themes: money (14), anxiety (9), stress (6).",
       "evidence": [
-        "Theme rows analyzed: 8",
+        "Theme rows analyzed: 10",
         "Themes are extracted from conversation tags plus lexicon matches in message text."
       ],
       "dollar_impact": null,
       "top_themes": [
         {
           "theme": "money",
-          "count": 4
-        },
-        {
-          "theme": "career",
-          "count": 3
-        },
-        {
-          "theme": "burnout",
-          "count": 3
-        },
-        {
-          "theme": "stress",
-          "count": 2
+          "count": 14
         },
         {
           "theme": "anxiety",
-          "count": 2
+          "count": 9
+        },
+        {
+          "theme": "stress",
+          "count": 6
         },
         {
           "theme": "debt",
-          "count": 1
+          "count": 6
+        },
+        {
+          "theme": "career",
+          "count": 5
+        },
+        {
+          "theme": "burnout",
+          "count": 4
+        },
+        {
+          "theme": "self_doubt",
+          "count": 2
         },
         {
           "theme": "client_stress",
@@ -429,6 +433,10 @@
         },
         {
           "theme": "relationship",
+          "count": 1
+        },
+        {
+          "theme": "overwhelm",
           "count": 1
         }
       ],
@@ -463,13 +471,13 @@
     {
       "id": "subscription_creep",
       "title": "Subscription creep",
-      "finding": "You have 6 recurring charges totaling $2902.48/mo: Rent \u2014 Avenue Place Apartments, Emergency fund transfer \u2014 HYSA, Navient \u2014 student loan autopay, CorePower Yoga \u2014 monthly membe, Netflix \u2014 monthly subscription.",
+      "finding": "You have 9 recurring charges totaling $2958.47/mo: Rent \u2014 Avenue Place Apartments, Emergency fund transfer \u2014 HYSA, Navient \u2014 student loan autopay, CorePower Yoga \u2014 monthly membe, Dovetail \u2014 UX research reposit.",
       "evidence": [
-        "Subscriptions detected: 6",
-        "Monthly total: $2902.48",
-        "Yearly cost: $34829.76"
+        "Subscriptions detected: 9",
+        "Monthly total: $2958.47",
+        "Yearly cost: $35501.64"
       ],
-      "dollar_impact": 34829.76,
+      "dollar_impact": 35501.64,
       "subscriptions": [
         {
           "name": "Rent \u2014 Avenue Place Apartments (January)",
@@ -496,10 +504,28 @@
           "avg_gap_days": 33.5
         },
         {
+          "name": "Dovetail \u2014 UX research repository",
+          "amount": 25.0,
+          "occurrences": 12,
+          "avg_gap_days": 30.5
+        },
+        {
+          "name": "Notion \u2014 workspace subscription",
+          "amount": 16.0,
+          "occurrences": 12,
+          "avg_gap_days": 30.5
+        },
+        {
           "name": "Netflix \u2014 monthly subscription",
           "amount": 15.49,
           "occurrences": 7,
           "avg_gap_days": 45.7
+        },
+        {
+          "name": "YNAB \u2014 budget tracking subscription",
+          "amount": 14.99,
+          "occurrences": 12,
+          "avg_gap_days": 30.5
         },
         {
           "name": "Spotify Premium \u2014 monthly subscription",
@@ -508,7 +534,7 @@
           "avg_gap_days": 30.5
         }
       ],
-      "monthly_total": 2902.48,
+      "monthly_total": 2958.47,
       "what_this_means": "These charges repeat every month whether you use the service or not. Review each one and cancel anything you haven't used in the last 30 days.",
       "recommended_next_actions": [
         "Open each subscription and check your last login date.",
@@ -518,24 +544,24 @@
     {
       "id": "expensive_day_of_week",
       "title": "Your expensive day of the week",
-      "finding": "You spend the most on Mondays \u2014 $1299.53 avg vs $947.85 overall (37% above average).",
+      "finding": "You spend the most on Mondays \u2014 $1085.94 avg vs $731.26 overall (49% above average).",
       "evidence": [
-        "Average by day: Monday: $1299.53, Tuesday: $812.12, Wednesday: $576.21, Thursday: $1027.35, Friday: $868.57, Saturday: $922.34, Sunday: $1128.86",
+        "Average by day: Monday: $1085.94, Tuesday: $602.98, Wednesday: $469.09, Thursday: $808.23, Friday: $672.09, Saturday: $603.34, Sunday: $877.12",
         "Cheapest day: Wednesday"
       ],
       "dollar_impact": null,
       "by_day": {
-        "Monday": 1299.53,
-        "Tuesday": 812.12,
-        "Wednesday": 576.21,
-        "Thursday": 1027.35,
-        "Friday": 868.57,
-        "Saturday": 922.34,
-        "Sunday": 1128.86
+        "Monday": 1085.94,
+        "Tuesday": 602.98,
+        "Wednesday": 469.09,
+        "Thursday": 808.23,
+        "Friday": 672.09,
+        "Saturday": 603.34,
+        "Sunday": 877.12
       },
       "expensive_day": "Monday",
       "cheapest_day": "Wednesday",
-      "pct_above_average": 37.0,
+      "pct_above_average": 49.0,
       "what_this_means": "Monday is when you're most likely to overspend. Knowing this lets you plan ahead.",
       "recommended_next_actions": [
         "Set a Monday spending cap and check it before buying.",
@@ -545,16 +571,16 @@
     {
       "id": "post_payday_surge",
       "title": "Post-payday spending surge",
-      "finding": "55.0% of your spending happens within 3 days of getting paid ($19920.89 of $36080.75).",
+      "finding": "54.0% of your spending happens within 3 days of getting paid ($19920.89 of $36752.63).",
       "evidence": [
         "Paydays detected: 15",
         "Post-payday spend: $19920.89",
-        "Total spend: $36080.75",
-        "Surge ratio: 55.0%"
+        "Total spend: $36752.63",
+        "Surge ratio: 54.0%"
       ],
       "dollar_impact": 19920.89,
       "detected": true,
-      "surge_pct": 55.0,
+      "surge_pct": 54.0,
       "what_this_means": "You spend heavily right after payday, which can leave you tight before the next one. This is a common pattern \u2014 awareness is the first step.",
       "recommended_next_actions": [
         "Wait 24 hours after payday before any non-essential purchase.",
@@ -564,10 +590,10 @@
     {
       "id": "worry_timeline",
       "title": "When you worry most (AI conversations x spending)",
-      "finding": "You mentioned financial/emotional worries 7 times in AI conversations. Peak worry: week 2024-08 ($120.22 spent that week).",
+      "finding": "You mentioned financial/emotional worries 12 times in AI conversations. Peak worry: week 2024-06 ($46.48 spent that week).",
       "evidence": [
-        "Total worry mentions: 7",
-        "Weeks with worry signals: 7",
+        "Total worry mentions: 12",
+        "Weeks with worry signals: 12",
         "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data."
       ],
       "dollar_impact": null,
@@ -578,6 +604,11 @@
           "discretionary_spend": 137.7
         },
         {
+          "year_week": "2024-06",
+          "worry_mentions": 1,
+          "discretionary_spend": 46.480000000000004
+        },
+        {
           "year_week": "2024-08",
           "worry_mentions": 1,
           "discretionary_spend": 120.22
@@ -585,7 +616,7 @@
         {
           "year_week": "2024-10",
           "worry_mentions": 1,
-          "discretionary_spend": 289.94
+          "discretionary_spend": 320.93
         },
         {
           "year_week": "2024-15",
@@ -593,9 +624,19 @@
           "discretionary_spend": 15.49
         },
         {
+          "year_week": "2024-17",
+          "worry_mentions": 1,
+          "discretionary_spend": 118.18
+        },
+        {
           "year_week": "2024-19",
           "worry_mentions": 1,
-          "discretionary_spend": 209.59
+          "discretionary_spend": 224.58
+        },
+        {
+          "year_week": "2024-24",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
         },
         {
           "year_week": "2024-26",
@@ -608,6 +649,11 @@
           "discretionary_spend": 10.99
         },
         {
+          "year_week": "2024-33",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
           "year_week": "2024-39",
           "worry_mentions": 1,
           "discretionary_spend": 0.0
@@ -618,13 +664,18 @@
           "discretionary_spend": 119.77
         },
         {
+          "year_week": "2024-46",
+          "worry_mentions": 1,
+          "discretionary_spend": 0.0
+        },
+        {
           "year_week": "2024-52",
           "worry_mentions": 1,
           "discretionary_spend": 0.0
         }
       ],
-      "peak_worry_week": "2024-08",
-      "total_worry_mentions": 7,
+      "peak_worry_week": "2024-06",
+      "total_worry_mentions": 12,
       "what_this_means": "Your AI conversations reveal when stress peaks. Overlaying this with spending shows whether worry translates into spending changes \u2014 something no single data source can show alone.",
       "recommended_next_actions": [
         "During high-worry weeks, set a 24-hour rule on discretionary purchases.",
@@ -650,21 +701,21 @@
         },
         {
           "category": "food_delivery",
-          "high_stress_avg": 125.44,
-          "low_stress_avg": 74.26,
-          "shift_pct": 69.0
+          "high_stress_avg": 111.98,
+          "low_stress_avg": 81.44,
+          "shift_pct": 38.0
+        },
+        {
+          "category": "subscriptions",
+          "high_stress_avg": 60.31,
+          "low_stress_avg": 54.59,
+          "shift_pct": 10.0
         },
         {
           "category": "entertainment",
           "high_stress_avg": 13.24,
           "low_stress_avg": 12.28,
           "shift_pct": 8.0
-        },
-        {
-          "category": "subscriptions",
-          "high_stress_avg": 43.54,
-          "low_stress_avg": 48.13,
-          "shift_pct": -10.0
         },
         {
           "category": "coffee",
@@ -685,7 +736,7 @@
       "finding": "72% of your discretionary spending happens in the first half of each pay period.",
       "evidence": [
         "Analyzed 13 pay periods",
-        "Average spend per period: $2497.77"
+        "Average spend per period: $2545.14"
       ],
       "dollar_impact": null,
       "has_data": true,
@@ -705,12 +756,12 @@
       "finding": "Your spending doesn't change much after stressful weeks.",
       "evidence": [
         "Compared spending after 10 high-stress weeks vs the rest",
-        "Overall weekly average: $75.23"
+        "Overall weekly average: $84.01"
       ],
       "dollar_impact": null,
       "has_data": true,
       "is_recovery_detected": false,
-      "recovery_pct": -50.0,
+      "recovery_pct": -45.0,
       "recovery_weeks": [
         {
           "stress_week": "2024-20",
@@ -722,7 +773,7 @@
           "stress_week": "2024-21",
           "stress_level": 0.357,
           "stress_week_spend": 103.0,
-          "next_week_spend": 10.99
+          "next_week_spend": 41.98
         },
         {
           "stress_week": "2024-29",
@@ -740,12 +791,12 @@
           "stress_week": "2024-31",
           "stress_level": 0.571,
           "stress_week_spend": 10.99,
-          "next_week_spend": 15.49
+          "next_week_spend": 46.48
         },
         {
           "stress_week": "2024-32",
           "stress_level": 0.5,
-          "stress_week_spend": 15.49,
+          "stress_week_spend": 46.48,
           "next_week_spend": 0.0
         },
         {
@@ -758,12 +809,12 @@
           "stress_week": "2024-38",
           "stress_level": 0.643,
           "stress_week_spend": 89.0,
-          "next_week_spend": 10.99
+          "next_week_spend": 41.98
         },
         {
           "stress_week": "2024-40",
           "stress_level": 0.571,
-          "stress_week_spend": 10.99,
+          "stress_week_spend": 41.98,
           "next_week_spend": 0.0
         },
         {
