@@ -1,6 +1,6 @@
 import { findInsight, type InsightPayload } from "@/lib/api";
 import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function StressCategoryShift({ payload }: { payload: InsightPayload }) {
   const insight = findInsight(payload, "stress_category_shift");

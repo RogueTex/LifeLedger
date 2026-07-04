@@ -1,4 +1,5 @@
 import express from "express";
+import { spawn } from "child_process";
 import { createServer } from "http";
 import fs from "fs";
 import path from "path";
@@ -9,11 +10,98 @@ const httpServer = createServer(app);
 
 app.use(express.json({ limit: "50mb" }));
 
-const SERVER_DIR =
-  typeof __dirname !== "undefined"
-    ? __dirname
-    : path.dirname(fileURLToPath(import.meta.url));
-const OUTPUTS_DIR = path.resolve(SERVER_DIR, "..", "..", "outputs");
+const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(SERVER_DIR, "..", "..");
+const OUTPUTS_DIR = path.join(PROJECT_ROOT, "outputs");
+const PYTHON_TIMEOUT_MS = parseInt(process.env.PYTHON_TIMEOUT_MS || "30000", 10);
+const MAX_UPLOAD_FILES = parseInt(process.env.MAX_UPLOAD_FILES || "12", 10);
+const MAX_UPLOAD_BASE64_CHARS = parseInt(
+  process.env.MAX_UPLOAD_BASE64_CHARS || `${20 * 1024 * 1024}`,
+  10,
+);
+const UPLOAD_TYPES = new Set(["transactions", "calendar", "conversations"]);
+
+interface PythonResult {
+  code: number | null;
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
+}
+
+function resolvePythonBin(): string {
+  if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN;
+  const localVenvPython =
+    process.platform === "win32"
+      ? path.join(PROJECT_ROOT, ".venv", "Scripts", "python.exe")
+      : path.join(PROJECT_ROOT, ".venv", "bin", "python");
+  return fs.existsSync(localVenvPython) ? localVenvPython : "python3";
+}
+
+function runPython(args: string[], input?: string, envOverrides: Record<string, string> = {}): Promise<PythonResult> {
+  return new Promise((resolve, reject) => {
+    const py = spawn(resolvePythonBin(), args, {
+      cwd: PROJECT_ROOT,
+      env: { ...process.env, ...envOverrides },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    let timedOut = false;
+
+    const timer = setTimeout(() => {
+      timedOut = true;
+      py.kill("SIGTERM");
+    }, PYTHON_TIMEOUT_MS);
+
+    py.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+    py.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+    py.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    py.on("close", (code: number | null) => {
+      clearTimeout(timer);
+      resolve({ code, stdout, stderr, timedOut });
+    });
+
+    if (input) py.stdin.write(input);
+    py.stdin.end();
+  });
+}
+
+function parsePythonJson(stdout: string): any | null {
+  const trimmed = stdout.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return null;
+  }
+}
+
+function pythonErrorMessage(result: PythonResult): string {
+  if (result.timedOut) return `Python process timed out after ${PYTHON_TIMEOUT_MS}ms`;
+  const parsed = parsePythonJson(result.stdout);
+  if (parsed?.error) return parsed.error;
+  return (result.stderr || result.stdout || "Python process failed").trim().slice(0, 300);
+}
+
+function validateUploadFiles(files: any[]): string | null {
+  if (files.length > MAX_UPLOAD_FILES) {
+    return `Too many files uploaded. Limit is ${MAX_UPLOAD_FILES}.`;
+  }
+  for (const file of files) {
+    if (!file || typeof file !== "object") return "Each uploaded item must be a file object.";
+    if (!UPLOAD_TYPES.has(file.type)) return `Unsupported file type: ${file.type || "unknown"}.`;
+    if (typeof file.data !== "string" || file.data.length === 0) {
+      return `File ${file.name || "unknown"} is missing base64 data.`;
+    }
+    if (file.data.length > MAX_UPLOAD_BASE64_CHARS) {
+      return `File ${file.name || "unknown"} is too large for this demo upload path.`;
+    }
+  }
+  return null;
+}
 
 // GET /api/personas — list available personas
 app.get("/api/personas", (_req, res) => {
@@ -45,34 +133,34 @@ app.post("/api/upload", async (req, res) => {
     return;
   }
 
+  const validationError = validateUploadFiles(files);
+  if (validationError) {
+    res.status(400).json({ error: validationError });
+    return;
+  }
+
   try {
-    const { spawn } = await import("child_process");
-    const scriptPath = path.resolve(OUTPUTS_DIR, "..", "scripts", "process_upload.py");
-    const py = spawn("python", [scriptPath], {
-      cwd: path.resolve(OUTPUTS_DIR, ".."),
-    });
-
+    const scriptPath = path.join(PROJECT_ROOT, "scripts", "process_upload.py");
     const inputPayload = JSON.stringify({ files, userContext: userContext || null });
-    py.stdin.write(inputPayload);
-    py.stdin.end();
+    const result = await runPython([scriptPath], inputPayload);
+    const parsed = parsePythonJson(result.stdout);
 
-    let stdout = "";
-    let stderr = "";
-    py.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
-    py.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
-    py.on("close", (code: number) => {
-      if (code !== 0) {
-        console.error("Upload processing stderr:", stderr);
-        res.status(500).json({ error: `Processing failed: ${stderr.slice(0, 300)}` });
-        return;
-      }
-      try {
-        const result = JSON.parse(stdout.trim());
-        res.json(result);
-      } catch {
-        res.status(500).json({ error: "Failed to parse processing output" });
-      }
-    });
+    if (result.code !== 0) {
+      res.status(500).json({
+        error: pythonErrorMessage(result),
+        error_code: parsed?.error_code || "upload_processing_failed",
+      });
+      return;
+    }
+    if (!parsed) {
+      res.status(500).json({ error: "Failed to parse processing output" });
+      return;
+    }
+    if (parsed.error) {
+      res.status(400).json(parsed);
+      return;
+    }
+    res.json(parsed);
   } catch (err: any) {
     res.status(500).json({ error: `Upload error: ${err.message}` });
   }
@@ -100,40 +188,25 @@ app.post("/api/chat/upload", async (req, res) => {
   }
 
   try {
-    const { spawn } = await import("child_process");
-    const projectRoot = path.resolve(OUTPUTS_DIR, "..");
-    const insightsJson = JSON.stringify(insights);
-    const py = spawn("python", [
-      "-c",
-      `
-import json, sys, os
-sys.path.insert(0, ${JSON.stringify(projectRoot)})
+    const pyCode = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PROJECT_ROOT)})
 from src.insights.narrative_gen import generate_narrative
 data = json.loads(sys.stdin.read())
 answer = generate_narrative(data["question"], data["insights"])
 print(json.dumps({"answer": answer}))
-`,
-    ], { cwd: projectRoot, env: { ...process.env, ...byoKeyEnv(byoKey) } });
+`;
+    const result = await runPython([
+      "-c",
+      pyCode,
+    ], JSON.stringify({ question, insights }), byoKeyEnv(byoKey));
 
-    py.stdin.write(JSON.stringify({ question, insights }));
-    py.stdin.end();
-
-    let stdout = "";
-    let stderr = "";
-    py.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
-    py.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
-    py.on("close", (code: number) => {
-      if (code !== 0) {
-        res.json({ answer: `AI response unavailable. ${stderr.slice(0, 200)}` });
-        return;
-      }
-      try {
-        const result = JSON.parse(stdout.trim());
-        res.json(result);
-      } catch {
-        res.json({ answer: stdout.trim() || "No response generated." });
-      }
-    });
+    if (result.code !== 0) {
+      res.json({ answer: `AI response unavailable. ${pythonErrorMessage(result)}` });
+      return;
+    }
+    const parsed = parsePythonJson(result.stdout);
+    res.json(parsed || { answer: result.stdout.trim() || "No response generated." });
   } catch (err: any) {
     res.json({ answer: `Chat error: ${err.message}` });
   }
@@ -154,36 +227,26 @@ app.post("/api/chat", async (req, res) => {
   }
 
   try {
-    const { spawn } = await import("child_process");
-    const py = spawn("python", [
-      "-c",
-      `
-import json, sys, os
-sys.path.insert(0, ${JSON.stringify(path.resolve(OUTPUTS_DIR, ".."))})
+    const pyCode = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PROJECT_ROOT)})
 from src.insights.narrative_gen import generate_narrative
-data = json.load(open(${JSON.stringify(file)}, encoding="utf-8"))
-question = ${JSON.stringify(question)}
-answer = generate_narrative(question, data)
+payload = json.loads(sys.stdin.read())
+data = json.load(open(payload["file"], encoding="utf-8"))
+answer = generate_narrative(payload["question"], data)
 print(json.dumps({"answer": answer}))
-`,
-    ], { env: { ...process.env, ...byoKeyEnv(byoKey) } });
+`;
+    const result = await runPython([
+      "-c",
+      pyCode,
+    ], JSON.stringify({ question, file }), byoKeyEnv(byoKey));
 
-    let stdout = "";
-    let stderr = "";
-    py.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
-    py.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
-    py.on("close", (code: number) => {
-      if (code !== 0) {
-        res.json({ answer: `AI response unavailable. ${stderr.slice(0, 200)}` });
-        return;
-      }
-      try {
-        const result = JSON.parse(stdout.trim());
-        res.json(result);
-      } catch {
-        res.json({ answer: stdout.trim() || "No response generated." });
-      }
-    });
+    if (result.code !== 0) {
+      res.json({ answer: `AI response unavailable. ${pythonErrorMessage(result)}` });
+      return;
+    }
+    const parsed = parsePythonJson(result.stdout);
+    res.json(parsed || { answer: result.stdout.trim() || "No response generated." });
   } catch (err: any) {
     res.json({ answer: `Chat error: ${err.message}` });
   }
@@ -193,7 +256,7 @@ print(json.dumps({"answer": answer}))
 if (process.env.NODE_ENV === "production") {
   const publicDir = path.resolve(SERVER_DIR, "..", "dist", "public");
   app.use(express.static(publicDir));
-  app.get("*", (_req, res) => {
+  app.use((_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));
   });
 }

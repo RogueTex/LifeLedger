@@ -1,4 +1,4 @@
-import { findInsight, fmt, type InsightPayload } from "@/lib/api";
+import { findInsight, type InsightPayload } from "@/lib/api";
 import { CalendarDays } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 

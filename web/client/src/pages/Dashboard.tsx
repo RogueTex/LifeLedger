@@ -17,7 +17,7 @@ import StrengthsWeaknesses from "@/components/dashboard/StrengthsWeaknesses";
 import StressCategoryShift from "@/components/dashboard/StressCategoryShift";
 import SpendingVelocity from "@/components/dashboard/SpendingVelocity";
 import RecoverySpending from "@/components/dashboard/RecoverySpending";
-import { fetchPersonas, fetchInsights, findInsight, type InsightPayload, type Persona } from "@/lib/api";
+import { fetchPersonas, fetchInsights, type InsightPayload, type Persona } from "@/lib/api";
 
 export default function Dashboard() {
   const search = useSearch();

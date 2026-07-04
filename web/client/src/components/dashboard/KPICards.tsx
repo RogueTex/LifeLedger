@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { TrendingDown, Briefcase, AlertTriangle, Target, CreditCard, CalendarDays } from "lucide-react";
+import { TrendingDown, Briefcase, Target, CreditCard, CalendarDays } from "lucide-react";
 import { findInsight, fmt, type InsightPayload } from "@/lib/api";
 
 const container = {

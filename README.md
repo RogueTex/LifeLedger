@@ -155,6 +155,8 @@ cp .env.example .env
 #   GROQ_API_KEY=gsk_...        (recommended — free, fast)
 #   OPENROUTER_API_KEY=sk-or-...
 #   OPENAI_API_KEY=sk-...
+# Optional if your shell's python is not the project venv:
+#   PYTHON_BIN=.venv/bin/python
 ```
 
 Or skip this — users can enter their own API key directly in the chat UI (BYOK).
@@ -232,7 +234,7 @@ See [`context/docs/how_to_export_your_own_data.md`](context/docs/how_to_export_y
 ## Privacy & Consent
 
 - All demo data is **100% synthetic** (`pii_level: "synthetic"`)
-- User-uploaded files are processed **locally in the browser session** — nothing is persisted
+- User-uploaded files are processed by the local app server for the current session — nothing is persisted
 - The AI chat receives only **precomputed insight JSON**, never raw transaction data or files
 - BYOK API keys are **session-only** and never written to disk
 - Synthetic data will be deleted after **March 31, 2026** per hackathon rules

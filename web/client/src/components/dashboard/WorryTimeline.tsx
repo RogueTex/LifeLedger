@@ -1,4 +1,4 @@
-import { findInsight, fmt, type InsightPayload } from "@/lib/api";
+import { findInsight, type InsightPayload } from "@/lib/api";
 import { BrainCircuit } from "lucide-react";
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,

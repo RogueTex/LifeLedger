@@ -1,5 +1,5 @@
 import { findInsight, type InsightPayload } from "@/lib/api";
-import { BrainCircuit, Calendar, AlertCircle, Heart, TrendingUp } from "lucide-react";
+import { BrainCircuit, Calendar, AlertCircle, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 
 const container = {

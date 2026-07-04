@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, Database, Upload } from "lucide-react";
+import { Play, Database, Upload } from "lucide-react";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();

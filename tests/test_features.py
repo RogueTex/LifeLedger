@@ -498,3 +498,33 @@ class TestParseChatgptExport:
         df = parse_chatgpt_export(buf.getvalue(), "export.zip")
         assert len(df) == 1
         assert "Hello world" == df.iloc[0]["text"]
+
+
+class TestUploadProcessor:
+    def _run_process_upload(self, payload: dict) -> tuple[int, dict]:
+        import json as _json
+        import subprocess
+
+        proc = subprocess.run(
+            [sys.executable, str(_PROJECT_ROOT / "scripts" / "process_upload.py")],
+            input=_json.dumps(payload),
+            text=True,
+            capture_output=True,
+            cwd=_PROJECT_ROOT,
+            check=False,
+        )
+        return proc.returncode, _json.loads(proc.stdout)
+
+    def test_rejects_unknown_file_type(self):
+        code, body = self._run_process_upload({
+            "files": [{"name": "notes.txt", "type": "notes", "data": "SGVsbG8="}],
+        })
+        assert code == 1
+        assert body["error_code"] == "unsupported_file_type"
+
+    def test_rejects_invalid_base64(self):
+        code, body = self._run_process_upload({
+            "files": [{"name": "bad.csv", "type": "transactions", "data": "not base64!?"}],
+        })
+        assert code == 1
+        assert body["error_code"] == "invalid_file_encoding"

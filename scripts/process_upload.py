@@ -25,6 +25,8 @@ from src.loaders.upload_parser import (
 )
 from src.insights.insight_engine import compute_insights_from_dataframes
 
+ALLOWED_FILE_TYPES = {"transactions", "calendar", "conversations"}
+
 
 def _emit_error(message: str, code: str = "upload_processing_error") -> None:
     print(json.dumps({"error": message, "error_code": code}))
@@ -44,9 +46,16 @@ def main() -> None:
 
     try:
         for file_info in payload.get("files", []):
-            file_bytes = base64.b64decode(file_info["data"])
             file_type = file_info["type"]
             filename = file_info.get("name", "")
+            if file_type not in ALLOWED_FILE_TYPES:
+                _emit_error(f"Unsupported file type: {file_type}.", "unsupported_file_type")
+                sys.exit(1)
+
+            file_bytes = base64.b64decode(file_info["data"], validate=True)
+            if not file_bytes:
+                _emit_error(f"Uploaded file is empty: {filename or 'unnamed file'}.", "empty_file")
+                sys.exit(1)
 
             if file_type == "transactions":
                 df = parse_transactions_csv(file_bytes)
