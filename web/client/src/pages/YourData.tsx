@@ -27,10 +27,10 @@ export default function YourData() {
   const [userContext, setUserContext] = useState<UserContext | null>(null);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
       <header className="sticky top-0 z-50 glass-panel border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 min-h-16 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setLocation("/")}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer mr-2"
@@ -40,7 +40,7 @@ export default function YourData() {
             <LogoMark />
             <h1 className="font-display font-medium text-xl tracking-tight">LifeLedger</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-end gap-2 sm:gap-4 min-w-0">
             {payload && (
               <button
                 onClick={() => setChatOpen(!chatOpen)}

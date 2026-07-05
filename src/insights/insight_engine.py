@@ -1238,6 +1238,10 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
         "detected": surge_data.get("detected", False),
         "surge_pct": surge_data.get("surge_pct"),
+        "surge_ratio": surge_data.get("surge_ratio"),
+        "payday_count": surge_data.get("payday_count", 0),
+        "post_payday_total": surge_data.get("post_payday_total"),
+        "total_spend": surge_data.get("total_spend"),
         "what_this_means": (
             "You spend heavily right after payday, which can leave you tight before the next one. "
             "This is a common pattern — awareness is the first step."
@@ -1645,6 +1649,10 @@ def compute_insights_from_dataframes(
         "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
         "detected": surge_data.get("detected", False),
         "surge_pct": surge_data.get("surge_pct"),
+        "surge_ratio": surge_data.get("surge_ratio"),
+        "payday_count": surge_data.get("payday_count", 0),
+        "post_payday_total": surge_data.get("post_payday_total"),
+        "total_spend": surge_data.get("total_spend"),
         "what_this_means": (
             "A lot of people spend heavily right after payday. If that's you, try moving savings out first before you start spending."
             if surge_data.get("detected")

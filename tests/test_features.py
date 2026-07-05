@@ -629,6 +629,9 @@ class TestSamplePersonaData:
         assert stress["correlation_coefficient"] > 0.5
         assert stress["confidence"]["level"] == "high"
         assert surge["detected"] is True
+        assert surge["payday_count"] > 0
+        assert surge["post_payday_total"] > 0
+        assert surge["total_spend"] > surge["post_payday_total"]
         assert worry["total_worry_mentions"] > 0
         assert worry["structured_facts_count"] == len(extract_worry_facts(load_persona("p03", data_root=self.SAMPLE_ROOT)["conversations"]))
 

@@ -49,11 +49,11 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
       {/* Header */}
       <header className="sticky top-0 z-50 glass-panel border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 min-h-16 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setLocation("/")}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer mr-2"
@@ -64,12 +64,12 @@ export default function Dashboard() {
             <h1 className="font-display font-medium text-xl tracking-tight">LifeLedger</h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex w-full sm:w-auto items-center justify-end gap-2 sm:gap-4 min-w-0">
             {/* Persona selector */}
             <select
               value={selectedPersona}
               onChange={(e) => setSelectedPersona(e.target.value)}
-              className="bg-secondary/50 text-sm font-mono border border-border/50 rounded-full px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="min-w-0 max-w-[58vw] sm:max-w-none bg-secondary/50 text-sm font-mono border border-border/50 rounded-full px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
             >
               {(personas || []).map((p) => (
                 <option key={p.id} value={p.id}>
@@ -95,7 +95,7 @@ export default function Dashboard() {
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               Engine Online
             </div>
-            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center border border-border/50">
+            <div className="hidden sm:flex w-8 h-8 rounded-full bg-secondary items-center justify-center border border-border/50">
               <UserCircle className="w-5 h-5 text-muted-foreground" />
             </div>
           </div>

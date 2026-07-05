@@ -51,7 +51,7 @@ export default function SpikeEvidence({ payload }: { payload: InsightPayload }) 
             <div className="flex justify-between items-start mb-3">
               <div>
                 <h4 className="font-mono text-sm font-semibold text-foreground">
-                  Week {spike.year_week}
+                  ISO week {spike.year_week}
                 </h4>
                 <div className="flex items-center gap-3 mt-1 text-xs">
                   <span className="text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">

@@ -1,7 +1,7 @@
 {
   "schema_version": "v1_locked",
   "metric_layer_version": null,
-  "generated_at": "2026-07-05T07:39:03.452089+00:00",
+  "generated_at": "2026-07-05T14:04:49.304935+00:00",
   "persona": "p05",
   "profile_name": "Theo Nakamura",
   "consent": {
@@ -526,6 +526,10 @@
       "dollar_impact": 7807.47,
       "detected": true,
       "surge_pct": 80.0,
+      "surge_ratio": 0.8,
+      "payday_count": 11,
+      "post_payday_total": 7807.47,
+      "total_spend": 9805.08,
       "what_this_means": "You spend heavily right after payday, which can leave you tight before the next one. This is a common pattern \u2014 awareness is the first step.",
       "recommended_next_actions": [
         "Wait 24 hours after payday before any non-essential purchase.",
