@@ -3,7 +3,7 @@
 
 Welcome! This guide gets you from zero to working with the datasets in under 10 minutes.
 
-> Repo note: this quickstart documents the original synthetic source dataset format. This app repo ships the frozen demo outputs in `outputs/insights_p01.json`, `outputs/insights_p03.json`, and `outputs/insights_p05.json`; raw `persona_pXX/` folders are not committed and are only needed to regenerate those caches. The shipped app demo names are Jordan Lee (`p01`), Sasha Moreno (`p03`), and Theo Nakamura (`p05`).
+> Repo note: this quickstart documents the synthetic source dataset format. This app repo ships frozen demo outputs in `outputs/insights_p01.json`, `outputs/insights_p03.json`, and `outputs/insights_p05.json`, plus committed raw fixtures under `data/sample/persona_pXX/`. Private `data/raw/persona_pXX/` folders remain gitignored. The shipped app demo names are Jordan Lee (`p01`), Sasha Moreno (`p03`), and Theo Nakamura (`p05`).
 
 ---
 

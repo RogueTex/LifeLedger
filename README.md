@@ -129,7 +129,9 @@ lifeledger/
 │   ├── insights_p03.json                   # Frozen demo cache — Sasha Moreno
 │   ├── insights_p05.json                   # Frozen demo cache — Theo Nakamura
 │   └── demo_backups/                       # Smaller backup payloads for demo panels
-├── data/raw/                               # Not committed; optional source exports for cache regeneration
+├── data/
+│   ├── sample/                             # Committed synthetic raw fixtures + upload files
+│   └── raw/                                # Gitignored private source exports
 ├── context/
 │   └── docs/how_to_export_your_own_data.md # Guide for exporting your own data
 └── schemas/DATASET_SCHEMA.md               # Full schema reference
@@ -142,11 +144,13 @@ lifeledger/
 LifeLedger does **not** ship with a database. There are no migrations, ORM models, or hosted DB dependencies in the demo path.
 
 - Demo personas are served from committed frozen JSON payloads in `outputs/insights_p01.json`, `outputs/insights_p03.json`, and `outputs/insights_p05.json`.
+- Raw synthetic sample fixtures are committed under `data/sample/` so the ingestion path can be inspected and regenerated without private data.
+- Drop personal or private persona exports under `data/raw/persona_pXX/` or set `LIFELEDGER_PERSONA_DATA_DIR=/path/to/personas` to test your own raw files. `data/raw/` remains gitignored.
 - User uploads are parsed by the local Express/Python pipeline and returned to the browser for the current session; uploaded files and generated upload insights are not persisted.
-- Raw synthetic source exports under `data/raw/persona_*` are intentionally gitignored and are not part of this public repo. They are only required if you want to regenerate the frozen `outputs/insights_*.json` caches with `save_insights(...)`.
 - The schema docs still describe the original hackathon source dataset format so future regeneration or import work has a stable target.
 
 See [`context/DEMO_DATA_AND_PERSISTENCE.md`](context/DEMO_DATA_AND_PERSISTENCE.md) for the interview-ready version of this architecture tradeoff.
+See [`context/SYSTEM_DESIGN_PRESENTATION.md`](context/SYSTEM_DESIGN_PRESENTATION.md) for the system-design talk track.
 
 ---
 
@@ -163,6 +167,12 @@ git clone https://github.com/RogueTex/LifeLedger.git
 cd LifeLedger
 python -m pip install -r requirements.txt
 cd web && npm install && cd ..
+```
+
+Optional: regenerate the committed synthetic sample data:
+
+```bash
+python scripts/generate_sample_data.py
 ```
 
 ### 2. Configure environment (optional — for AI chat)
@@ -195,6 +205,7 @@ Open **http://localhost:5173**. The API runs on `:5000`, and Vite proxies `/api`
 
 - **View Demo** — Pre-analyzed synthetic personas (Jordan Lee, Sasha Moreno, Theo Nakamura)
 - **Analyze My Data** — Upload your own bank CSV, Google Calendar ICS, or ChatGPT/Claude exports
+- **Try Sample Uploads** — Use files from `data/sample/uploads/` to exercise the upload path without private data
 - **Ask AI** — Open the chat sidebar and ask questions about the insights (requires an API key via `.env` or BYOK)
 
 ---

@@ -1,0 +1,18 @@
+{
+  "age": 23,
+  "avg_net_monthly_savings": 350,
+  "current_savings": 900,
+  "goals": [
+    "Pay down $8000 of debt and raise client rates to sustainable levels."
+  ],
+  "income_approx": "$46,800/year",
+  "location": "Austin, TX",
+  "name": "Theo Nakamura",
+  "notes": "Synthetic fixture persona for LifeLedger ingestion and inference demos.",
+  "pain_points": [
+    "Client deadlines, scope creep, and underpriced invoices create cash pressure."
+  ],
+  "persona_id": "p05",
+  "role": "Freelance Designer",
+  "savings_goal": 8000
+}

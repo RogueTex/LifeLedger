@@ -5,7 +5,7 @@ This schema describes fully synthetic personal memory persona folders for use in
 
 All data is **100% synthetic**. No real individuals are represented.
 
-Repo note: this file is a schema reference for raw source persona folders. The public app repo does not commit those folders; it ships frozen demo insight caches for Jordan Lee (`p01`), Sasha Moreno (`p03`), and Theo Nakamura (`p05`) under `outputs/`.
+Repo note: this file is a schema reference for raw source persona folders. The public app repo ships committed synthetic examples under `data/sample/` and frozen demo insight caches for Jordan Lee (`p01`), Sasha Moreno (`p03`), and Theo Nakamura (`p05`) under `outputs/`.
 
 ---
 

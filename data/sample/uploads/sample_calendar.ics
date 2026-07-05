@@ -1,0 +1,130 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//LifeLedger//Synthetic Sample//EN
+BEGIN:VEVENT
+UID:cal_0001@lifeledger.local
+DTSTART:20260106T140000Z
+DTEND:20260106T150000Z
+SUMMARY:Weekly planning sync
+DESCRIPTION:Weekly planning sync - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0002@lifeledger.local
+DTSTART:20260107T150000Z
+DTEND:20260107T160000Z
+SUMMARY:Budget review
+DESCRIPTION:Budget review - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0003@lifeledger.local
+DTSTART:20260113T140000Z
+DTEND:20260113T150000Z
+SUMMARY:Weekly planning sync
+DESCRIPTION:Weekly planning sync - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0004@lifeledger.local
+DTSTART:20260114T150000Z
+DTEND:20260114T160000Z
+SUMMARY:Budget review
+DESCRIPTION:Budget review - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0005@lifeledger.local
+DTSTART:20260115T160000Z
+DTEND:20260115T170000Z
+SUMMARY:Customer follow-up
+DESCRIPTION:Customer follow-up - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0006@lifeledger.local
+DTSTART:20260120T140000Z
+DTEND:20260120T150000Z
+SUMMARY:Weekly planning sync
+DESCRIPTION:Weekly planning sync - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0007@lifeledger.local
+DTSTART:20260121T150000Z
+DTEND:20260121T160000Z
+SUMMARY:Budget review
+DESCRIPTION:Budget review - normal cadence
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0008@lifeledger.local
+DTSTART:20260127T140000Z
+DTEND:20260127T150000Z
+SUMMARY:Weekly planning sync
+DESCRIPTION:Weekly planning sync - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0009@lifeledger.local
+DTSTART:20260128T150000Z
+DTEND:20260128T160000Z
+SUMMARY:Budget review
+DESCRIPTION:Budget review - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0010@lifeledger.local
+DTSTART:20260129T160000Z
+DTEND:20260129T170000Z
+SUMMARY:Customer follow-up
+DESCRIPTION:Customer follow-up - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0011@lifeledger.local
+DTSTART:20260130T170000Z
+DTEND:20260130T180000Z
+SUMMARY:1:1 coaching
+DESCRIPTION:1:1 coaching - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0012@lifeledger.local
+DTSTART:20260127T180000Z
+DTEND:20260127T190000Z
+SUMMARY:Launch deadline review
+DESCRIPTION:Launch deadline review - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0013@lifeledger.local
+DTSTART:20260203T140000Z
+DTEND:20260203T150000Z
+SUMMARY:Weekly planning sync
+DESCRIPTION:Weekly planning sync - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0014@lifeledger.local
+DTSTART:20260204T150000Z
+DTEND:20260204T160000Z
+SUMMARY:Budget review
+DESCRIPTION:Budget review - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0015@lifeledger.local
+DTSTART:20260205T160000Z
+DTEND:20260205T170000Z
+SUMMARY:Customer follow-up
+DESCRIPTION:Customer follow-up - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0016@lifeledger.local
+DTSTART:20260206T170000Z
+DTEND:20260206T180000Z
+SUMMARY:1:1 coaching
+DESCRIPTION:1:1 coaching - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0017@lifeledger.local
+DTSTART:20260203T180000Z
+DTEND:20260203T190000Z
+SUMMARY:Launch deadline review
+DESCRIPTION:Launch deadline review - high pressure week
+END:VEVENT
+BEGIN:VEVENT
+UID:cal_0018@lifeledger.local
+DTSTART:20260210T140000Z
+DTEND:20260210T150000Z
+SUMMARY:Weekly planning sync
+DESCRIPTION:Weekly planning sync - normal cadence
+END:VEVENT
+END:VCALENDAR

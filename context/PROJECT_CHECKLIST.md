@@ -6,7 +6,8 @@ Deadline: March 9, 2026
 ## 1) Current Snapshot (As Of 2026-03-06)
 
 - [x] Frozen demo caches for `p01`, `p03`, and `p05` are present in `outputs/`
-- [ ] Raw persona source exports are committed in this repo (`data/raw/` is intentionally gitignored)
+- [x] Synthetic raw sample fixtures are committed in `data/sample/`
+- [ ] Private raw persona source exports are committed in this repo (`data/raw/` is intentionally gitignored)
 - [x] Loader, features, insight engine, narrative generator, web dashboard implemented
 - [x] Validation notebook scaffold (`notebooks/eda.ipynb`) created with required cells
 - [x] Cached insights generated: `outputs/insights_p01.json`, `outputs/insights_p03.json`, `outputs/insights_p05.json`
@@ -22,9 +23,9 @@ Deadline: March 9, 2026
 Source Drive:
 `https://drive.google.com/drive/folders/1TEWhdzff-FgkDNY-53IDXIWaPZQ7_5F3`
 
-### Persona source data required for cache regeneration
+### Persona source data for cache regeneration
 
-These raw folders are not committed in this public repo. The app can run the demo from frozen `outputs/` caches without them.
+Synthetic equivalents are committed under `data/sample/`. Private source folders remain uncommitted under `data/raw/` or an external directory pointed to by `LIFELEDGER_PERSONA_DATA_DIR`.
 
 - [ ] `data/raw/persona_p01/persona_profile.json`
 - [ ] `data/raw/persona_p01/consent.json`

@@ -1,0 +1,154 @@
+[
+  {
+    "create_time": 1767920400,
+    "mapping": {
+      "u1": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "Weekly check-in: I want to stay focused on my goal. Save $50000 for a first home while keeping burnout under control."
+            ]
+          },
+          "create_time": 1767920400
+        }
+      }
+    },
+    "title": "Money check-in 1"
+  },
+  {
+    "create_time": 1768525200,
+    "mapping": {
+      "u2": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "Weekly check-in: I want to stay focused on my goal. Save $50000 for a first home while keeping burnout under control."
+            ]
+          },
+          "create_time": 1768525200
+        }
+      }
+    },
+    "title": "Money check-in 2"
+  },
+  {
+    "create_time": 1769130000,
+    "mapping": {
+      "u3": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "Weekly check-in: I want to stay focused on my goal. Save $50000 for a first home while keeping burnout under control."
+            ]
+          },
+          "create_time": 1769130000
+        }
+      }
+    },
+    "title": "Money check-in 3"
+  },
+  {
+    "create_time": 1769734800,
+    "mapping": {
+      "u4": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "I am anxious about money this week. Promotion cycle creates deadline pressure and convenience spending. I keep spending on convenience when the calendar gets packed."
+            ]
+          },
+          "create_time": 1769734800
+        }
+      }
+    },
+    "title": "Money check-in 4"
+  },
+  {
+    "create_time": 1770339600,
+    "mapping": {
+      "u5": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "I am anxious about money this week. Promotion cycle creates deadline pressure and convenience spending. I keep spending on convenience when the calendar gets packed."
+            ]
+          },
+          "create_time": 1770339600
+        }
+      }
+    },
+    "title": "Money check-in 5"
+  },
+  {
+    "create_time": 1770944400,
+    "mapping": {
+      "u6": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "Weekly check-in: I want to stay focused on my goal. Save $50000 for a first home while keeping burnout under control."
+            ]
+          },
+          "create_time": 1770944400
+        }
+      }
+    },
+    "title": "Money check-in 6"
+  },
+  {
+    "create_time": 1771549200,
+    "mapping": {
+      "u7": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "Weekly check-in: I want to stay focused on my goal. Save $50000 for a first home while keeping burnout under control."
+            ]
+          },
+          "create_time": 1771549200
+        }
+      }
+    },
+    "title": "Money check-in 7"
+  },
+  {
+    "create_time": 1772154000,
+    "mapping": {
+      "u8": {
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              "Weekly check-in: I want to stay focused on my goal. Save $50000 for a first home while keeping burnout under control."
+            ]
+          },
+          "create_time": 1772154000
+        }
+      }
+    },
+    "title": "Money check-in 8"
+  }
+]

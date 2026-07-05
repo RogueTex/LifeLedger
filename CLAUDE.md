@@ -31,8 +31,11 @@ pytest tests/test_features.py::test_name -v
 # Compile check all modules
 python -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/features/resilience_model.py src/insights/insight_engine.py src/insights/narrative_gen.py
 
-# Regenerate insight caches (required after feature/insight logic changes — needs persona data in data/raw/)
+# Regenerate insight caches (required after feature/insight logic changes — uses data/raw/ when present, otherwise data/sample/)
 python -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p03'); save_insights('p05')"
+
+# Regenerate committed synthetic sample fixtures
+python scripts/generate_sample_data.py
 
 # Start web app
 cd web && npm run dev
@@ -123,7 +126,8 @@ Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `do
 - After changing feature or insight logic, always regenerate cached insights and verify with `pytest`.
 - Frozen caches in `outputs/` are what the UI reads — the app does not recompute insights live for demo personas.
 - There is no database layer in the demo path. `outputs/` is the committed demo store; user-uploaded analysis is session-only.
-- Raw `data/raw/persona_*` source exports are intentionally gitignored and not required to run the demo from a fresh clone.
+- Synthetic raw fixtures live in `data/sample/persona_*`; private source exports belong in gitignored `data/raw/persona_*`.
+- Use `LIFELEDGER_PERSONA_DATA_DIR=/path/to/personas` to point regeneration at external raw persona folders.
 - Environment requires one of `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `OPENAI_API_KEY` in `.env` for narrative chat — OR users can BYOK in the chat UI.
 - Groq keys start with `gsk_`. Uses OpenAI-compatible endpoint at `https://api.groq.com/openai/v1`.
 - All committed demo payloads are synthetic.

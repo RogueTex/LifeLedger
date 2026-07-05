@@ -19,9 +19,28 @@ These files are enough to run the demo from a fresh clone.
 
 ## Raw Source Data
 
-The raw hackathon-style persona exports are not committed. `data/raw/` is intentionally gitignored because those folders are source material for regenerating caches, not runtime dependencies for the demo.
+The repo now also includes committed synthetic raw fixtures:
 
-Regeneration paths such as `save_insights("p01")` expect `data/raw/persona_p01/` to exist locally. If those folders are absent, the frozen `outputs/` files are still served normally by the web app.
+- `data/sample/persona_p01/` — Jordan Lee raw JSON/JSONL files
+- `data/sample/persona_p03/` — Sasha Moreno raw JSON/JSONL files
+- `data/sample/persona_p05/` — Theo Nakamura raw JSON/JSONL files
+- `data/sample/uploads/` — CSV, ICS, and ChatGPT-style JSON files for the upload flow
+
+Regenerate them with:
+
+```bash
+python scripts/generate_sample_data.py
+```
+
+Private or personal source exports belong in `data/raw/`, which remains gitignored. You can also set `LIFELEDGER_PERSONA_DATA_DIR=/path/to/personas` to point the loader at an external persona directory.
+
+The loader checks for persona folders in this order:
+
+1. `LIFELEDGER_PERSONA_DATA_DIR/persona_pXX` when the environment variable is set
+2. `data/raw/persona_pXX`
+3. `data/sample/persona_pXX`
+
+If raw folders are absent, the frozen `outputs/` files are still served normally by the web app.
 
 ## Production Direction
 

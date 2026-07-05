@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -146,11 +147,33 @@ def _read_jsonl(path: Path) -> pd.DataFrame:
     return pd.read_json(path, lines=True)
 
 
-def load_persona(persona_id: str) -> dict[str, Any]:
-    persona_dir = _project_root() / "data" / "raw" / f"persona_{persona_id}"
+def _persona_dir_candidates(persona_id: str, data_root: str | Path | None = None) -> list[Path]:
+    if data_root is not None:
+        return [Path(data_root) / f"persona_{persona_id}"]
 
-    if not persona_dir.exists():
-        raise FileNotFoundError(f"Persona directory not found: {persona_dir}")
+    root = _project_root()
+    override = os.environ.get("LIFELEDGER_PERSONA_DATA_DIR")
+    candidates: list[Path] = []
+    if override:
+        candidates.append(Path(override) / f"persona_{persona_id}")
+    candidates.extend([
+        root / "data" / "raw" / f"persona_{persona_id}",
+        root / "data" / "sample" / f"persona_{persona_id}",
+    ])
+    return candidates
+
+
+def _resolve_persona_dir(persona_id: str, data_root: str | Path | None = None) -> Path:
+    candidates = _persona_dir_candidates(persona_id, data_root)
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    checked = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"Persona directory not found for {persona_id}. Checked: {checked}")
+
+
+def load_persona(persona_id: str, data_root: str | Path | None = None) -> dict[str, Any]:
+    persona_dir = _resolve_persona_dir(persona_id, data_root)
 
     persona_data: dict[str, Any] = {
         "profile": _read_json(persona_dir / "persona_profile.json"),

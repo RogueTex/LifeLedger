@@ -481,7 +481,7 @@ def _compute_worry_timeline(conversations_df: pd.DataFrame, weekly_spend_df: pd.
     df["_year_week"] = iso.year.astype(str) + "-" + iso.week.astype(str).str.zfill(2)
 
     worry_keywords = re.compile(
-        r"(anxiety|anxious|stress|worried|overwhelm|burnout|panic|nervous|scared|"
+        r"(?:anxiety|anxious|stress|worried|overwhelm|burnout|panic|nervous|scared|"
         r"money|debt|rent|budget|broke|afford|expensive|bills|paycheck)",
         re.IGNORECASE,
     )

@@ -1,0 +1,18 @@
+{
+  "age": 32,
+  "avg_net_monthly_savings": 1250,
+  "current_savings": 18500,
+  "goals": [
+    "Save $50000 for a first home while keeping burnout under control."
+  ],
+  "income_approx": "$101,400/year",
+  "location": "Austin, TX",
+  "name": "Jordan Lee",
+  "notes": "Synthetic fixture persona for LifeLedger ingestion and inference demos.",
+  "pain_points": [
+    "Promotion cycle creates deadline pressure and convenience spending."
+  ],
+  "persona_id": "p01",
+  "role": "Senior Product Manager",
+  "savings_goal": 50000
+}

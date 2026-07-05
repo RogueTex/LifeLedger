@@ -1,0 +1,36 @@
+Date,Description,Amount,Category
+2026-01-05,Payroll direct deposit,3900.00,income
+2026-01-06,Avenue Place Rent,-1650.00,housing
+2026-01-07,H-E-B Groceries,-88.00,groceries
+2026-01-08,Starbucks Coffee,-6.25,coffee
+2026-01-09,Local Restaurant Dinner,-34.80,dining
+2026-01-07,Netflix monthly subscription,-18.99,subscriptions
+2026-01-08,Spotify monthly subscription,-25.99,subscriptions
+2026-01-09,Figma Professional monthly subscription,-32.99,subscriptions
+2026-01-14,H-E-B Groceries,-95.00,groceries
+2026-01-15,Starbucks Coffee,-6.25,coffee
+2026-01-16,Local Restaurant Dinner,-34.80,dining
+2026-01-19,Payroll direct deposit,3900.00,income
+2026-01-21,H-E-B Groceries,-102.00,groceries
+2026-01-22,Starbucks Coffee,-6.25,coffee
+2026-01-23,Local Restaurant Dinner,-34.80,dining
+2026-01-28,H-E-B Groceries,-109.00,groceries
+2026-01-29,Starbucks Coffee,-6.25,coffee
+2026-01-30,Local Restaurant Dinner,-34.80,dining
+2026-01-28,Uber Eats deadline dinner,-43.50,food_delivery
+2026-01-29,Amazon one-click work supplies,-119.40,shopping
+2026-01-30,Lyft after late meeting,-27.80,rideshare
+2026-02-02,Payroll direct deposit,3900.00,income
+2026-02-03,Avenue Place Rent,-1650.00,housing
+2026-02-04,H-E-B Groceries,-88.00,groceries
+2026-02-05,Starbucks Coffee,-6.25,coffee
+2026-02-06,Local Restaurant Dinner,-34.80,dining
+2026-02-04,Netflix monthly subscription,-18.99,subscriptions
+2026-02-05,Spotify monthly subscription,-25.99,subscriptions
+2026-02-06,Figma Professional monthly subscription,-32.99,subscriptions
+2026-02-04,Uber Eats deadline dinner,-43.50,food_delivery
+2026-02-05,Amazon one-click work supplies,-119.40,shopping
+2026-02-06,Lyft after late meeting,-27.80,rideshare
+2026-02-11,H-E-B Groceries,-95.00,groceries
+2026-02-12,Starbucks Coffee,-6.25,coffee
+2026-02-13,Local Restaurant Dinner,-34.80,dining

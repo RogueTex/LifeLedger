@@ -1,0 +1,18 @@
+{
+  "age": 37,
+  "avg_net_monthly_savings": 700,
+  "current_savings": 4200,
+  "goals": [
+    "Build a $12000 emergency buffer while reducing post-payday spending spikes."
+  ],
+  "income_approx": "$84,500/year",
+  "location": "Austin, TX",
+  "name": "Sasha Moreno",
+  "notes": "Synthetic fixture persona for LifeLedger ingestion and inference demos.",
+  "pain_points": [
+    "Exec reviews and staffing escalations make money worries more frequent."
+  ],
+  "persona_id": "p03",
+  "role": "Operations Strategy Lead",
+  "savings_goal": 12000
+}

@@ -26,7 +26,8 @@ if str(_PROJECT_ROOT) not in sys.path:
 from src.features.stress_scorer import compute_stress, DEADLINE_KEYWORDS
 from src.features.spend_tagger import tag_spend, KEYWORD_MAP
 from src.features.correlation import compute_correlation
-from src.insights.insight_engine import _validate_insight_schema, _compute_anxiety_themes
+from src.insights.insight_engine import _validate_insight_schema, _compute_anxiety_themes, compute_insights
+from src.loaders.persona_loader import build_timeline, load_persona
 from src.loaders.upload_parser import parse_transactions_csv, parse_calendar_ics, parse_chatgpt_export
 
 
@@ -556,3 +557,47 @@ class TestDemoAssets:
             assert payload["consent"]["dataset_type"] == "synthetic"
             assert len(payload["insights"]) >= 3
             _validate_insight_schema(payload)
+
+
+# ===================================================================
+# 8. Committed raw sample data
+# ===================================================================
+
+class TestSamplePersonaData:
+    SAMPLE_ROOT = _PROJECT_ROOT / "data" / "sample"
+    EXPECTED_PERSONAS = ("p01", "p03", "p05")
+
+    def test_sample_personas_load_and_normalize(self):
+        for persona_id in self.EXPECTED_PERSONAS:
+            data = load_persona(persona_id, data_root=self.SAMPLE_ROOT)
+            assert data["consent"]["dataset_type"] == "synthetic"
+            assert len(data["transactions"]) >= 70
+            assert len(data["calendar"]) >= 40
+            assert len(data["conversations"]) >= 10
+
+            timeline = build_timeline(data)
+            assert len(timeline) >= 150
+            assert {"bank", "calendar", "ai_chat", "email"}.issubset(set(timeline["source"]))
+            assert timeline["year_week"].dropna().str.match(r"^\d{4}-\d{2}$").all()
+
+    def test_sample_persona_can_compute_insights(self, monkeypatch):
+        monkeypatch.setenv("LIFELEDGER_PERSONA_DATA_DIR", str(self.SAMPLE_ROOT))
+        result = compute_insights("p05")
+        _validate_insight_schema(result)
+        insight_ids = {insight["id"] for insight in result["insights"]}
+        assert "stress_spend_correlation" in insight_ids
+        assert "worry_timeline" in insight_ids
+        assert "invoice_rate_risk" in insight_ids
+
+    def test_upload_fixtures_parse(self):
+        upload_dir = self.SAMPLE_ROOT / "uploads"
+        transactions = parse_transactions_csv((upload_dir / "sample_transactions.csv").read_bytes())
+        calendar = parse_calendar_ics((upload_dir / "sample_calendar.ics").read_bytes())
+        conversations = parse_chatgpt_export(
+            (upload_dir / "sample_chatgpt_export.json").read_bytes(),
+            "sample_chatgpt_export.json",
+        )
+
+        assert len(transactions) >= 30
+        assert len(calendar) >= 15
+        assert len(conversations) >= 5

@@ -1,0 +1,15 @@
+{
+  "allowed_uses": [
+    "local_demo",
+    "testing",
+    "model_prompting",
+    "portfolio_review"
+  ],
+  "dataset_type": "synthetic",
+  "notes": "Generated synthetic fixture data. No real individuals are represented.",
+  "prohibited_uses": [
+    "attempt_reidentification",
+    "training_production_models"
+  ],
+  "retention": "no_real_personal_data"
+}
