@@ -100,6 +100,7 @@ lifeledger/
 │   │   │   ├── PostPaydaySurge.tsx          # Post-income spending concentration
 │   │   │   ├── DayOfWeekChart.tsx           # Day-of-week spending patterns
 │   │   │   ├── BehavioralInsights.tsx       # Theme extraction + rate risk + savings
+│   │   │   ├── InsightAuditTrail.tsx         # Confidence, source lineage, methods, evidence refs
 │   │   │   ├── StrengthsWeaknesses.tsx      # Data-driven strengths/weaknesses summary
 │   │   │   ├── DataUploadSection.tsx        # Multi-file drag-drop upload
 │   │   │   ├── UserContextForm.tsx          # Income/savings/debt context form
@@ -154,6 +155,7 @@ LifeLedger does **not** ship with a database. There are no migrations, ORM model
 See [`context/DEMO_DATA_AND_PERSISTENCE.md`](context/DEMO_DATA_AND_PERSISTENCE.md) for the interview-ready version of this architecture tradeoff.
 See [`context/SYSTEM_DESIGN_PRESENTATION.md`](context/SYSTEM_DESIGN_PRESENTATION.md) for the system-design talk track.
 See [`context/PRODUCTION_ARCHITECTURE.md`](context/PRODUCTION_ARCHITECTURE.md) for the production DB, queue, worker, and observability design.
+See [`context/EVALUATION_AND_QUALITY.md`](context/EVALUATION_AND_QUALITY.md) for the golden fixture, schema, and regression testing story.
 See [`data/sample/EXPECTED_INSIGHTS.md`](data/sample/EXPECTED_INSIGHTS.md) for the committed synthetic fixture outcomes.
 
 ---
@@ -238,6 +240,8 @@ Users upload files through a drag-and-drop interface. The system auto-classifies
 Every insight includes: `id`, `title`, `finding`, `evidence[]`, `dollar_impact`, `what_this_means`, `recommended_next_actions[]`, `confidence{}`, and `provenance{}`.
 
 The confidence/provenance contract records the method, source types, source record counts, and source references when available. This keeps the AI chat grounded in computed insight JSON instead of raw personal data or unsupported model claims.
+
+The dashboard now exposes this contract in an **Insight Audit Trail** panel, so demo viewers can inspect confidence, method names, source record counts, and evidence refs without opening the raw JSON.
 
 Up to 11 insight types are computed (all data-contingent — only generated when the data supports them):
 - `stress_spend_correlation` — with `weekly_series[]`, `spike_weeks[]`, correlation stats

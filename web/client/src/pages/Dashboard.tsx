@@ -17,6 +17,7 @@ import StrengthsWeaknesses from "@/components/dashboard/StrengthsWeaknesses";
 import StressCategoryShift from "@/components/dashboard/StressCategoryShift";
 import SpendingVelocity from "@/components/dashboard/SpendingVelocity";
 import RecoverySpending from "@/components/dashboard/RecoverySpending";
+import InsightAuditTrail from "@/components/dashboard/InsightAuditTrail";
 import { fetchPersonas, fetchInsights, type InsightPayload, type Persona } from "@/lib/api";
 
 export default function Dashboard() {
@@ -169,6 +170,7 @@ export default function Dashboard() {
                   </div>
                   <DayOfWeekChart payload={payload} />
                   <BehavioralInsights payload={payload} />
+                  <InsightAuditTrail payload={payload} />
                 </div>
               )}
             </>

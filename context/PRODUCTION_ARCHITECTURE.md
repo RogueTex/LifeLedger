@@ -4,15 +4,17 @@ LifeLedger is intentionally file-backed for the portfolio demo, but the architec
 
 ## High-Level Flow
 
-```text
-Exports / Uploads
-  -> source parsers
-  -> canonical timeline rows
-  -> typed extraction facts
-  -> deterministic feature tables
-  -> insight JSON
-  -> grounded AI narration
-  -> dashboard and chat
+```mermaid
+flowchart LR
+  A["Exports and Uploads<br/>CSV, ICS, chat JSON, email JSONL"] --> B["Source Parsers<br/>validate, normalize, quarantine"]
+  B --> C["Canonical Timeline<br/>date, source, text, amount, tags, refs"]
+  C --> D["Typed Extraction Facts<br/>invoice_payment, worry_signal"]
+  C --> E["Deterministic Feature Tables<br/>stress, spend, subscriptions, payday windows"]
+  D --> F["Insight Engine<br/>thresholds, statistics, confidence"]
+  E --> F
+  F --> G["Insight JSON v1_locked<br/>evidence, confidence, provenance"]
+  G --> H["Dashboard<br/>charts and audit trail"]
+  G --> I["Grounded AI Narration<br/>answers only from insight JSON"]
 ```
 
 The core principle is: compute before narrating. The model is not the source of truth for financial conclusions. It can extract structured facts and explain computed insights, but the durable decision layer is deterministic and testable.
@@ -31,6 +33,22 @@ This is deliberate. It makes the project easy to clone, run, inspect, and discus
 ## Production Mode
 
 In production, the same modules would sit behind these services:
+
+```mermaid
+flowchart TD
+  U["User / Demo Operator"] --> API["API + Auth<br/>consent scopes, upload limits"]
+  API --> OBJ["Encrypted Object Storage<br/>raw files by content hash"]
+  API --> DB["Postgres<br/>users, uploads, jobs, manifests, insight versions"]
+  API --> Q["Durable Queue<br/>parse and inference jobs"]
+  Q --> W["Python Workers<br/>parsers, extraction, features, insights"]
+  W --> OBJ
+  W --> DB
+  W --> LLM["LLM Gateway<br/>schema extraction, grounded narration, tracing"]
+  DB --> DASH["Dashboard API<br/>derived insight payloads"]
+  DASH --> UI["React UI<br/>charts, chat, audit trail"]
+  W --> OBS["Observability<br/>logs, traces, eval reports, drift checks"]
+  LLM --> OBS
+```
 
 | Layer | Production Choice | Why |
 |---|---|---|
@@ -107,6 +125,7 @@ AI should not silently decide that someone is undercharging, overspending, or fi
 - Schema versioning for canonical rows and insights.
 - Golden fixture tests for expected insights.
 - Confidence/provenance fields on every insight.
+- UI-visible audit trail for source types, methods, record counts, and evidence refs.
 - Deletion jobs tied to consent and retention settings.
 - PII redaction in logs and model prompts.
 - Model outputs constrained by JSON schemas.

@@ -18,6 +18,7 @@ import GroundedChatUpload from "@/components/dashboard/GroundedChatUpload";
 import StressCategoryShift from "@/components/dashboard/StressCategoryShift";
 import SpendingVelocity from "@/components/dashboard/SpendingVelocity";
 import RecoverySpending from "@/components/dashboard/RecoverySpending";
+import InsightAuditTrail from "@/components/dashboard/InsightAuditTrail";
 import { findInsight, type InsightPayload } from "@/lib/api";
 
 export default function YourData() {
@@ -162,6 +163,7 @@ export default function YourData() {
                   )}
                   {hasDow && <DayOfWeekChart payload={payload} />}
                   <BehavioralInsights payload={payload} />
+                  <InsightAuditTrail payload={payload} />
                 </div>
               );
             })()}

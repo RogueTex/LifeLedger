@@ -11,12 +11,27 @@ export interface InsightPayload {
   insights: Insight[];
 }
 
+export interface InsightConfidence {
+  level?: "low" | "medium" | "high" | string;
+  score?: number;
+  rationale?: string;
+}
+
+export interface InsightProvenance {
+  source_types?: string[];
+  method?: string;
+  source_record_counts?: Record<string, number>;
+  evidence_refs?: string[];
+}
+
 export interface Insight {
   id: string;
   title: string;
   finding: string;
   evidence: string[];
   dollar_impact: number | null;
+  confidence?: InsightConfidence;
+  provenance?: InsightProvenance;
   [key: string]: any;
 }
 

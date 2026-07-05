@@ -6,16 +6,18 @@ LifeLedger is a multi-source ingestion and inference system: it takes fragmented
 
 ## Current Demo Architecture
 
-```text
-React dashboard
-  -> Express API
-    -> frozen demo JSON in outputs/
-    -> Python upload bridge
-      -> parsers for CSV, ICS, ChatGPT/Claude JSON
-      -> normalized pandas dataframes
-      -> feature engineering
-      -> insight JSON
-    -> optional grounded LLM narrative
+```mermaid
+flowchart LR
+  UI["React Dashboard<br/>demo personas and uploads"] --> API["Express API"]
+  API --> Frozen["Frozen Demo JSON<br/>outputs/insights_p*.json"]
+  API --> Bridge["Python Upload Bridge<br/>stdin JSON -> stdout insights"]
+  Bridge --> Parsers["Source Parsers<br/>CSV, ICS, ChatGPT/Claude JSON"]
+  Parsers --> Frames["Normalized DataFrames<br/>transactions, calendar, conversations"]
+  Frames --> Features["Feature Engineering<br/>stress, spend, subscriptions, payday windows"]
+  Features --> Insights["Insight JSON<br/>confidence + provenance"]
+  Frozen --> UI
+  Insights --> UI
+  Insights --> Chat["Grounded LLM Chat<br/>no raw files in prompt"]
 ```
 
 The demo intentionally avoids a database. That keeps local setup simple, protects user-uploaded files by not persisting them, and makes the demo deterministic. The tradeoff is that user upload history, job retries, and multi-user workflows are out of scope for the local prototype.
@@ -58,16 +60,19 @@ Vercel/Cloudflare Pages frontend
 
 Production version:
 
-```text
-Frontend
-  -> API gateway/auth
-    -> object storage for encrypted raw uploads
-    -> Postgres for users, jobs, insight metadata, consent, audit logs
-    -> queue for async ingestion jobs
-    -> Python inference workers
-    -> derived insight store
-    -> grounded chat service
-    -> observability and retention jobs
+```mermaid
+flowchart TD
+  Frontend["Frontend"] --> Gateway["API Gateway + Auth"]
+  Gateway --> Storage["Encrypted Object Storage<br/>raw uploads"]
+  Gateway --> Pg["Postgres<br/>users, jobs, manifests, consent, audit logs"]
+  Gateway --> Queue["Async Ingestion Queue"]
+  Queue --> Workers["Python Inference Workers"]
+  Workers --> Storage
+  Workers --> Pg
+  Workers --> Derived["Derived Insight Store<br/>facts, features, insight JSON"]
+  Derived --> Chat["Grounded Chat Service"]
+  Derived --> Frontend
+  Workers --> Obs["Observability + Retention Jobs"]
 ```
 
 ## Key Architecture Tradeoffs
@@ -98,10 +103,12 @@ The canonical timeline makes cross-source patterns possible. Source-specific par
 2. Show the demo persona dashboard and one strongest insight.
 3. Open the raw sample files in `data/sample/` to show the ingestion inputs.
 4. Trace one path: `sample_transactions.csv` or `persona_p05/emails.jsonl` -> parser/loader -> insight engine -> dashboard.
-5. Explain why the LLM is downstream of deterministic evidence.
-6. Close with the production architecture: object storage, Postgres, queue, workers, derived insight store, grounded chat.
+5. Open the Insight Audit Trail panel and show confidence, method, source counts, and evidence refs.
+6. Explain why the LLM is downstream of deterministic evidence.
+7. Close with the production architecture: object storage, Postgres, queue, workers, derived insight store, grounded chat.
 
 Use [`context/PRODUCTION_ARCHITECTURE.md`](PRODUCTION_ARCHITECTURE.md) for the longer production-grade architecture talk track.
+Use [`context/EVALUATION_AND_QUALITY.md`](EVALUATION_AND_QUALITY.md) for the evaluation and regression-testing story.
 
 ## Rama-Relevant Framing
 
