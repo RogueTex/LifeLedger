@@ -55,9 +55,11 @@ The narrative chat doesn't hallucinate. It receives only the precomputed insight
 
 ## Live Demo
 
-Two synthetic personas demonstrate the engine's capabilities:
+Three synthetic personas demonstrate the engine's capabilities:
 
 **Jordan Lee (p01)** — Burnout + home savings goal. Shows stress-spend correlation, spike week evidence with specific transactions and calendar events, worry timeline, subscription creep, and savings velocity tracking.
+
+**Sasha Moreno (p03)** — High-stress professional with strong cross-source correlation. Shows the clearest stress-spend signal and a compact demo path for explaining the analytics pipeline.
 
 **Theo Nakamura (p05)** — ADHD + freelance. Shows invoice rate risk detection (undercharging at implied $50/hr vs. $65/hr Austin baseline), anxiety themes tied to client stress, and spending pattern analysis.
 
@@ -74,6 +76,7 @@ Two synthetic personas demonstrate the engine's capabilities:
 | API Server | Express 5 (TypeScript) | Bridges React frontend to Python compute layer |
 | Compute | Python 3.12 + pandas | Feature engineering, correlation analysis, insight generation |
 | LLM Chat | Groq / OpenRouter / OpenAI (BYOK) | Narrative answers grounded in insight JSON |
+| Persistence | No database / ORM | Demo is file-backed; user uploads are session-only |
 | Caching | JSON in `outputs/` | Pre-generated insights for demo reliability |
 
 ---
@@ -121,14 +124,29 @@ lifeledger/
 │   ├── process_upload.py                   # Bridge: stdin JSON → upload_parser → insights → stdout
 │   ├── demo_dry_run.sh                     # 2-minute timed demo runbook
 │   └── generate_demo_backups.py            # Backup panel data per persona
-├── data/raw/persona_p{01,05}/              # Synthetic persona exports (10 files each)
 ├── outputs/
 │   ├── insights_p01.json                   # Frozen demo cache — Jordan Lee
-│   └── insights_p05.json                   # Frozen demo cache — Theo Nakamura
+│   ├── insights_p03.json                   # Frozen demo cache — Sasha Moreno
+│   ├── insights_p05.json                   # Frozen demo cache — Theo Nakamura
+│   └── demo_backups/                       # Smaller backup payloads for demo panels
+├── data/raw/                               # Not committed; optional source exports for cache regeneration
 ├── context/
 │   └── docs/how_to_export_your_own_data.md # Guide for exporting your own data
 └── schemas/DATASET_SCHEMA.md               # Full schema reference
 ```
+
+---
+
+## Data and Persistence
+
+LifeLedger does **not** ship with a database. There are no migrations, ORM models, or hosted DB dependencies in the demo path.
+
+- Demo personas are served from committed frozen JSON payloads in `outputs/insights_p01.json`, `outputs/insights_p03.json`, and `outputs/insights_p05.json`.
+- User uploads are parsed by the local Express/Python pipeline and returned to the browser for the current session; uploaded files and generated upload insights are not persisted.
+- Raw synthetic source exports under `data/raw/persona_*` are intentionally gitignored and are not part of this public repo. They are only required if you want to regenerate the frozen `outputs/insights_*.json` caches with `save_insights(...)`.
+- The schema docs still describe the original hackathon source dataset format so future regeneration or import work has a stable target.
+
+See [`context/DEMO_DATA_AND_PERSISTENCE.md`](context/DEMO_DATA_AND_PERSISTENCE.md) for the interview-ready version of this architecture tradeoff.
 
 ---
 
@@ -175,7 +193,7 @@ Open **http://localhost:5173**. The API runs on `:5000`, and Vite proxies `/api`
 
 ### 4. Explore
 
-- **View Demo** — Pre-analyzed synthetic personas (Jordan Lee, Theo Nakamura)
+- **View Demo** — Pre-analyzed synthetic personas (Jordan Lee, Sasha Moreno, Theo Nakamura)
 - **Analyze My Data** — Upload your own bank CSV, Google Calendar ICS, or ChatGPT/Claude exports
 - **Ask AI** — Open the chat sidebar and ask questions about the insights (requires an API key via `.env` or BYOK)
 
@@ -237,7 +255,7 @@ See [`context/docs/how_to_export_your_own_data.md`](context/docs/how_to_export_y
 - User-uploaded files are processed by the local app server for the current session — nothing is persisted
 - The AI chat receives only **precomputed insight JSON**, never raw transaction data or files
 - BYOK API keys are **session-only** and never written to disk
-- Synthetic data will be deleted after **March 31, 2026** per hackathon rules
+- Demo consent metadata preserves the original hackathon retention rule (`delete_after_2026-03-31`); the committed payloads here are synthetic portfolio/demo artifacts.
 
 ---
 
@@ -245,6 +263,9 @@ See [`context/docs/how_to_export_your_own_data.md`](context/docs/how_to_export_y
 
 ### Jordan Lee (p01)
 Burnout + home savings. Primary demo: stress-spend correlation with spike evidence, worry timeline showing anxiety-spending overlap, subscription creep detection, savings velocity to $50K goal.
+
+### Sasha Moreno (p03)
+Stress-heavy professional life. Strongest demo for explaining the correlation engine because the stress-spend signal is clearer and the frozen payload includes rich weekly evidence.
 
 ### Theo Nakamura (p05)
 ADHD + freelance. Secondary demo: invoice rate risk detection (undercharging $15/hr below market), ADHD/client-stress anxiety themes, spending pattern analysis without traditional income structure.

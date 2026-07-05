@@ -22,7 +22,7 @@ cd web && npx vite --host
 # TypeScript type check (React app)
 cd web && npx tsc --noEmit
 
-# Run tests (42 pytest cases)
+# Run the pytest suite
 pytest tests/test_features.py
 
 # Run a single test
@@ -32,7 +32,7 @@ pytest tests/test_features.py::test_name -v
 python -m py_compile src/loaders/persona_loader.py src/loaders/upload_parser.py src/features/stress_scorer.py src/features/spend_tagger.py src/features/correlation.py src/features/resilience_model.py src/insights/insight_engine.py src/insights/narrative_gen.py
 
 # Regenerate insight caches (required after feature/insight logic changes — needs persona data in data/raw/)
-python -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p05')"
+python -c "from src.insights.insight_engine import save_insights; save_insights('p01'); save_insights('p03'); save_insights('p05')"
 
 # Start web app
 cd web && npm run dev
@@ -84,6 +84,7 @@ AI chat (BYOK supported):
 
 ### Personas used
 - **p01 (Jordan Lee)** — Burnout + home savings. Primary demo: stress-spend correlation, goal velocity, anxiety themes.
+- **p03 (Sasha Moreno)** — Strongest stress-spend correlation. Useful for explaining the cross-source pipeline and weekly evidence.
 - **p05 (Theo Nakamura)** — ADHD + freelance. Secondary demo: undercharging detection, invoice tracking, implied rate alert.
 
 ## Locked Contracts
@@ -121,7 +122,9 @@ Every insight row must include: `id`, `title`, `finding`, `evidence` (list), `do
 
 - After changing feature or insight logic, always regenerate cached insights and verify with `pytest`.
 - Frozen caches in `outputs/` are what the UI reads — the app does not recompute insights live for demo personas.
+- There is no database layer in the demo path. `outputs/` is the committed demo store; user-uploaded analysis is session-only.
+- Raw `data/raw/persona_*` source exports are intentionally gitignored and not required to run the demo from a fresh clone.
 - Environment requires one of `GROQ_API_KEY`, `OPENROUTER_API_KEY`, or `OPENAI_API_KEY` in `.env` for narrative chat — OR users can BYOK in the chat UI.
 - Groq keys start with `gsk_`. Uses OpenAI-compatible endpoint at `https://api.groq.com/openai/v1`.
-- All persona data is 100% synthetic. Delete after March 31, 2026 per hackathon rules.
+- All committed demo payloads are synthetic.
 - On Windows, `NODE_ENV=x cmd` doesn't work. Start the two dev servers as separate processes (not combined with `&`): `npx tsx server/index.ts` (API on :5000) and `npx vite --host` (frontend on :5173).

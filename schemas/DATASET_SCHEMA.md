@@ -1,9 +1,11 @@
 # DATASET_SCHEMA.md — Data Portability Hackathon 2026
 
 ## Overview
-This folder contains 5 fully synthetic personal memory personas for use in the Data Portability Hackathon. Each persona represents a fictional individual with a coherent life story, consistent across all data files.
+This schema describes fully synthetic personal memory persona folders for use in the Data Portability Hackathon. Each persona represents a fictional individual with a coherent life story, consistent across all data files.
 
 All data is **100% synthetic**. No real individuals are represented.
+
+Repo note: this file is a schema reference for raw source persona folders. The public app repo does not commit those folders; it ships frozen demo insight caches for Jordan Lee (`p01`), Sasha Moreno (`p03`), and Theo Nakamura (`p05`) under `outputs/`.
 
 ---
 
@@ -13,7 +15,7 @@ All data is **100% synthetic**. No real individuals are represented.
 |-----|---------------|-----|----------------------------|-------------------------------------|
 | p01 | Jordan Lee    | 32  | Senior Product Manager     | Burnout, promotion, relationship guilt, house savings |
 | p02 | Maya Patel    | 26  | Medical Resident           | Exhaustion, debt, isolation, career decisions |
-| p03 | Darius Webb   | 41  | Agency Founder/CEO         | Post-divorce rebuild, co-parenting, book writing |
+| p03 | Sasha Moreno  | --  | Demo cache persona         | Stress-spend correlation, money anxiety, pay-cycle spending |
 | p04 | Sunita Rajan  | 58  | AP Chemistry Teacher       | Pre-retirement, family caregiving, late tech adopter |
 | p05 | Theo Nakamura | 23  | Freelance Designer         | ADHD, undercharging, debt payoff, creative growth |
 

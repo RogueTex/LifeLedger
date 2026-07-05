@@ -3,9 +3,13 @@
 
 Welcome! This guide gets you from zero to working with the datasets in under 10 minutes.
 
+> Repo note: this quickstart documents the original synthetic source dataset format. This app repo ships the frozen demo outputs in `outputs/insights_p01.json`, `outputs/insights_p03.json`, and `outputs/insights_p05.json`; raw `persona_pXX/` folders are not committed and are only needed to regenerate those caches. The shipped app demo names are Jordan Lee (`p01`), Sasha Moreno (`p03`), and Theo Nakamura (`p05`).
+
 ---
 
 ## Step 1: Understand the folder structure
+
+The original hackathon dataset package used this shape:
 
 ```
 Hackathon_Datasets/
@@ -14,12 +18,12 @@ Hackathon_Datasets/
 ├── how_to_export_your_own_data.md  ← If you want to use real personal data
 ├── persona_p01/               ← Jordan Lee, 32, Senior PM
 ├── persona_p02/               ← Maya Patel, 26, Medical Resident
-├── persona_p03/               ← Darius Webb, 41, Agency Founder
+├── persona_p03/               ← Sasha Moreno, demo cache persona
 ├── persona_p04/               ← Sunita Rajan, 58, Chemistry Teacher
 └── persona_p05/               ← Theo Nakamura, 23, Freelance Designer
 ```
 
-Each persona folder contains 10 files:
+Each raw persona folder contains 10 files:
 ```
 persona_pXX/
 ├── persona_profile.json   ← Who this person is (goals, pain points, personality)
@@ -236,7 +240,7 @@ Follow the same pattern for conversations, emails, calendar, etc. Use the schema
 Before building, read `consent.json` in each persona folder. All data is:
 - ✅ Allowed: hackathon demos, model prompting, local analysis, team collaboration within the event
 - ❌ Not allowed: attempting re-identification, sharing outside the event, commercial use, training production models
-- 🗑️ Delete after: March 31, 2026
+- Delete after: March 31, 2026 in the original hackathon consent package
 
 ---
 

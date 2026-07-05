@@ -11,6 +11,7 @@ Tests cover:
 from __future__ import annotations
 
 import datetime
+import json
 import sys
 from pathlib import Path
 
@@ -528,3 +529,30 @@ class TestUploadProcessor:
         })
         assert code == 1
         assert body["error_code"] == "invalid_file_encoding"
+
+
+# ===================================================================
+# 7. Shipped demo assets
+# ===================================================================
+
+class TestDemoAssets:
+    EXPECTED_PERSONAS = {
+        "p01": "Jordan Lee",
+        "p03": "Sasha Moreno",
+        "p05": "Theo Nakamura",
+    }
+
+    def test_frozen_demo_insights_are_committed_and_schema_valid(self):
+        for persona_id, expected_name in self.EXPECTED_PERSONAS.items():
+            path = _PROJECT_ROOT / "outputs" / f"insights_{persona_id}.json"
+            assert path.exists(), f"Missing frozen demo cache: {path}"
+
+            with path.open("r", encoding="utf-8") as f:
+                payload = json.load(f)
+
+            assert payload["schema_version"] == "v1_locked"
+            assert payload["persona"] == persona_id
+            assert payload["profile_name"] == expected_name
+            assert payload["consent"]["dataset_type"] == "synthetic"
+            assert len(payload["insights"]) >= 3
+            _validate_insight_schema(payload)

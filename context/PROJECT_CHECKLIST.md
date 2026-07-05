@@ -5,10 +5,11 @@ Deadline: March 9, 2026
 
 ## 1) Current Snapshot (As Of 2026-03-06)
 
-- [x] Persona data for `p01` and `p05` is present in `data/raw/`
+- [x] Frozen demo caches for `p01`, `p03`, and `p05` are present in `outputs/`
+- [ ] Raw persona source exports are committed in this repo (`data/raw/` is intentionally gitignored)
 - [x] Loader, features, insight engine, narrative generator, web dashboard implemented
 - [x] Validation notebook scaffold (`notebooks/eda.ipynb`) created with required cells
-- [x] Cached insights generated: `outputs/insights_p01.json`, `outputs/insights_p05.json`
+- [x] Cached insights generated: `outputs/insights_p01.json`, `outputs/insights_p03.json`, `outputs/insights_p05.json`
 - [x] Schema and export docs moved to structured locations (`schemas/`, `context/docs/`)
 - [x] Final contract alignment for judging (field-level schema + evidence richness)
 - [x] Final demo polish + script rehearsal
@@ -21,27 +22,40 @@ Deadline: March 9, 2026
 Source Drive:
 `https://drive.google.com/drive/folders/1TEWhdzff-FgkDNY-53IDXIWaPZQ7_5F3`
 
-### Persona data required
-- [x] `data/raw/persona_p01/persona_profile.json`
-- [x] `data/raw/persona_p01/consent.json`
-- [x] `data/raw/persona_p01/lifelog.jsonl`
-- [x] `data/raw/persona_p01/conversations.jsonl`
-- [x] `data/raw/persona_p01/emails.jsonl`
-- [x] `data/raw/persona_p01/calendar.jsonl`
-- [x] `data/raw/persona_p01/social_posts.jsonl`
-- [x] `data/raw/persona_p01/transactions.jsonl`
-- [x] `data/raw/persona_p01/files_index.jsonl`
-- [x] `data/raw/persona_p01/README.md`
-- [x] `data/raw/persona_p05/persona_profile.json`
-- [x] `data/raw/persona_p05/consent.json`
-- [x] `data/raw/persona_p05/lifelog.jsonl`
-- [x] `data/raw/persona_p05/conversations.jsonl`
-- [x] `data/raw/persona_p05/emails.jsonl`
-- [x] `data/raw/persona_p05/calendar.jsonl`
-- [x] `data/raw/persona_p05/social_posts.jsonl`
-- [x] `data/raw/persona_p05/transactions.jsonl`
-- [x] `data/raw/persona_p05/files_index.jsonl`
-- [x] `data/raw/persona_p05/README.md`
+### Persona source data required for cache regeneration
+
+These raw folders are not committed in this public repo. The app can run the demo from frozen `outputs/` caches without them.
+
+- [ ] `data/raw/persona_p01/persona_profile.json`
+- [ ] `data/raw/persona_p01/consent.json`
+- [ ] `data/raw/persona_p01/lifelog.jsonl`
+- [ ] `data/raw/persona_p01/conversations.jsonl`
+- [ ] `data/raw/persona_p01/emails.jsonl`
+- [ ] `data/raw/persona_p01/calendar.jsonl`
+- [ ] `data/raw/persona_p01/social_posts.jsonl`
+- [ ] `data/raw/persona_p01/transactions.jsonl`
+- [ ] `data/raw/persona_p01/files_index.jsonl`
+- [ ] `data/raw/persona_p01/README.md`
+- [ ] `data/raw/persona_p03/persona_profile.json`
+- [ ] `data/raw/persona_p03/consent.json`
+- [ ] `data/raw/persona_p03/lifelog.jsonl`
+- [ ] `data/raw/persona_p03/conversations.jsonl`
+- [ ] `data/raw/persona_p03/emails.jsonl`
+- [ ] `data/raw/persona_p03/calendar.jsonl`
+- [ ] `data/raw/persona_p03/social_posts.jsonl`
+- [ ] `data/raw/persona_p03/transactions.jsonl`
+- [ ] `data/raw/persona_p03/files_index.jsonl`
+- [ ] `data/raw/persona_p03/README.md`
+- [ ] `data/raw/persona_p05/persona_profile.json`
+- [ ] `data/raw/persona_p05/consent.json`
+- [ ] `data/raw/persona_p05/lifelog.jsonl`
+- [ ] `data/raw/persona_p05/conversations.jsonl`
+- [ ] `data/raw/persona_p05/emails.jsonl`
+- [ ] `data/raw/persona_p05/calendar.jsonl`
+- [ ] `data/raw/persona_p05/social_posts.jsonl`
+- [ ] `data/raw/persona_p05/transactions.jsonl`
+- [ ] `data/raw/persona_p05/files_index.jsonl`
+- [ ] `data/raw/persona_p05/README.md`
 
 ### Root/support docs required
 - [x] `QUICKSTART.md`
@@ -89,12 +103,14 @@ cd web && npm run dev
 ```python
 from src.insights.insight_engine import save_insights
 save_insights("p01")
+save_insights("p03")
 save_insights("p05")
 ```
 
 ## 7) Pre-Demo Checklist
 
 - [x] `outputs/insights_p01.json` exists
+- [x] `outputs/insights_p03.json` exists
 - [x] `outputs/insights_p05.json` exists
 - [x] Web app starts
 - [x] Correlation for p01 is meaningful (target `r >= 0.3`) 
@@ -141,4 +157,4 @@ save_insights("p05")
 }
 ```
 
-All data is synthetic. Delete after March 31, 2026 per hackathon rules.
+Committed demo payloads are synthetic. Raw source exports are not shipped with this repo.
