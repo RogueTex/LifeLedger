@@ -26,6 +26,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 from src.features.stress_scorer import compute_stress, DEADLINE_KEYWORDS
 from src.features.spend_tagger import tag_spend, KEYWORD_MAP
 from src.features.correlation import compute_correlation
+from src.insights.extraction import extract_invoice_facts, extract_worry_facts
 from src.insights.insight_engine import _validate_insight_schema, _compute_anxiety_themes, compute_insights
 from src.loaders.persona_loader import build_timeline, load_persona
 from src.loaders.upload_parser import parse_transactions_csv, parse_calendar_ics, parse_chatgpt_export
@@ -588,6 +589,61 @@ class TestSamplePersonaData:
         assert "stress_spend_correlation" in insight_ids
         assert "worry_timeline" in insight_ids
         assert "invoice_rate_risk" in insight_ids
+
+    def test_structured_invoice_extraction_from_sample_emails(self):
+        data = load_persona("p05", data_root=self.SAMPLE_ROOT)
+        facts = extract_invoice_facts(data["emails"])
+
+        assert len(facts) == 4
+        for fact in facts:
+            assert fact["type"] == "invoice_payment"
+            assert fact["source"] == "email"
+            assert fact["source_id"].startswith("e_")
+            assert fact["amounts"] == [750.0]
+            assert fact["hours"] == [15.0]
+            assert fact["confidence"] >= 0.9
+            assert "$750" in fact["evidence_span"]
+
+    def test_sample_golden_insights_have_confidence_and_provenance(self, monkeypatch):
+        monkeypatch.setenv("LIFELEDGER_PERSONA_DATA_DIR", str(self.SAMPLE_ROOT))
+
+        theo = compute_insights("p05")
+        _validate_insight_schema(theo)
+        assert all(isinstance(insight.get("confidence"), dict) for insight in theo["insights"])
+        assert all(isinstance(insight.get("provenance"), dict) for insight in theo["insights"])
+
+        rate = next(insight for insight in theo["insights"] if insight["id"] == "invoice_rate_risk")
+        assert rate["flagged"] is True
+        assert rate["dollar_impact"] == 900.0
+        assert rate["structured_facts_count"] == 4
+        assert rate["confidence"]["level"] == "high"
+        assert {"email", "calendar"}.issubset(set(rate["provenance"]["source_types"]))
+        assert all(match["source_id"].startswith("e_") for match in rate["matches"])
+        assert all(match["confidence"] >= 0.9 for match in rate["matches"])
+
+        sasha = compute_insights("p03")
+        stress = next(insight for insight in sasha["insights"] if insight["id"] == "stress_spend_correlation")
+        surge = next(insight for insight in sasha["insights"] if insight["id"] == "post_payday_surge")
+        worry = next(insight for insight in sasha["insights"] if insight["id"] == "worry_timeline")
+
+        assert stress["correlation_coefficient"] > 0.5
+        assert stress["confidence"]["level"] == "high"
+        assert surge["detected"] is True
+        assert worry["total_worry_mentions"] > 0
+        assert worry["structured_facts_count"] == len(extract_worry_facts(load_persona("p03", data_root=self.SAMPLE_ROOT)["conversations"]))
+
+    def test_subscription_creep_ignores_rent_and_groceries(self, monkeypatch):
+        monkeypatch.setenv("LIFELEDGER_PERSONA_DATA_DIR", str(self.SAMPLE_ROOT))
+        result = compute_insights("p01")
+        subscription = next(insight for insight in result["insights"] if insight["id"] == "subscription_creep")
+        names = [item["name"].lower() for item in subscription["subscriptions"]]
+
+        assert names == [
+            "figma professional monthly subscription",
+            "spotify monthly subscription",
+            "netflix monthly subscription",
+        ]
+        assert not any("rent" in name or "grocer" in name or "payroll" in name for name in names)
 
     def test_upload_fixtures_parse(self):
         upload_dir = self.SAMPLE_ROOT / "uploads"

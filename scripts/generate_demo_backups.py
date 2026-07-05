@@ -41,7 +41,7 @@ def extract_panels(persona_id: str) -> dict:
     }
 
 
-for pid in ("p01", "p05"):
+for pid in ("p01", "p03", "p05"):
     backup = extract_panels(pid)
     out_path = OUT_DIR / f"backup_{pid}.json"
     out_path.write_text(json.dumps(backup, indent=2), encoding="utf-8")

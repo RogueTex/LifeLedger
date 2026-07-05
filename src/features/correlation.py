@@ -302,7 +302,7 @@ def compute_correlation(
             "prior_week": prior_week,
             "prior_week_stress": None if prior_stress_value is None else round(float(prior_stress_value), 3),
             "evidence": (
-                f"Week {week} spend ${weekly_total:,.2f} crossed threshold ${threshold_value:,.2f}; "
+                f"ISO week {week} spend ${weekly_total:,.2f} crossed threshold ${threshold_value:,.2f}; "
                 f"prior week stress was "
                 f"{'N/A' if prior_stress_value is None else f'{float(prior_stress_value):.2f}'}."
             ),

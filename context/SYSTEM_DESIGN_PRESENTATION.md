@@ -36,8 +36,8 @@ The system does deterministic inference before LLM generation:
 - calendar density and deadline keywords -> stress scores
 - transaction text and tags -> discretionary spend categories
 - stress/spend overlap -> spike weeks and correlation evidence
-- conversation text -> worry timeline and anxiety themes
-- invoice emails and calendar/project hours -> undercharging risk
+- conversation text -> typed `worry_signal` facts -> worry timeline and anxiety themes
+- invoice emails -> typed `invoice_payment` facts -> invoice/calendar rate math -> undercharging risk
 
 The LLM is deliberately downstream. It only receives precomputed insight JSON, so the AI layer explains grounded findings instead of inventing calculations.
 
@@ -100,6 +100,8 @@ The canonical timeline makes cross-source patterns possible. Source-specific par
 4. Trace one path: `sample_transactions.csv` or `persona_p05/emails.jsonl` -> parser/loader -> insight engine -> dashboard.
 5. Explain why the LLM is downstream of deterministic evidence.
 6. Close with the production architecture: object storage, Postgres, queue, workers, derived insight store, grounded chat.
+
+Use [`context/PRODUCTION_ARCHITECTURE.md`](PRODUCTION_ARCHITECTURE.md) for the longer production-grade architecture talk track.
 
 ## Rama-Relevant Framing
 

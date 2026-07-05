@@ -119,6 +119,7 @@ lifeledger/
 │   │   └── resilience_model.py             # Financial resilience metrics (stability, volatility, runway)
 │   ├── insights/
 │   │   ├── insight_engine.py               # End-to-end insight computation + schema validation
+│   │   ├── extraction.py                   # Typed facts from emails and AI conversation exports
 │   │   └── narrative_gen.py                # LLM narrative generation (Groq → OpenRouter → OpenAI)
 ├── scripts/
 │   ├── process_upload.py                   # Bridge: stdin JSON → upload_parser → insights → stdout
@@ -131,6 +132,7 @@ lifeledger/
 │   └── demo_backups/                       # Smaller backup payloads for demo panels
 ├── data/
 │   ├── sample/                             # Committed synthetic raw fixtures + upload files
+│   │   └── EXPECTED_INSIGHTS.md            # Golden expected outcomes for sample fixtures
 │   └── raw/                                # Gitignored private source exports
 ├── context/
 │   └── docs/how_to_export_your_own_data.md # Guide for exporting your own data
@@ -151,6 +153,8 @@ LifeLedger does **not** ship with a database. There are no migrations, ORM model
 
 See [`context/DEMO_DATA_AND_PERSISTENCE.md`](context/DEMO_DATA_AND_PERSISTENCE.md) for the interview-ready version of this architecture tradeoff.
 See [`context/SYSTEM_DESIGN_PRESENTATION.md`](context/SYSTEM_DESIGN_PRESENTATION.md) for the system-design talk track.
+See [`context/PRODUCTION_ARCHITECTURE.md`](context/PRODUCTION_ARCHITECTURE.md) for the production DB, queue, worker, and observability design.
+See [`data/sample/EXPECTED_INSIGHTS.md`](data/sample/EXPECTED_INSIGHTS.md) for the committed synthetic fixture outcomes.
 
 ---
 
@@ -218,6 +222,9 @@ Calendar events are scored for stress (meeting count, deadline keywords, packed 
 ### Worry Timeline (Cross-Source Fusion)
 AI conversation exports (ChatGPT, Claude) are scanned for 18 worry-related keywords across financial and emotional categories. Mentions are grouped by week and overlaid with discretionary spending to reveal when anxiety and spending move together — a pattern invisible in either source alone.
 
+### Typed Extraction Layer
+LifeLedger extracts typed facts before computing insights. For example, invoice emails become `invoice_payment` facts with `source_id`, amounts, hours, evidence spans, extraction method, and confidence. AI conversation rows become `worry_signal` facts. The insight engine then applies deterministic math and thresholds to those facts.
+
 ### Freelancer Business Brain
 Email text is scanned for invoice/payment signals and dollar amounts. When explicit hours aren't stated, the engine infers them from trailing 28-day calendar project blocks. If the implied hourly rate falls below the **$65/hr market baseline**, it flags undercharging risk and estimates the monthly leakage.
 
@@ -228,7 +235,9 @@ Users upload files through a drag-and-drop interface. The system auto-classifies
 
 ## Insight Schema (`v1_locked`)
 
-Every insight includes: `id`, `title`, `finding`, `evidence[]`, `dollar_impact`, `what_this_means`, `recommended_next_actions[]`.
+Every insight includes: `id`, `title`, `finding`, `evidence[]`, `dollar_impact`, `what_this_means`, `recommended_next_actions[]`, `confidence{}`, and `provenance{}`.
+
+The confidence/provenance contract records the method, source types, source record counts, and source references when available. This keeps the AI chat grounded in computed insight JSON instead of raw personal data or unsupported model claims.
 
 Up to 11 insight types are computed (all data-contingent — only generated when the data supports them):
 - `stress_spend_correlation` — with `weekly_series[]`, `spike_weeks[]`, correlation stats

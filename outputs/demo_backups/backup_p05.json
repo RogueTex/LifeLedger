@@ -3,40 +3,51 @@
   "profile_name": "Theo Nakamura",
   "critical_panels": {
     "kpi_summary": {
-      "correlation_coefficient": 0.3100973071298601,
-      "months_to_goal": 18.947168977168662,
+      "correlation_coefficient": 0.9140538905266741,
+      "months_to_goal": 20.285714285714285,
       "top_themes": [
         "client_stress",
-        "adhd",
-        "self_doubt"
+        "anxiety",
+        "money"
       ]
     },
     "stress_spike_panel": {
-      "finding": "Weak positive relationship between stress and discretionary spend using `prior_week_stress_raw` alignment (statistically significant).",
+      "finding": "Strong positive relationship between stress and discretionary spend using `same_week_raw` alignment (statistically significant).",
       "evidence": [
-        "Correlation coefficient: 0.31",
-        "Spike weeks detected: 1",
+        "Correlation coefficient: 0.91",
+        "Spike weeks detected: 2",
         "Track discretionary categories weekly and compare against stressful calendar periods."
       ],
       "spike_weeks": [
         {
-          "year_week": "2024-19",
-          "weekly_discretionary_total": 214.5,
+          "year_week": "2026-06",
+          "weekly_discretionary_total": 309.72,
           "top_transactions": [
             {
-              "date": "2024-05-07",
-              "merchant": null,
-              "text": "$200.00 - School of Motion subscription - learning",
-              "amount": 200.0,
+              "date": "2026-02-05",
+              "merchant": "Amazon one-click work supplies",
+              "text": "Amazon one-click work supplies",
+              "amount": 119.4,
               "tags": [
-                "subscriptions"
+                "impulse",
+                "shopping"
               ]
             },
             {
-              "date": "2024-05-11",
-              "merchant": null,
-              "text": "$14.50 - Veracruz tacos - food",
-              "amount": 14.5,
+              "date": "2026-02-04",
+              "merchant": "Uber Eats deadline dinner",
+              "text": "Uber Eats deadline dinner",
+              "amount": 43.5,
+              "tags": [
+                "food_delivery",
+                "rideshare"
+              ]
+            },
+            {
+              "date": "2026-02-06",
+              "merchant": "Local Restaurant Dinner",
+              "text": "Local Restaurant Dinner",
+              "amount": 34.8,
               "tags": [
                 "dining"
               ]
@@ -44,306 +55,272 @@
           ],
           "calendar_events": [
             {
-              "date": "2024-05-11",
-              "title": "Design meetup \u2014 Austin Creatives (2h) - Canopy",
+              "date": "2026-02-03",
+              "title": "Client design block 3h - high pressure week",
               "tags": [
-                "social",
-                "networking",
-                "design"
+                "work"
               ],
-              "source_week": "2024-19"
+              "source_week": "2026-06"
             },
             {
-              "date": "2024-05-12",
-              "title": "Skate session with roommates (2h) - East Austin",
+              "date": "2026-02-04",
+              "title": "Portfolio review - high pressure week",
               "tags": [
-                "social",
-                "self_care"
+                "work",
+                "deadline"
               ],
-              "source_week": "2024-19"
+              "source_week": "2026-06"
+            },
+            {
+              "date": "2026-02-05",
+              "title": "Invoice follow-up - high pressure week",
+              "tags": [
+                "work"
+              ],
+              "source_week": "2026-06"
             }
           ],
           "threshold_math": {
-            "week_spend": 214.5,
-            "mean": 34.39,
-            "std": 68.09,
-            "threshold": 34.39,
-            "prior_week_stress": 0.036
+            "week_spend": 309.72,
+            "mean": 131.43,
+            "std": 103.94,
+            "threshold": 235.38,
+            "prior_week_stress": 0.524
           },
-          "prior_week": "2024-18",
-          "prior_week_stress": 0.036,
-          "evidence": "Week 2024-19 spend $214.50 crossed threshold $34.39; prior week stress was 0.04."
+          "prior_week": "2026-05",
+          "prior_week_stress": 0.524,
+          "evidence": "ISO week 2026-06 spend $309.72 crossed threshold $235.38; prior week stress was 0.52."
+        },
+        {
+          "year_week": "2026-14",
+          "weekly_discretionary_total": 309.72,
+          "top_transactions": [
+            {
+              "date": "2026-04-02",
+              "merchant": "Amazon one-click work supplies",
+              "text": "Amazon one-click work supplies",
+              "amount": 119.4,
+              "tags": [
+                "impulse",
+                "shopping"
+              ]
+            },
+            {
+              "date": "2026-04-01",
+              "merchant": "Uber Eats deadline dinner",
+              "text": "Uber Eats deadline dinner",
+              "amount": 43.5,
+              "tags": [
+                "food_delivery",
+                "rideshare"
+              ]
+            },
+            {
+              "date": "2026-04-03",
+              "merchant": "Local Restaurant Dinner",
+              "text": "Local Restaurant Dinner",
+              "amount": 34.8,
+              "tags": [
+                "dining"
+              ]
+            }
+          ],
+          "calendar_events": [
+            {
+              "date": "2026-03-31",
+              "title": "Client design block 3h - high pressure week",
+              "tags": [
+                "work"
+              ],
+              "source_week": "2026-14"
+            },
+            {
+              "date": "2026-04-01",
+              "title": "Portfolio review - high pressure week",
+              "tags": [
+                "work",
+                "deadline"
+              ],
+              "source_week": "2026-14"
+            },
+            {
+              "date": "2026-04-02",
+              "title": "Invoice follow-up - high pressure week",
+              "tags": [
+                "work"
+              ],
+              "source_week": "2026-14"
+            }
+          ],
+          "threshold_math": {
+            "week_spend": 309.72,
+            "mean": 131.43,
+            "std": 103.94,
+            "threshold": 235.38,
+            "prior_week_stress": 0.524
+          },
+          "prior_week": "2026-13",
+          "prior_week_stress": 0.524,
+          "evidence": "ISO week 2026-14 spend $309.72 crossed threshold $235.38; prior week stress was 0.52."
         }
       ]
     },
     "rate_signal_panel": {
       "finding": "Detected invoices that imply hourly rates below the $65 baseline.",
       "evidence": [
-        "Low-rate matches: 18",
-        "Estimated leakage: $6422.5",
-        "Used trailing 28-day calendar-based project hours when invoice email had no explicit hours."
+        "Low-rate matches: 4",
+        "Invoice/payment facts extracted: 4",
+        "Estimated leakage: $900.0"
       ],
       "matches": [
         {
-          "date": "2024-04-20",
-          "implied_hourly_rate": 23.2,
+          "date": "2026-01-14 15:00:00+00:00",
+          "source_id": "e_0002",
+          "source": "email",
+          "implied_hourly_rate": 50.0,
           "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
+            750.0
           ],
           "hours_detected": [
-            5.0
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2024-04-25",
-          "implied_hourly_rate": 3.0,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
             15.0
           ],
-          "hours_detected": [
-            5.0
+          "evidence_text": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+          "confidence": 0.92,
+          "extraction_method": "regex_invoice_v1",
+          "evidence_refs": [
+            "e_0002"
           ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+          "structured_fact": {
+            "type": "invoice_payment",
+            "source": "email",
+            "source_id": "e_0002",
+            "ts": "2026-01-14 15:00:00+00:00",
+            "amounts": [
+              750.0
+            ],
+            "hours": [
+              15.0
+            ],
+            "evidence_span": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+            "confidence": 0.92,
+            "extraction_method": "regex_invoice_v1"
+          }
         },
         {
-          "date": "2024-05-03",
-          "implied_hourly_rate": 25.78,
+          "date": "2026-02-11 15:00:00+00:00",
+          "source_id": "e_0006",
+          "source": "email",
+          "implied_hourly_rate": 50.0,
           "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
+            750.0
           ],
           "hours_detected": [
-            4.5
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2024-05-25",
-          "implied_hourly_rate": 19.33,
-          "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
-          ],
-          "hours_detected": [
-            6.0
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2024-06-02",
-          "implied_hourly_rate": 13.65,
-          "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
-          ],
-          "hours_detected": [
-            8.5
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2024-06-07",
-          "implied_hourly_rate": 1.76,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
             15.0
           ],
-          "hours_detected": [
-            8.5
+          "evidence_text": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+          "confidence": 0.92,
+          "extraction_method": "regex_invoice_v1",
+          "evidence_refs": [
+            "e_0006"
           ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+          "structured_fact": {
+            "type": "invoice_payment",
+            "source": "email",
+            "source_id": "e_0006",
+            "ts": "2026-02-11 15:00:00+00:00",
+            "amounts": [
+              750.0
+            ],
+            "hours": [
+              15.0
+            ],
+            "evidence_span": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+            "confidence": 0.92,
+            "extraction_method": "regex_invoice_v1"
+          }
         },
         {
-          "date": "2024-07-21",
-          "implied_hourly_rate": 19.33,
+          "date": "2026-03-11 15:00:00+00:00",
+          "source_id": "e_0010",
+          "source": "email",
+          "implied_hourly_rate": 50.0,
           "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
+            750.0
           ],
           "hours_detected": [
-            6.0
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2024-10-15",
-          "implied_hourly_rate": 19.33,
-          "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
-          ],
-          "hours_detected": [
-            6.0
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2024-11-20",
-          "implied_hourly_rate": 2.5,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
             15.0
           ],
-          "hours_detected": [
-            6.0
+          "evidence_text": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+          "confidence": 0.92,
+          "extraction_method": "regex_invoice_v1",
+          "evidence_refs": [
+            "e_0010"
           ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
+          "structured_fact": {
+            "type": "invoice_payment",
+            "source": "email",
+            "source_id": "e_0010",
+            "ts": "2026-03-11 15:00:00+00:00",
+            "amounts": [
+              750.0
+            ],
+            "hours": [
+              15.0
+            ],
+            "evidence_span": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+            "confidence": 0.92,
+            "extraction_method": "regex_invoice_v1"
+          }
         },
         {
-          "date": "2024-12-18",
-          "implied_hourly_rate": 23.2,
+          "date": "2026-04-08 15:00:00+00:00",
+          "source_id": "e_0014",
+          "source": "email",
+          "implied_hourly_rate": 50.0,
           "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
+            750.0
           ],
           "hours_detected": [
-            5.0
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2025-01-24",
-          "implied_hourly_rate": 1.5,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
             15.0
           ],
-          "hours_detected": [
-            10.0
+          "evidence_text": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+          "confidence": 0.92,
+          "extraction_method": "regex_invoice_v1",
+          "evidence_refs": [
+            "e_0014"
           ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
-        },
-        {
-          "date": "2025-02-13",
-          "implied_hourly_rate": 4.29,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
-            15.0
-          ],
-          "hours_detected": [
-            3.5
-          ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
-        },
-        {
-          "date": "2025-02-25",
-          "implied_hourly_rate": 3.75,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
-            15.0
-          ],
-          "hours_detected": [
-            4.0
-          ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
-        },
-        {
-          "date": "2025-03-07",
-          "implied_hourly_rate": 33.14,
-          "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
-          ],
-          "hours_detected": [
-            3.5
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2025-03-14",
-          "implied_hourly_rate": 17.85,
-          "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
-          ],
-          "hours_detected": [
-            6.5
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
-        },
-        {
-          "date": "2025-03-30",
-          "implied_hourly_rate": 1.58,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
-            15.0
-          ],
-          "hours_detected": [
-            9.5
-          ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
-        },
-        {
-          "date": "2025-04-06",
-          "implied_hourly_rate": 1.36,
-          "amounts_detected": [
-            18.0,
-            18.0,
-            2200.0,
-            15.0
-          ],
-          "hours_detected": [
-            11.0
-          ],
-          "evidence_text": "From: theo@theonakamura.com | To: client@startupco.com | Subject: Invoice #018 | Body summary: Hi \u2014 attached is invoice #018 for the brand identity project, $2,200 due net-15. Than"
-        },
-        {
-          "date": "2025-04-25",
-          "implied_hourly_rate": 11.6,
-          "amounts_detected": [
-            5840.0,
-            116.0,
-            1160.0
-          ],
-          "hours_detected": [
-            10.0
-          ],
-          "evidence_text": "From: chase@creditcard.com | To: theo@theonakamura.com | Subject: Statement ready \u2014 balance $5,840 | Body summary: Minimum payment due: $116. Available credit: $1,160."
+          "structured_fact": {
+            "type": "invoice_payment",
+            "source": "email",
+            "source_id": "e_0014",
+            "ts": "2026-04-08 15:00:00+00:00",
+            "amounts": [
+              750.0
+            ],
+            "hours": [
+              15.0
+            ],
+            "evidence_span": "Invoice follow-up Invoice for client brand package: $750 for 15 hours. Payment due Friday.",
+            "confidence": 0.92,
+            "extraction_method": "regex_invoice_v1"
+          }
         }
       ]
     },
     "consent_panel": {
       "dataset_type": "synthetic",
       "allowed_uses": [
-        "hackathon_demo",
+        "local_demo",
+        "testing",
         "model_prompting",
-        "local_analysis",
-        "team_collaboration_within_event"
+        "portfolio_review"
       ],
       "prohibited_uses": [
         "attempt_reidentification",
-        "sharing_outside_event",
-        "commercial_use",
         "training_production_models"
       ],
-      "retention": "delete_after_2026-03-31",
-      "notes": "All records are fully synthetic and generated for the Data Portability Hackathon 2026. No real individuals are represented."
+      "retention": "no_real_personal_data",
+      "notes": "Generated synthetic fixture data. No real individuals are represented."
     }
   }
 }

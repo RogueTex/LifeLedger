@@ -12,6 +12,7 @@ import pandas as pd
 from ..features.correlation import compute_correlation, _weekly_stress
 from ..features.spend_tagger import tag_spend
 from ..features.stress_scorer import compute_stress
+from .extraction import extract_invoice_facts, extract_worry_facts
 from ..loaders.persona_loader import load_persona
 
 ANXIETY_THEMES: tuple[str, ...] = (
@@ -25,20 +26,7 @@ ANXIETY_THEMES: tuple[str, ...] = (
     "relationship",
 )
 
-INVOICE_PAYMENT_KEYWORDS: tuple[str, ...] = (
-    "invoice",
-    "payment",
-    "pay",
-    "paid",
-    "bill",
-    "billed",
-    "remit",
-    "wire",
-    "ach",
-)
-
 AMOUNT_PATTERN = re.compile(r"\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)")
-HOURS_PATTERN = re.compile(r"(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)", re.IGNORECASE)
 MONEY_K_PATTERN = re.compile(r"\$?\s*(\d+(?:\.\d+)?)\s*k\b", re.IGNORECASE)
 YEARLY_INCOME_PATTERN = re.compile(r"\$?\s*(\d{2,3}(?:,\d{3})?)\s*/?\s*year", re.IGNORECASE)
 TIMELINE_MONTHS_PATTERN = re.compile(r"within\s+(\d+)\s*months?", re.IGNORECASE)
@@ -59,6 +47,19 @@ THEME_LEXICON: dict[str, tuple[str, ...]] = {
 }
 
 REQUIRED_INSIGHT_FIELDS = ("id", "title", "finding", "evidence", "dollar_impact")
+
+SUBSCRIPTION_HINT_RE = re.compile(
+    r"(?:subscription|monthly|membership|netflix|spotify|hulu|prime|adobe|figma|notion|dovetail|ynab|"
+    r"webflow|corepower|linkedin|patreon|icloud|dropbox|github|openai|anthropic|cursor|canva)",
+    re.IGNORECASE,
+)
+NON_SUBSCRIPTION_RE = re.compile(
+    r"(?:rent|grocery|groceries|payroll|direct deposit|salary|mortgage|utility|utilities|insurance|"
+    r"loan|credit card payment|transfer)",
+    re.IGNORECASE,
+)
+SUBSCRIPTION_TAGS = {"subscription", "subscriptions", "membership"}
+NON_SUBSCRIPTION_TAGS = {"income", "housing", "groceries", "utility", "utilities", "insurance", "loan"}
 
 
 def _project_root() -> Path:
@@ -223,21 +224,23 @@ def _extract_hours_from_calendar(calendar_df: pd.DataFrame, anchor_ts: pd.Timest
 
 def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame, calendar_df: pd.DataFrame) -> dict[str, Any]:
     if emails_df is None or emails_df.empty:
-        return {"flagged": False, "matches": [], "estimated_monthly_leakage": None, "method_notes": []}
-
-    keyword_re = re.compile("|".join(re.escape(k) for k in INVOICE_PAYMENT_KEYWORDS), re.IGNORECASE)
+        return {
+            "flagged": False,
+            "matches": [],
+            "estimated_monthly_leakage": None,
+            "method_notes": [],
+            "structured_facts_count": 0,
+            "extraction_facts": [],
+        }
 
     matches: list[dict[str, Any]] = []
     leakage_samples: list[float] = []
     method_notes: list[str] = []
-    for _, row in emails_df.iterrows():
-        text = _extract_email_text(row)
-        if not text or not keyword_re.search(text):
-            continue
-
-        amounts = [float(a.replace(",", "")) for a in AMOUNT_PATTERN.findall(text)]
-        hours = [float(h) for h in HOURS_PATTERN.findall(text)]
-        ts = pd.to_datetime(row.get("ts"), errors="coerce", utc=True)
+    invoice_facts = extract_invoice_facts(emails_df)
+    for fact in invoice_facts:
+        amounts = [float(value) for value in fact.get("amounts", [])]
+        hours = [float(value) for value in fact.get("hours", [])]
+        ts = pd.to_datetime(fact.get("ts"), errors="coerce", utc=True)
         if not hours:
             inferred_hours = _extract_hours_from_calendar(calendar_df, ts)
             if inferred_hours > 0:
@@ -248,17 +251,23 @@ def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame, calendar_df: pd.DataFr
 
         implied_rate = min(amount / hour for amount in amounts for hour in hours if hour > 0)
         if implied_rate < 65:
-            date_value = row.get("date")
+            date_value = fact.get("ts")
             if pd.isna(date_value):
-                date_value = row.get("ts")
+                date_value = None
             leakage_samples.append(max(0.0, 65.0 - implied_rate) * max(hours))
             matches.append(
                 {
                     "date": None if pd.isna(date_value) else str(date_value),
+                    "source_id": fact.get("source_id"),
+                    "source": fact.get("source"),
                     "implied_hourly_rate": round(float(implied_rate), 2),
                     "amounts_detected": [round(float(v), 2) for v in amounts],
                     "hours_detected": [round(float(v), 2) for v in hours],
-                    "evidence_text": str(row.get("text", ""))[:180],
+                    "evidence_text": str(fact.get("evidence_span", ""))[:180],
+                    "confidence": fact.get("confidence"),
+                    "extraction_method": fact.get("extraction_method"),
+                    "evidence_refs": [fact.get("source_id")] if fact.get("source_id") else [],
+                    "structured_fact": fact,
                 }
             )
 
@@ -268,6 +277,8 @@ def _scan_email_hourly_rate_risk(emails_df: pd.DataFrame, calendar_df: pd.DataFr
         "matches": matches,
         "estimated_monthly_leakage": monthly_leakage,
         "method_notes": sorted(set(method_notes)),
+        "structured_facts_count": len(invoice_facts),
+        "extraction_facts": invoice_facts,
     }
 
 
@@ -278,17 +289,17 @@ def _detect_subscriptions(transactions_df: pd.DataFrame) -> dict[str, Any]:
 
     df = transactions_df.copy()
 
-    # Exclude income-tagged rows so contract deposits / paychecks are not
-    # misclassified as recurring subscription charges.
     if "tags" in df.columns:
-        def _has_income_tag(tags: object) -> bool:
+        def _tag_set(tags: object) -> set[str]:
             if isinstance(tags, list):
-                return "income" in tags
+                return {str(tag).strip().lower() for tag in tags if str(tag).strip()}
             if isinstance(tags, str):
-                return "income" in tags
-            return False
-        income_mask = df["tags"].apply(_has_income_tag)
-        df = df[~income_mask].copy()
+                return {part.strip().lower() for part in re.split(r"[,|;]", tags) if part.strip()}
+            return set()
+
+        tag_sets = df["tags"].apply(_tag_set)
+    else:
+        tag_sets = pd.Series([set() for _ in range(len(df))], index=df.index)
 
     if df.empty:
         return {"subscriptions": [], "monthly_total": 0.0}
@@ -302,6 +313,15 @@ def _detect_subscriptions(transactions_df: pd.DataFrame) -> dict[str, Any]:
         if col in df.columns:
             texts = texts + " " + df[col].fillna("").astype(str)
     df["_text"] = texts.str.strip().str.lower()
+
+    has_subscription_tag = tag_sets.apply(lambda tags: bool(tags & SUBSCRIPTION_TAGS))
+    has_non_subscription_tag = tag_sets.apply(lambda tags: bool(tags & NON_SUBSCRIPTION_TAGS))
+    has_subscription_hint = df["_text"].str.contains(SUBSCRIPTION_HINT_RE, na=False) | has_subscription_tag
+    has_non_subscription_hint = df["_text"].str.contains(NON_SUBSCRIPTION_RE, na=False) | has_non_subscription_tag
+
+    df = df[has_subscription_hint & ~(has_non_subscription_hint & ~has_subscription_tag)].copy()
+    if df.empty:
+        return {"subscriptions": [], "monthly_total": 0.0}
 
     # Group by rounded amount and description prefix
     df["_amt_key"] = df["_abs_amount"].round(2)
@@ -775,6 +795,181 @@ def _jsonable(value: Any) -> Any:
     return value
 
 
+INSIGHT_PROVENANCE: dict[str, dict[str, Any]] = {
+    "stress_spend_correlation": {
+        "source_types": ["calendar", "bank"],
+        "method": "calendar_stress_x_weekly_discretionary_spend_v1",
+    },
+    "top_anxiety_themes": {
+        "source_types": ["ai_chat"],
+        "method": "conversation_tag_and_lexicon_theme_count_v1",
+    },
+    "months_to_goal": {
+        "source_types": ["profile", "user_context"],
+        "method": "savings_goal_velocity_v1",
+    },
+    "subscription_creep": {
+        "source_types": ["bank"],
+        "method": "recurring_charge_with_subscription_signal_v1",
+    },
+    "expensive_day_of_week": {
+        "source_types": ["bank"],
+        "method": "transaction_day_of_week_average_v1",
+    },
+    "post_payday_surge": {
+        "source_types": ["bank"],
+        "method": "income_deposit_window_spend_concentration_v1",
+    },
+    "worry_timeline": {
+        "source_types": ["ai_chat", "bank"],
+        "method": "conversation_worry_signals_x_weekly_spend_v1",
+    },
+    "stress_category_shift": {
+        "source_types": ["calendar", "bank"],
+        "method": "high_stress_vs_low_stress_category_shift_v1",
+    },
+    "spending_velocity": {
+        "source_types": ["bank"],
+        "method": "pay_period_discretionary_spend_pacing_v1",
+    },
+    "recovery_spending": {
+        "source_types": ["calendar", "bank"],
+        "method": "post_high_stress_week_spend_delta_v1",
+    },
+    "invoice_rate_risk": {
+        "source_types": ["email", "calendar"],
+        "method": "invoice_payment_facts_x_calendar_hours_v1",
+    },
+}
+
+
+def _df_count(df: pd.DataFrame | None) -> int:
+    return 0 if df is None or df.empty else int(len(df))
+
+
+def _source_counts(
+    calendar_df: pd.DataFrame | None,
+    transactions_df: pd.DataFrame | None,
+    conversations_df: pd.DataFrame | None,
+    emails_df: pd.DataFrame | None = None,
+) -> dict[str, int]:
+    return {
+        "calendar_events": _df_count(calendar_df),
+        "transactions": _df_count(transactions_df),
+        "conversation_messages": _df_count(conversations_df),
+        "emails": _df_count(emails_df),
+        "extracted_worry_facts": len(extract_worry_facts(conversations_df)),
+        "extracted_invoice_facts": len(extract_invoice_facts(emails_df)),
+    }
+
+
+def _confidence(level: str, score: float, rationale: str) -> dict[str, Any]:
+    return {"level": level, "score": round(score, 2), "rationale": rationale}
+
+
+def _confidence_for_insight(insight: dict[str, Any]) -> dict[str, Any]:
+    insight_id = insight.get("id")
+
+    if insight_id == "stress_spend_correlation":
+        coefficient = insight.get("correlation_coefficient")
+        spikes = insight.get("spike_weeks") or []
+        if insight.get("insufficient_variance") or coefficient is None:
+            return _confidence("low", 0.38, "Calendar and spending overlap exists, but variance is insufficient.")
+        if abs(float(coefficient)) >= 0.5 and spikes:
+            return _confidence("high", 0.88, "Strong correlation with concrete spike-week evidence.")
+        if abs(float(coefficient)) >= 0.3:
+            return _confidence("medium", 0.72, "Moderate correlation signal across overlapping weekly data.")
+        return _confidence("medium", 0.58, "Enough data for a stable low-correlation result.")
+
+    if insight_id == "invoice_rate_risk":
+        matches = insight.get("matches") or []
+        if not insight.get("flagged") or not matches:
+            return _confidence("low", 0.42, "No low-rate invoice facts passed the deterministic threshold.")
+        scores = [float(match.get("confidence", 0.0)) for match in matches if match.get("confidence") is not None]
+        average_score = sum(scores) / len(scores) if scores else 0.72
+        level = "high" if average_score >= 0.85 else "medium"
+        return _confidence(level, min(0.94, average_score), "Invoice facts include source IDs, amounts, hours, and rate math.")
+
+    if insight_id == "subscription_creep":
+        if insight.get("subscriptions"):
+            return _confidence("high", 0.84, "Recurring charges also contain subscription or membership signals.")
+        return _confidence("medium", 0.6, "No subscription-like recurring charges were found.")
+
+    if insight_id == "worry_timeline":
+        mentions = int(insight.get("total_worry_mentions") or 0)
+        if mentions > 0:
+            return _confidence("medium", 0.76, "Lexicon worry signals were grouped by week and joined to spend.")
+        return _confidence("low", 0.35, "No worry signals were present in the conversation data.")
+
+    if insight_id == "top_anxiety_themes":
+        if insight.get("top_themes"):
+            return _confidence("medium", 0.74, "Themes are deterministic tags plus lexicon matches, not model guesses.")
+        return _confidence("low", 0.36, "No recurring conversation themes were detected.")
+
+    if insight_id == "months_to_goal":
+        mode = str(insight.get("estimation_mode") or "")
+        if mode in {"direct_profile_fields", "user_context"}:
+            return _confidence("high", 0.86, "Goal math uses explicit profile or user-provided fields.")
+        if insight.get("months_to_goal") is not None:
+            return _confidence("medium", 0.64, "Goal math uses a documented inference fallback.")
+        return _confidence("low", 0.3, "Savings projection fields are missing.")
+
+    if insight_id in {"stress_category_shift", "spending_velocity", "recovery_spending"}:
+        if insight.get("has_data"):
+            return _confidence("medium", 0.7, "The insight has enough overlapping data for deterministic aggregation.")
+        return _confidence("low", 0.34, "The required overlapping source data is not present yet.")
+
+    if insight_id == "post_payday_surge":
+        if insight.get("detected"):
+            return _confidence("high", 0.82, "Income deposits and spend windows were both detected.")
+        if insight.get("surge_pct") is not None:
+            return _confidence("medium", 0.65, "Income deposits were detected, but no surge crossed the threshold.")
+        return _confidence("low", 0.34, "Income deposits could not be detected.")
+
+    if insight_id == "expensive_day_of_week":
+        if insight.get("expensive_day"):
+            return _confidence("medium", 0.72, "Day-of-week averages are based on normalized transactions.")
+        return _confidence("low", 0.34, "Not enough transaction dates were available.")
+
+    return _confidence("medium", 0.62, "Deterministic insight generated from normalized source data.")
+
+
+def _collect_evidence_refs(value: Any) -> list[str]:
+    refs: list[str] = []
+    if isinstance(value, dict):
+        evidence_refs = value.get("evidence_refs")
+        if isinstance(evidence_refs, list):
+            refs.extend(str(ref) for ref in evidence_refs if ref)
+        source_id = value.get("source_id")
+        if source_id:
+            refs.append(str(source_id))
+        for nested in value.values():
+            refs.extend(_collect_evidence_refs(nested))
+    elif isinstance(value, list):
+        for item in value:
+            refs.extend(_collect_evidence_refs(item))
+    return list(dict.fromkeys(refs))
+
+
+def _attach_insight_metadata(insights: list[dict[str, Any]], source_counts: dict[str, int]) -> None:
+    for insight in insights:
+        insight_id = str(insight.get("id") or "")
+        provenance_template = INSIGHT_PROVENANCE.get(
+            insight_id,
+            {"source_types": ["derived"], "method": "deterministic_insight_v1"},
+        )
+        insight.setdefault("confidence", _confidence_for_insight(insight))
+        insight.setdefault(
+            "provenance",
+            {
+                "source_types": provenance_template["source_types"],
+                "method": provenance_template["method"],
+                "source_record_counts": source_counts,
+                "evidence_refs": _collect_evidence_refs(insight),
+            },
+        )
+
+
 def _validate_insight_schema(result: dict[str, Any]) -> None:
     if "insights" not in result or not isinstance(result["insights"], list):
         raise ValueError("Insights contract mismatch: top-level `insights` list missing")
@@ -797,6 +992,12 @@ def _validate_insight_schema(result: dict[str, Any]) -> None:
 
         if not isinstance(insight["evidence"], list):
             raise ValueError(f"Insight `{insight_id}` field `evidence` must be a list")
+
+        if "confidence" in insight and not isinstance(insight["confidence"], dict):
+            raise ValueError(f"Insight `{insight_id}` field `confidence` must be an object when present")
+
+        if "provenance" in insight and not isinstance(insight["provenance"], dict):
+            raise ValueError(f"Insight `{insight_id}` field `provenance` must be an object when present")
 
 
 def compute_insights(persona_id: str) -> dict[str, Any]:
@@ -1051,6 +1252,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
 
     # --- Worry timeline (cross-source) ---
     worry_data = _compute_worry_timeline(conversations_df, weekly_spend_df)
+    worry_facts = extract_worry_facts(conversations_df)
     worry_timeline = worry_data.get("timeline", [])
     peak_week = worry_data.get("peak_worry_week")
     peak_spend = worry_data.get("peak_worry_spend", 0.0)
@@ -1059,13 +1261,14 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "title": "When you worry most (AI conversations x spending)",
         "finding": (
             f"You mentioned financial/emotional worries {worry_data['total_worry_mentions']} times in AI conversations. "
-            f"Peak worry: week {peak_week}"
+            f"Peak worry: ISO week {peak_week}"
             + (f" (${peak_spend:.2f} spent that week)." if peak_spend else ".")
             if peak_week
             else "No worry-related conversations detected in your AI chat exports."
         ),
         "evidence": [
             f"Total worry mentions: {worry_data.get('total_worry_mentions', 0)}",
+            f"Structured worry facts extracted: {len(worry_facts)}",
             f"Weeks with worry signals: {sum(1 for w in worry_timeline if w['worry_mentions'] > 0)}",
             "Sources: ChatGPT/Claude conversation exports cross-referenced with spending data.",
         ],
@@ -1073,6 +1276,8 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "timeline": worry_timeline,
         "peak_worry_week": peak_week,
         "total_worry_mentions": worry_data.get("total_worry_mentions", 0),
+        "structured_facts_count": len(worry_facts),
+        "extraction_facts": worry_facts,
         "what_this_means": (
             "Your AI conversations reveal when stress peaks. Overlaying this with spending shows "
             "whether worry translates into spending changes — something no single data source can show alone."
@@ -1225,12 +1430,15 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
             ),
             "evidence": [
                 f"Low-rate matches: {len(matches)}",
+                f"Invoice/payment facts extracted: {rate_payload.get('structured_facts_count', 0)}",
                 f"Estimated leakage: ${rate_payload.get('estimated_monthly_leakage') if rate_payload.get('estimated_monthly_leakage') is not None else 'N/A'}",
                 *rate_payload.get("method_notes", []),
             ],
             "dollar_impact": rate_payload.get("estimated_monthly_leakage"),
             "flagged": bool(rate_payload.get("flagged")),
             "matches": matches,
+            "structured_facts_count": rate_payload.get("structured_facts_count", 0),
+            "extraction_facts": rate_payload.get("extraction_facts", []),
             "what_this_means": "Your pricing floor may be below sustainable market rates.",
             "recommended_next_actions": [
                 "Set a minimum acceptable hourly floor before sending the next quote.",
@@ -1238,6 +1446,16 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
             ],
         }
         insights.append(rate_insight)
+
+    _attach_insight_metadata(
+        insights,
+        _source_counts(
+            calendar_df=calendar_df,
+            transactions_df=transactions_df,
+            conversations_df=conversations_df,
+            emails_df=emails_df,
+        ),
+    )
 
     result = {
         "schema_version": "v1_locked",
@@ -1443,6 +1661,7 @@ def compute_insights_from_dataframes(
     }
 
     worry_data = _compute_worry_timeline(conversations_df, weekly_spend_df)
+    worry_facts = extract_worry_facts(conversations_df)
     worry_timeline = worry_data.get("timeline", [])
     peak_week = worry_data.get("peak_worry_week")
     peak_spend = worry_data.get("peak_worry_spend", 0.0)
@@ -1451,19 +1670,22 @@ def compute_insights_from_dataframes(
         "title": "When you worry most (AI conversations x spending)",
         "finding": (
             f"You brought up money or stress worries {worry_data['total_worry_mentions']} times in your AI conversations. "
-            f"The heaviest week was {peak_week}"
+            f"The heaviest ISO week was {peak_week}"
             + (f" (${peak_spend:.2f} spent that week)." if peak_spend else ".")
             if peak_week
             else "No worry-related conversations found. Upload ChatGPT or Claude exports to unlock this."
         ),
         "evidence": [
             f"Scanned conversations for money, stress, and anxiety keywords",
+            f"Structured worry facts extracted: {len(worry_facts)}",
             f"Found worry signals in {sum(1 for w in worry_timeline if w['worry_mentions'] > 0)} different weeks",
         ],
         "dollar_impact": None,
         "timeline": worry_timeline,
         "peak_worry_week": peak_week,
         "total_worry_mentions": worry_data.get("total_worry_mentions", 0),
+        "structured_facts_count": len(worry_facts),
+        "extraction_facts": worry_facts,
         "what_this_means": (
             "Your AI conversations reveal when stress peaks. We overlay this with spending to see if worrying leads to spending changes."
             if worry_data.get("total_worry_mentions", 0) > 0
@@ -1687,6 +1909,15 @@ def compute_insights_from_dataframes(
         velocity_insight,
         recovery_insight,
     ]
+
+    _attach_insight_metadata(
+        insights,
+        _source_counts(
+            calendar_df=calendar_df,
+            transactions_df=transactions_df,
+            conversations_df=conversations_df,
+        ),
+    )
 
     result = {
         "schema_version": "v1_locked",
