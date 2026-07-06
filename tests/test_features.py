@@ -34,7 +34,7 @@ from src.insights.insight_engine import (
     compute_insights_from_dataframes,
 )
 from src.loaders.persona_loader import build_timeline, load_persona
-from src.loaders.upload_parser import parse_transactions_csv, parse_calendar_ics, parse_chatgpt_export
+from src.loaders.upload_parser import detect_upload_type, parse_transactions_csv, parse_calendar_ics, parse_chatgpt_export
 
 
 # ---------------------------------------------------------------------------
@@ -385,6 +385,39 @@ class TestParseTransactionsCsv:
         df = parse_transactions_csv(data)
         assert len(df) == 1
 
+    def test_split_debit_credit_columns(self):
+        data = (
+            b"Transaction Date,Description,Debit,Credit,Category\n"
+            b"2026-01-05,Payroll direct deposit,,3900.00,income\n"
+            b"2026-01-06,Starbucks,5.50,,coffee\n"
+        )
+        df = parse_transactions_csv(data)
+
+        assert len(df) == 2
+        assert df.iloc[0]["signed_amount"] == 3900.00
+        assert df.iloc[1]["amount"] == 5.50
+        assert df.iloc[1]["signed_amount"] == -5.50
+
+
+class TestDetectUploadType:
+    def test_detects_transactions_calendar_and_ai_exports(self):
+        import json as _json
+        import io
+        import zipfile
+
+        bank_csv = b"Transaction Date,Description,Debit,Credit\n2026-01-06,Coffee,5.50,\n"
+        calendar_ics = b"BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART:20260115T090000Z\nSUMMARY:Review\nEND:VEVENT\nEND:VCALENDAR"
+        chatgpt_json = _json.dumps([{"title": "Budget", "mapping": {}}]).encode()
+        claude_json = _json.dumps([{"name": "Budget", "chat_messages": []}]).encode()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("conversations.json", claude_json)
+
+        assert detect_upload_type(bank_csv, "statement.csv") == "transactions"
+        assert detect_upload_type(calendar_ics, "calendar.ics") == "calendar"
+        assert detect_upload_type(chatgpt_json, "conversations.json") == "conversations"
+        assert detect_upload_type(buf.getvalue(), "claude.zip") == "conversations"
+
 
 class TestParseCalendarIcs:
     def test_basic_ics(self):
@@ -547,6 +580,11 @@ class TestParseChatgptExport:
 
 
 class TestUploadProcessor:
+    def _b64(self, data: bytes) -> str:
+        import base64
+
+        return base64.b64encode(data).decode()
+
     def _run_process_upload(self, payload: dict) -> tuple[int, dict]:
         import json as _json
         import subprocess
@@ -574,6 +612,65 @@ class TestUploadProcessor:
         })
         assert code == 1
         assert body["error_code"] == "invalid_file_encoding"
+
+    def test_auto_detects_and_merges_multiple_statement_and_ai_exports(self):
+        import json as _json
+        import io
+        import zipfile
+
+        signed_bank_csv = b"Date,Description,Amount,Category\n2026-01-05,Payroll,3900.00,income\n2026-01-06,Coffee,-5.50,coffee\n"
+        split_bank_csv = (
+            b"Transaction Date,Description,Debit,Credit,Category\n"
+            b"2026-01-07,Lunch,14.25,,dining\n"
+            b"2026-01-08,Direct deposit,,1200.00,income\n"
+        )
+        chatgpt_json = _json.dumps([{
+            "title": "Budget stress",
+            "create_time": 1767225600,
+            "mapping": {
+                "a": {"message": {
+                    "author": {"role": "user"},
+                    "content": {"parts": ["I am stressed about money and rent"]},
+                    "create_time": 1767225600,
+                }},
+            },
+        }]).encode()
+        claude_json = _json.dumps([{
+            "name": "Debt plan",
+            "created_at": "2026-01-09T10:00:00Z",
+            "chat_messages": [{
+                "sender": "human",
+                "created_at": "2026-01-09T10:01:00Z",
+                "text": "Debt and savings are making me worried",
+                "content": [{"type": "text", "text": "Debt and savings are making me worried"}],
+            }],
+        }]).encode()
+        claude_zip = io.BytesIO()
+        with zipfile.ZipFile(claude_zip, "w") as zf:
+            zf.writestr("conversations.json", claude_json)
+
+        code, body = self._run_process_upload({
+            "files": [
+                {"name": "checking.csv", "type": "auto", "data": self._b64(signed_bank_csv)},
+                {"name": "credit-card.csv", "type": "auto", "data": self._b64(split_bank_csv)},
+                {"name": "chatgpt.json", "type": "auto", "data": self._b64(chatgpt_json)},
+                {"name": "claude.zip", "type": "auto", "data": self._b64(claude_zip.getvalue())},
+            ],
+            "userContext": {"income": 78000, "savingsGoal": 25000, "currentSavings": 8000, "monthlyDebt": 350},
+        })
+
+        assert code == 0
+        summary = body["ingestion_summary"]
+        assert summary["source_rows"]["transactions"] == 4
+        assert summary["source_rows"]["conversation_messages"] == 2
+        assert summary["conversation_providers"] == {"chatgpt": 1, "claude": 1}
+        assert [file["detected_type"] for file in summary["files"]] == [
+            "transactions",
+            "transactions",
+            "conversations",
+            "conversations",
+        ]
+        assert {insight["id"] for insight in body["insights"]} >= {"top_anxiety_themes", "worry_timeline"}
 
 
 # ===================================================================

@@ -8,6 +8,7 @@ export interface InsightPayload {
   persona: string;
   profile_name: string;
   consent: Record<string, any>;
+  ingestion_summary?: Record<string, any>;
   insights: Insight[];
 }
 
@@ -65,7 +66,7 @@ export async function sendChat(question: string, personaId: string, byoKey?: BYO
 
 export interface UploadFile {
   name: string;
-  type: "transactions" | "calendar" | "conversations";
+  type: "auto" | "transactions" | "calendar" | "conversations";
   data: string; // base64
 }
 

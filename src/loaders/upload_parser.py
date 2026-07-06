@@ -1,4 +1,4 @@
-"""Parsers for user-uploaded data files (CSV transactions, ICS calendar, ChatGPT export)."""
+"""Parsers and content sniffers for user-uploaded CSV, ICS, and AI export files."""
 
 from __future__ import annotations
 
@@ -22,8 +22,16 @@ _DATE_CANDIDATES = (
     "transaction_date", "posted_date", "trans_date",
 )
 _AMOUNT_CANDIDATES = (
-    "amount", "debit", "transaction amount", "trans amount",
-    "amount (usd)", "transaction_amount",
+    "amount", "transaction amount", "trans amount", "amount (usd)", "transaction_amount",
+    "value", "net amount",
+)
+_DEBIT_CANDIDATES = (
+    "debit", "debits", "debit amount", "withdrawal", "withdrawals", "withdrawal amount",
+    "charge", "charges", "money out", "outflow",
+)
+_CREDIT_CANDIDATES = (
+    "credit", "credits", "credit amount", "deposit", "deposits", "deposit amount",
+    "payment", "payments", "money in", "inflow",
 )
 _TEXT_CANDIDATES = (
     "description", "merchant", "name", "memo", "details",
@@ -32,6 +40,8 @@ _TEXT_CANDIDATES = (
 _CATEGORY_CANDIDATES = (
     "category", "type", "transaction type", "trans type",
 )
+
+SUPPORTED_UPLOAD_TYPES = ("transactions", "calendar", "conversations")
 
 
 def _find_column(columns: list[str], candidates: tuple[str, ...]) -> str | None:
@@ -42,19 +52,27 @@ def _find_column(columns: list[str], candidates: tuple[str, ...]) -> str | None:
     return None
 
 
+def detect_upload_type(file_bytes: bytes, filename: str = "", hinted_type: str | None = None) -> str | None:
+    """Infer the upload type from file content, falling back to a trusted hint."""
+    concrete_hint = hinted_type if hinted_type in SUPPORTED_UPLOAD_TYPES else None
+    lower_name = filename.lower()
+
+    if _looks_like_ics(file_bytes, lower_name):
+        return "calendar"
+    if _looks_like_conversation_export(file_bytes, lower_name):
+        return "conversations"
+    if _looks_like_transactions_csv(file_bytes, lower_name):
+        return "transactions"
+    return concrete_hint
+
+
 def parse_transactions_csv(file_bytes: bytes) -> pd.DataFrame:
     """Parse a bank CSV into a normalised transactions DataFrame."""
     text = file_bytes.decode("utf-8-sig", errors="replace")
 
     # Skip preamble lines that some banks add before the header
     lines = text.splitlines()
-    header_idx = 0
-    for i, line in enumerate(lines[:10]):
-        if "," in line:
-            sniffer_cols = [c.strip().strip('"').lower() for c in line.split(",")]
-            if any(c in _flatten_candidates() for c in sniffer_cols):
-                header_idx = i
-                break
+    header_idx = _find_csv_header_index(lines)
 
     reader = csv.DictReader(lines[header_idx:])
     if reader.fieldnames is None:
@@ -63,15 +81,17 @@ def parse_transactions_csv(file_bytes: bytes) -> pd.DataFrame:
     cols = list(reader.fieldnames)
     date_col = _find_column(cols, _DATE_CANDIDATES)
     amount_col = _find_column(cols, _AMOUNT_CANDIDATES)
+    debit_col = _find_column(cols, _DEBIT_CANDIDATES)
+    credit_col = _find_column(cols, _CREDIT_CANDIDATES)
     text_col = _find_column(cols, _TEXT_CANDIDATES)
     category_col = _find_column(cols, _CATEGORY_CANDIDATES)
 
-    if date_col is None or amount_col is None:
+    if date_col is None or (amount_col is None and debit_col is None and credit_col is None):
         return _empty_txn_df()
 
     rows: list[dict[str, Any]] = []
     for row in reader:
-        raw_amount = _parse_amount(row.get(amount_col, ""))
+        raw_amount = _row_signed_amount(row, amount_col, debit_col, credit_col)
         if raw_amount is None:
             continue
         ts = _parse_date(row.get(date_col, ""))
@@ -106,22 +126,92 @@ def parse_transactions_csv(file_bytes: bytes) -> pd.DataFrame:
 
 
 def _flatten_candidates() -> set[str]:
-    return set(_DATE_CANDIDATES + _AMOUNT_CANDIDATES + _TEXT_CANDIDATES + _CATEGORY_CANDIDATES)
+    return set(
+        _DATE_CANDIDATES
+        + _AMOUNT_CANDIDATES
+        + _DEBIT_CANDIDATES
+        + _CREDIT_CANDIDATES
+        + _TEXT_CANDIDATES
+        + _CATEGORY_CANDIDATES
+    )
 
 
-def _parse_amount(raw: str) -> float | None:
-    if not raw or not raw.strip():
+def _find_csv_header_index(lines: list[str]) -> int:
+    for i, line in enumerate(lines[:10]):
+        if "," not in line:
+            continue
+        sniffer_cols = [c.strip().strip('"').lower() for c in line.split(",")]
+        if any(c in _flatten_candidates() for c in sniffer_cols):
+            return i
+    return 0
+
+
+def _row_signed_amount(
+    row: dict[str, str],
+    amount_col: str | None,
+    debit_col: str | None,
+    credit_col: str | None,
+) -> float | None:
+    if amount_col:
+        amount = _parse_amount(row.get(amount_col, ""))
+        if amount is not None:
+            return amount
+
+    credit = _parse_amount(row.get(credit_col, "")) if credit_col else None
+    debit = _parse_amount(row.get(debit_col, "")) if debit_col else None
+
+    if credit is not None and abs(credit) > 0:
+        return abs(credit)
+    if debit is not None and abs(debit) > 0:
+        return -abs(debit)
+    return None
+
+
+def _parse_amount(raw: Any) -> float | None:
+    if raw is None:
         return None
-    cleaned = raw.strip().replace("$", "").replace(",", "").strip("\"'() ")
+    cleaned = str(raw).strip()
+    if not cleaned or cleaned in {"-", "—"}:
+        return None
+
     # Handle parenthetical negatives: (123.45)
     negative = cleaned.startswith("(") and cleaned.endswith(")")
     if negative:
         cleaned = cleaned.strip("()")
+    cleaned = cleaned.replace("$", "").replace(",", "").strip("\"' ")
+    if cleaned.endswith("-"):
+        negative = True
+        cleaned = cleaned[:-1].strip()
+    if cleaned.startswith("-"):
+        negative = True
+        cleaned = cleaned[1:].strip()
     try:
         value = float(cleaned)
         return -value if negative else value
     except ValueError:
         return None
+
+
+def _looks_like_transactions_csv(file_bytes: bytes, filename: str = "") -> bool:
+    if filename and not filename.endswith(".csv"):
+        return False
+    text = file_bytes.decode("utf-8-sig", errors="replace")
+    lines = text.splitlines()
+    if not lines:
+        return False
+    header_idx = _find_csv_header_index(lines)
+    reader = csv.DictReader(lines[header_idx:])
+    if reader.fieldnames is None:
+        return False
+    cols = list(reader.fieldnames)
+    has_date = _find_column(cols, _DATE_CANDIDATES) is not None
+    has_amount = (
+        _find_column(cols, _AMOUNT_CANDIDATES) is not None
+        or _find_column(cols, _DEBIT_CANDIDATES) is not None
+        or _find_column(cols, _CREDIT_CANDIDATES) is not None
+    )
+    has_text = _find_column(cols, _TEXT_CANDIDATES) is not None
+    return has_date and has_amount and has_text
 
 
 def _parse_date(raw: str) -> datetime | None:
@@ -153,6 +243,13 @@ def _empty_txn_df() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # ICS calendar parser
 # ---------------------------------------------------------------------------
+
+def _looks_like_ics(file_bytes: bytes, filename: str = "") -> bool:
+    if filename.endswith(".ics"):
+        return True
+    text = file_bytes[:4096].decode("utf-8", errors="replace").upper()
+    return "BEGIN:VCALENDAR" in text and "BEGIN:VEVENT" in text
+
 
 def parse_calendar_ics(file_bytes: bytes) -> pd.DataFrame:
     """Parse an ICS file into a normalised calendar DataFrame."""
@@ -243,6 +340,41 @@ def _empty_cal_df() -> pd.DataFrame:
 # ChatGPT / Claude export parser
 # ---------------------------------------------------------------------------
 
+def _looks_like_conversation_export(file_bytes: bytes, filename: str = "") -> bool:
+    if filename.endswith(".zip"):
+        try:
+            with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                json_names = [name for name in zf.namelist() if name.endswith(".json")]
+                if any(name.endswith("conversations.json") for name in json_names):
+                    return True
+                for name in json_names[:3]:
+                    try:
+                        if _json_payload_has_conversations(json.loads(zf.read(name).decode("utf-8", errors="replace"))):
+                            return True
+                    except (json.JSONDecodeError, UnicodeDecodeError, KeyError):
+                        continue
+        except zipfile.BadZipFile:
+            return False
+        return False
+
+    if not filename.endswith(".json") and filename:
+        return False
+    try:
+        payload = json.loads(file_bytes.decode("utf-8", errors="replace"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return False
+    return _json_payload_has_conversations(payload)
+
+
+def _json_payload_has_conversations(payload: Any) -> bool:
+    if not isinstance(payload, list):
+        return False
+    for item in payload[:5]:
+        if isinstance(item, dict) and (isinstance(item.get("mapping"), dict) or isinstance(item.get("chat_messages"), list)):
+            return True
+    return False
+
+
 def parse_chatgpt_export(file_bytes: bytes, filename: str) -> pd.DataFrame:
     """Parse a ChatGPT (or Claude) export into a conversations DataFrame.
 
@@ -309,6 +441,7 @@ def _parse_chatgpt_json(file_bytes: bytes) -> pd.DataFrame:
                         "id": f"c_{len(rows):04d}",
                         "ts": msg_ts,
                         "source": "ai_chat",
+                        "provider": "chatgpt",
                         "type": "conversation",
                         "text": text,
                         "tags": _infer_conversation_tags(text, conv_title),
@@ -336,6 +469,7 @@ def _parse_chatgpt_json(file_bytes: bytes) -> pd.DataFrame:
                         "id": f"c_{len(rows):04d}",
                         "ts": msg_ts,
                         "source": "ai_chat",
+                        "provider": "claude",
                         "type": "conversation",
                         "text": text,
                         "tags": _infer_conversation_tags(text, conv_title),
@@ -420,6 +554,6 @@ def _infer_conversation_tags(text: str, title: str) -> list[str]:
 
 def _empty_conv_df() -> pd.DataFrame:
     return pd.DataFrame(columns=[
-        "id", "ts", "source", "type", "text", "tags", "refs", "amount",
+        "id", "ts", "source", "provider", "type", "text", "tags", "refs", "amount",
         "pii_level", "date", "year_week",
     ])

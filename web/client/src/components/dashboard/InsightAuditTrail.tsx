@@ -66,6 +66,10 @@ export default function InsightAuditTrail({ payload }: { payload: InsightPayload
   const highConfidenceCount = payload.insights.filter((insight) => insight.confidence?.level === "high").length;
   const sourceTypes = new Set(payload.insights.flatMap((insight) => insight.provenance?.source_types || []));
   const rateRisk = findInsight(payload, "invoice_rate_risk");
+  const ingestion = payload.ingestion_summary || {};
+  const uploadedFiles = Array.isArray(ingestion.files) ? ingestion.files : [];
+  const sourceRows = Object.entries(ingestion.source_rows || {}).filter(([, count]) => Number(count) > 0);
+  const conversationProviders = Object.entries(ingestion.conversation_providers || {}).filter(([, count]) => Number(count) > 0);
 
   return (
     <section className="glass-panel border-border/50 rounded-xl p-6">
@@ -94,6 +98,46 @@ export default function InsightAuditTrail({ payload }: { payload: InsightPayload
           </div>
         </div>
       </div>
+
+      {uploadedFiles.length > 0 && (
+        <div className="mb-5 rounded-lg border border-border/50 bg-background/30 p-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2">
+                Ingestion
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {uploadedFiles.slice(0, 8).map((file: any, index: number) => (
+                  <span
+                    key={`${file.name || "file"}-${index}`}
+                    className="rounded-full border border-border/40 bg-secondary/40 px-2.5 py-1 text-xs text-foreground/80"
+                  >
+                    {labelFromKey(String(file.detected_type || "unknown"))}: {Number(file.rows || 0)} rows
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="min-w-0 text-xs text-muted-foreground lg:text-right">
+              {sourceRows.length > 0 && (
+                <p className="break-words">
+                  Sources:{" "}
+                  <span className="text-foreground">
+                    {sourceRows.map(([key, count]) => `${labelFromKey(key)} ${count}`).join(", ")}
+                  </span>
+                </p>
+              )}
+              {conversationProviders.length > 0 && (
+                <p className="mt-1 break-words">
+                  AI exports:{" "}
+                  <span className="text-foreground">
+                    {conversationProviders.map(([key, count]) => `${labelFromKey(key)} ${count}`).join(", ")}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="divide-y divide-border/40">
         {visibleInsights.map((insight) => {

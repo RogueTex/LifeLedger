@@ -103,9 +103,9 @@ export default function DataUploadSection({ onInsightsReady, userContext }: Prop
 
     try {
       const filesToUpload: UploadFile[] = [];
-      for (const { file, type } of files) {
+      for (const { file } of files) {
         const data = await fileToBase64(file);
-        filesToUpload.push({ name: file.name, type, data });
+        filesToUpload.push({ name: file.name, type: "auto", data });
       }
       const payload = await uploadFiles(filesToUpload, userContext ?? undefined);
       onInsightsReady?.(payload);
@@ -148,7 +148,7 @@ export default function DataUploadSection({ onInsightsReady, userContext }: Prop
                 <h3 className="text-xl font-display font-medium">Import Your Financial Data</h3>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Drop all your files at once or click to select multiple. We'll auto-detect the type from the extension.
+                Drop all your files at once or click to select multiple. We'll verify the type from file contents before parsing.
               </p>
 
               {/* Single multi-file picker */}

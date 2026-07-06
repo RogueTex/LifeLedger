@@ -19,7 +19,7 @@ const MAX_UPLOAD_BASE64_CHARS = parseInt(
   process.env.MAX_UPLOAD_BASE64_CHARS || `${20 * 1024 * 1024}`,
   10,
 );
-const UPLOAD_TYPES = new Set(["transactions", "calendar", "conversations"]);
+const UPLOAD_TYPES = new Set(["auto", "transactions", "calendar", "conversations"]);
 
 interface PythonResult {
   code: number | null;
@@ -92,7 +92,7 @@ function validateUploadFiles(files: any[]): string | null {
   }
   for (const file of files) {
     if (!file || typeof file !== "object") return "Each uploaded item must be a file object.";
-    if (!UPLOAD_TYPES.has(file.type)) return `Unsupported file type: ${file.type || "unknown"}.`;
+    if (file.type && !UPLOAD_TYPES.has(file.type)) return `Unsupported file type: ${file.type || "unknown"}.`;
     if (typeof file.data !== "string" || file.data.length === 0) {
       return `File ${file.name || "unknown"} is missing base64 data.`;
     }

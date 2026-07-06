@@ -25,11 +25,24 @@ The demo intentionally avoids a database. That keeps local setup simple, protect
 ## Data Model Choices
 
 - Raw sources stay source-specific: bank CSV, calendar ICS, AI chat JSON, email/persona JSONL.
+- Uploads are content-sniffed in the backend, not trusted solely from the browser extension guess. The processor detects CSV transactions, ICS calendars, ChatGPT exports, and Claude exports, then records an ingestion summary with detected type and parsed row counts.
+- Multiple files of the same source are concatenated after normalization. This allows several bank statements, plus both ChatGPT and Claude exports, to feed one insight run.
 - The loader normalizes every source into a shared timeline contract: `ts`, `date`, `year_week`, `source`, `text`, `amount`, `tags`, `refs`.
 - Feature modules operate on normalized dataframes, not raw files.
 - The dashboard and chat consume derived insight JSON, not raw personal records.
 
 This separation is the most important design decision. It lets new data sources be added at the parser layer without rewriting the feature and UI layers.
+
+## Upload Type Detection
+
+The upload bridge uses a hybrid detection strategy:
+
+- CSV files are treated as bank statements only when headers contain a date, description-like field, and either signed amount or debit/credit columns.
+- ICS files are detected from calendar markers such as `BEGIN:VCALENDAR` and `BEGIN:VEVENT`.
+- ChatGPT exports are detected from `mapping`-based conversation objects.
+- Claude exports are detected from `chat_messages` conversation objects, including ZIP exports containing `conversations.json`.
+
+After detection, each parser emits normalized rows and the processor attaches `source_file`, `detected_upload_type`, and a global row ID. The resulting `ingestion_summary` is returned with the insight JSON so the dashboard can show what was detected before inference runs.
 
 ## Inference Choices
 
