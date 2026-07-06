@@ -28,7 +28,7 @@ The committed demo path uses:
 - session-only upload processing through the local Express/Python bridge.
 - no database, migrations, hosted secrets, or background job system.
 
-This is deliberate. It makes the project easy to clone, run, inspect, and discuss without asking the interviewer to provision infrastructure.
+This is deliberate. It makes the project easy to clone, run, inspect, and discuss without requiring external infrastructure.
 
 ## Production Mode
 
@@ -133,7 +133,7 @@ AI should not silently decide that someone is undercharging, overspending, or fi
 - Replayable jobs for parser and feature upgrades.
 - Cost and latency budgets per upload.
 
-## Interview Framing
+## Concise Framing
 
 The strongest concise framing:
 

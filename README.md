@@ -2,7 +2,7 @@
 
 *"Your spending tells a story. Your calendar, conversations, and emotions tell the rest."*
 
-Built for the **Data Portability Hackathon 2026**, **Track 3: Personal Data, Personal Value**.
+A local-first personal data ingestion and insight system for turning exported data into explainable financial signals.
 
 ---
 
@@ -150,10 +150,10 @@ LifeLedger does **not** ship with a database. There are no migrations, ORM model
 - Raw synthetic sample fixtures are committed under `data/sample/` so the ingestion path can be inspected and regenerated without private data.
 - Drop personal or private persona exports under `data/raw/persona_pXX/` or set `LIFELEDGER_PERSONA_DATA_DIR=/path/to/personas` to test your own raw files. `data/raw/` remains gitignored.
 - User uploads are parsed by the local Express/Python pipeline and returned to the browser for the current session; uploaded files and generated upload insights are not persisted.
-- The schema docs still describe the original hackathon source dataset format so future regeneration or import work has a stable target.
+- The schema docs describe the source dataset format so future regeneration or import work has a stable target.
 
-See [`context/DEMO_DATA_AND_PERSISTENCE.md`](context/DEMO_DATA_AND_PERSISTENCE.md) for the interview-ready version of this architecture tradeoff.
-See [`context/SYSTEM_DESIGN_PRESENTATION.md`](context/SYSTEM_DESIGN_PRESENTATION.md) for the system-design talk track.
+See [`context/DEMO_DATA_AND_PERSISTENCE.md`](context/DEMO_DATA_AND_PERSISTENCE.md) for the data and persistence tradeoffs.
+See [`context/SYSTEM_DESIGN.md`](context/SYSTEM_DESIGN.md) for the system design notes.
 See [`context/PRODUCTION_ARCHITECTURE.md`](context/PRODUCTION_ARCHITECTURE.md) for the production DB, queue, worker, and observability design.
 See [`context/EVALUATION_AND_QUALITY.md`](context/EVALUATION_AND_QUALITY.md) for the golden fixture, schema, and regression testing story.
 See [`data/sample/EXPECTED_INSIGHTS.md`](data/sample/EXPECTED_INSIGHTS.md) for the committed synthetic fixture outcomes.
@@ -279,7 +279,7 @@ See [`context/docs/how_to_export_your_own_data.md`](context/docs/how_to_export_y
 - User-uploaded files are processed by the local app server for the current session — nothing is persisted
 - The AI chat receives only **precomputed insight JSON**, never raw transaction data or files
 - BYOK API keys are **session-only** and never written to disk
-- Demo consent metadata preserves the original hackathon retention rule (`delete_after_2026-03-31`); the committed payloads here are synthetic portfolio/demo artifacts.
+- Demo consent metadata preserves the original synthetic-data retention rule (`delete_after_2026-03-31`); the committed payloads here are synthetic sample artifacts.
 
 ---
 

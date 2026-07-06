@@ -35,7 +35,7 @@ Every computed insight is expected to carry:
 - `provenance.source_record_counts`
 - `provenance.evidence_refs` when source-level IDs are available
 
-The React dashboard exposes this in the Insight Audit Trail panel. That makes the evaluation story visible during the demo: the interviewer can see how a claim is scored, which sources contributed, which deterministic method ran, and which source IDs back the result.
+The React dashboard exposes this in the Insight Audit Trail panel. That makes the evaluation story visible in the product: a reviewer can see how a claim is scored, which sources contributed, which deterministic method ran, and which source IDs back the result.
 
 ## AI Quality Boundary
 
@@ -47,7 +47,7 @@ The current system does not ask an LLM to make financial conclusions directly.
 4. The insight engine emits locked JSON with evidence.
 5. The grounded chat answers only from that JSON.
 
-This keeps the demo defensible under CTO review: if an answer is wrong, there is a clear place to inspect the parser, extractor, feature, or prompt boundary.
+This keeps the system defensible under engineering review: if an answer is wrong, there is a clear place to inspect the parser, extractor, feature, or prompt boundary.
 
 ## Current Verification Commands
 

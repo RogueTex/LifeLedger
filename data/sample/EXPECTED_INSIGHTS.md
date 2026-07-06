@@ -54,4 +54,4 @@ Every newly computed insight should include:
 - `provenance.source_record_counts`
 - `provenance.evidence_refs` when source-level references are available
 
-The interview framing is: LifeLedger does not ask the model to invent financial conclusions. It extracts typed facts, computes deterministic metrics, and uses grounded AI only for explanation.
+The trust framing is: LifeLedger does not ask the model to invent financial conclusions. It extracts typed facts, computes deterministic metrics, and uses grounded AI only for explanation.

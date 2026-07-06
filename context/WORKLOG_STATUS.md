@@ -18,7 +18,7 @@ Last updated: 2026-03-06
 - Locked loader contract to `profile`/`consent` + normalized source keys and strict `year_week` validation.
 - Implemented strict insight schema (`id`, `title`, `finding`, `evidence`, `dollar_impact`) with fail-fast validation.
 - Improved stress/spend reliability and enriched spike evidence (`top_transactions`, `calendar_events`, `threshold_math`).
-- Added full weekly trend visualization with spike highlights and improved threshold math presentation in spike expanders.
+- Added full weekly trend visualization with spike highlights and improved threshold math display in spike expanders.
 - Added months-to-goal fallback inference (`estimation_mode`) from profile goal/income text when direct fields are missing.
 - Expanded anxiety theme extraction with text lexicon matching for freelancer/ADHD/self-doubt signals.
 - Improved undercharging detection with calendar-hours fallback when invoice emails lack explicit hours.

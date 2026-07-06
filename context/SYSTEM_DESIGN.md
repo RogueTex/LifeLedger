@@ -1,4 +1,4 @@
-# System Design Presentation Notes
+# System Design Notes
 
 ## One-Sentence Architecture
 
@@ -45,9 +45,9 @@ The LLM is deliberately downstream. It only receives precomputed insight JSON, s
 
 ## Hosting Recommendation
 
-For the interview, a hosted sample-data demo is useful, but it should not accept sensitive real uploads unless auth, storage policy, and deletion controls are in place.
+A hosted sample-data deployment is useful, but it should not accept sensitive real uploads unless auth, storage policy, and deletion controls are in place.
 
-Strong demo deployment:
+Sample-data deployment:
 
 ```text
 Vercel/Cloudflare Pages frontend
@@ -79,7 +79,7 @@ flowchart TD
 
 ### File-backed demo vs database
 
-File-backed JSON is ideal for a deterministic portfolio demo. Production needs Postgres for users, jobs, consent, audit history, and insight versions.
+File-backed JSON is ideal for a deterministic local prototype. Production needs Postgres for users, jobs, consent, audit history, and insight versions.
 
 ### Sync upload path vs async jobs
 
@@ -97,22 +97,22 @@ Deterministic feature engineering gives testable, inspectable evidence. The LLM 
 
 The canonical timeline makes cross-source patterns possible. Source-specific parsers remain isolated so adding a new export type does not destabilize the whole system.
 
-## How To Present It In 20 Minutes
+## System Walkthrough
 
 1. Start with the product problem: financial behavior is hidden across bank, calendar, chat, and email exports.
-2. Show the demo persona dashboard and one strongest insight.
+2. Show the sample persona dashboard and one strongest insight.
 3. Open the raw sample files in `data/sample/` to show the ingestion inputs.
 4. Trace one path: `sample_transactions.csv` or `persona_p05/emails.jsonl` -> parser/loader -> insight engine -> dashboard.
 5. Open the Insight Audit Trail panel and show confidence, method, source counts, and evidence refs.
 6. Explain why the LLM is downstream of deterministic evidence.
 7. Close with the production architecture: object storage, Postgres, queue, workers, derived insight store, grounded chat.
 
-Use [`context/PRODUCTION_ARCHITECTURE.md`](PRODUCTION_ARCHITECTURE.md) for the longer production-grade architecture talk track.
+Use [`context/PRODUCTION_ARCHITECTURE.md`](PRODUCTION_ARCHITECTURE.md) for the longer production-grade architecture notes.
 Use [`context/EVALUATION_AND_QUALITY.md`](EVALUATION_AND_QUALITY.md) for the evaluation and regression-testing story.
 
-## Rama-Relevant Framing
+## Generalization Pattern
 
-The parallel to an AI infrastructure company is the shape of the system:
+The same architecture applies to other messy operational data domains:
 
 ```text
 fragmented exports
@@ -124,4 +124,4 @@ fragmented exports
   -> grounded AI explanation
 ```
 
-For Rama, the sources might be ERP, CRM, supplier portals, pricing files, inventory, and email RFQs. For LifeLedger, they are bank CSVs, calendars, chat exports, and emails. The engineering problem is similar: normalize messy operational data, compute useful signals, and present the result in a workflow people can act on.
+For an operations system, the sources might be ERP, CRM, supplier portals, pricing files, inventory, and email RFQs. For LifeLedger, they are bank CSVs, calendars, chat exports, and emails. The engineering problem is similar: normalize messy operational data, compute useful signals, and present the result in a workflow people can act on.
