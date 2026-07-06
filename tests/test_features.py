@@ -510,6 +510,41 @@ class TestParseChatgptExport:
         assert len(df) == 1
         assert "Hello world" == df.iloc[0]["text"]
 
+    def test_claude_zip_with_chat_messages(self):
+        import json as _json
+        import io
+        import zipfile
+
+        conv_data = _json.dumps([{
+            "name": "Savings stress",
+            "created_at": "2026-01-15T09:00:00Z",
+            "chat_messages": [
+                {
+                    "sender": "human",
+                    "created_at": "2026-01-15T09:01:00Z",
+                    "text": "I am worried about rent and debt this month",
+                    "content": [{"type": "text", "text": "I am worried about rent and debt this month"}],
+                },
+                {
+                    "sender": "assistant",
+                    "created_at": "2026-01-15T09:02:00Z",
+                    "text": "Let's make a plan.",
+                    "content": [{"type": "text", "text": "Let's make a plan."}],
+                },
+            ],
+        }]).encode()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("conversations.json", conv_data)
+
+        df = parse_chatgpt_export(buf.getvalue(), "claude_export.zip")
+
+        assert len(df) == 1
+        assert df.iloc[0]["source"] == "ai_chat"
+        assert df.iloc[0]["ts"].isoformat() == "2026-01-15T09:01:00+00:00"
+        assert "worried" in df.iloc[0]["text"]
+        assert "money" in df.iloc[0]["tags"]
+
 
 class TestUploadProcessor:
     def _run_process_upload(self, payload: dict) -> tuple[int, dict]:

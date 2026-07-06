@@ -286,7 +286,7 @@ def _parse_chatgpt_json(file_bytes: bytes) -> pd.DataFrame:
                 continue
             conv_title = conv.get("title", "")
             create_time = conv.get("create_time")
-            ts = _epoch_to_datetime(create_time)
+            ts = _coerce_datetime(create_time)
 
             # Extract user messages from the mapping structure
             mapping = conv.get("mapping", {})
@@ -304,7 +304,34 @@ def _parse_chatgpt_json(file_bytes: bytes) -> pd.DataFrame:
                     text = " ".join(str(p) for p in parts if isinstance(p, str)).strip()
                     if not text:
                         continue
-                    msg_ts = _epoch_to_datetime(msg.get("create_time")) or ts
+                    msg_ts = _coerce_datetime(msg.get("create_time")) or ts
+                    rows.append({
+                        "id": f"c_{len(rows):04d}",
+                        "ts": msg_ts,
+                        "source": "ai_chat",
+                        "type": "conversation",
+                        "text": text,
+                        "tags": _infer_conversation_tags(text, conv_title),
+                        "refs": [],
+                        "amount": None,
+                        "pii_level": "user_upload",
+                    })
+
+            # Claude export format: list of conversation objects with "chat_messages".
+            chat_messages = conv.get("chat_messages")
+            if isinstance(chat_messages, list):
+                conv_title = str(conv.get("name") or conv.get("summary") or "")
+                ts = _coerce_datetime(conv.get("created_at") or conv.get("updated_at"))
+                for msg in chat_messages:
+                    if not isinstance(msg, dict):
+                        continue
+                    sender = str(msg.get("sender") or msg.get("role") or "").lower()
+                    if sender not in {"human", "user"}:
+                        continue
+                    text = _extract_claude_message_text(msg)
+                    if not text:
+                        continue
+                    msg_ts = _coerce_datetime(msg.get("created_at") or msg.get("updated_at")) or ts
                     rows.append({
                         "id": f"c_{len(rows):04d}",
                         "ts": msg_ts,
@@ -330,13 +357,44 @@ def _parse_chatgpt_json(file_bytes: bytes) -> pd.DataFrame:
     return df
 
 
-def _epoch_to_datetime(epoch: Any) -> datetime | None:
-    if epoch is None:
+def _coerce_datetime(value: Any) -> datetime | None:
+    if value is None:
         return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        try:
+            parsed = datetime.fromisoformat(stripped.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc)
+        except ValueError:
+            pass
     try:
-        return datetime.fromtimestamp(float(epoch), tz=timezone.utc)
+        return datetime.fromtimestamp(float(value), tz=timezone.utc)
     except (TypeError, ValueError, OverflowError, OSError):
         return None
+
+
+def _extract_claude_message_text(message: dict[str, Any]) -> str:
+    direct_text = str(message.get("text") or "").strip()
+    if direct_text:
+        return direct_text
+
+    content = message.get("content")
+    if not isinstance(content, list):
+        return ""
+
+    parts: list[str] = []
+    for block in content:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict):
+            text = block.get("text")
+            if isinstance(text, str) and text.strip():
+                parts.append(text)
+    return " ".join(part.strip() for part in parts if part.strip()).strip()
 
 
 _TAG_PATTERNS: dict[str, tuple[str, ...]] = {
