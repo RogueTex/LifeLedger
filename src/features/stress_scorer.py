@@ -12,7 +12,7 @@ DEADLINE_KEYWORDS: tuple[str, ...] = (
     "promotion",
     "1:1",
     "okr",
-    "presentation",
+    "readout",
     "launch",
     "demo",
 )

@@ -27,7 +27,12 @@ from src.features.stress_scorer import compute_stress, DEADLINE_KEYWORDS
 from src.features.spend_tagger import tag_spend, KEYWORD_MAP
 from src.features.correlation import compute_correlation
 from src.insights.extraction import extract_invoice_facts, extract_worry_facts
-from src.insights.insight_engine import _validate_insight_schema, _compute_anxiety_themes, compute_insights
+from src.insights.insight_engine import (
+    _validate_insight_schema,
+    _compute_anxiety_themes,
+    compute_insights,
+    compute_insights_from_dataframes,
+)
 from src.loaders.persona_loader import build_timeline, load_persona
 from src.loaders.upload_parser import parse_transactions_csv, parse_calendar_ics, parse_chatgpt_export
 
@@ -346,9 +351,12 @@ class TestParseTransactionsCsv:
         assert len(df) == 2
         assert "ts" in df.columns
         assert "amount" in df.columns
+        assert "signed_amount" in df.columns
         assert "year_week" in df.columns
         assert df.iloc[0]["text"] == "Starbucks"
         assert df.iloc[0]["amount"] == 5.50
+        assert df.iloc[0]["signed_amount"] == -5.50
+        assert df.iloc[1]["signed_amount"] == 2500.00
 
     def test_alternate_column_names(self):
         data = b"Transaction Date,Transaction Amount,Merchant\n2025-01-15,-42.99,Amazon\n"
@@ -462,7 +470,7 @@ class TestParseChatgptExport:
             "mapping": {
                 "a": {"message": {
                     "author": {"role": "user"},
-                    "content": {"parts": ["anxious about my promotion and nervous about the interview"]},
+                    "content": {"parts": ["anxious about my promotion and nervous about the hiring loop"]},
                     "create_time": 1705300000,
                 }},
             },
@@ -660,3 +668,49 @@ class TestSamplePersonaData:
         assert len(transactions) >= 30
         assert len(calendar) >= 15
         assert len(conversations) >= 5
+
+    def test_upload_fixtures_generate_sensible_demo_insights(self):
+        upload_dir = self.SAMPLE_ROOT / "uploads"
+        transactions = parse_transactions_csv((upload_dir / "sample_transactions.csv").read_bytes())
+        calendar = parse_calendar_ics((upload_dir / "sample_calendar.ics").read_bytes())
+        conversations = parse_chatgpt_export(
+            (upload_dir / "sample_chatgpt_export.json").read_bytes(),
+            "sample_chatgpt_export.json",
+        )
+
+        result = compute_insights_from_dataframes(
+            transactions_df=transactions,
+            calendar_df=calendar,
+            conversations_df=conversations,
+            user_context={
+                "income": 78000,
+                "savingsGoal": 25000,
+                "currentSavings": 8000,
+                "monthlyDebt": 350,
+            },
+        )
+        _validate_insight_schema(result)
+        insights = {insight["id"]: insight for insight in result["insights"]}
+
+        goal = insights["months_to_goal"]
+        assert goal["months_to_goal"] == pytest.approx(56.7, abs=0.1)
+        assert goal["avg_net_monthly_savings"] == 300
+        assert goal["confidence"]["level"] == "high"
+
+        day_of_week = insights["expensive_day_of_week"]
+        assert day_of_week["expensive_day"] not in {"Monday", "Tuesday"}
+        assert day_of_week["by_day"].get("Monday", 0) < 1000
+        assert day_of_week["by_day"].get("Tuesday", 0) < 1000
+        assert day_of_week["provenance"]["method"] == "discretionary_outflow_day_of_week_average_v1"
+        assert any("Income deposits" in item for item in day_of_week["evidence"])
+
+        surge = insights["post_payday_surge"]
+        assert surge["detected"] is True
+        assert surge["total_spend"] == pytest.approx(783.64, abs=0.01)
+        assert surge["surge_pct"] == 35.0
+        assert surge["provenance"]["method"] == "income_deposit_window_discretionary_spend_concentration_v1"
+
+        velocity = insights["spending_velocity"]
+        assert velocity["is_front_loaded"] is False
+        assert velocity["first_half_pct"] == 45.0
+        assert velocity["second_half_pct"] == 55.0

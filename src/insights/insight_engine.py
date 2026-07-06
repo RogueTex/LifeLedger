@@ -122,6 +122,25 @@ def _infer_yearly_income(profile: dict[str, Any]) -> float | None:
         return None
 
 
+def _transaction_text_series(df: pd.DataFrame) -> pd.Series:
+    """Return searchable transaction text across description-like fields and tags."""
+    text_cols = ("text", "description", "merchant", "memo", "category")
+    texts = pd.Series([""] * len(df), index=df.index, dtype="object")
+    for col in text_cols:
+        if col in df.columns:
+            texts = texts + " " + df[col].fillna("").astype(str)
+
+    if "tags" in df.columns:
+        def _tags_to_text(value: object) -> str:
+            if isinstance(value, list):
+                return " ".join(str(tag) for tag in value)
+            return str(value) if value is not None else ""
+
+        texts = texts + " " + df["tags"].apply(_tags_to_text)
+
+    return texts.str.lower()
+
+
 def _infer_goal_amount_from_profile(profile: dict[str, Any]) -> float | None:
     goals = profile.get("goals") or []
     if not isinstance(goals, list):
@@ -208,7 +227,7 @@ def _extract_hours_from_calendar(calendar_df: pd.DataFrame, anchor_ts: pd.Timest
         tags = tag_series.loc[idx] if idx in tag_series.index else []
         tags_list = [str(x).lower() for x in tags] if isinstance(tags, list) else []
         if not (
-            any(token in text for token in ("client", "design", "freelance", "portfolio", "presentation"))
+            any(token in text for token in ("client", "design", "freelance", "portfolio", "readout"))
             or any(token in tags_list for token in ("client", "design", "freelance", "business_development"))
         ):
             continue
@@ -360,21 +379,40 @@ def _detect_subscriptions(transactions_df: pd.DataFrame) -> dict[str, Any]:
 
 
 def _compute_day_of_week_spend(transactions_df: pd.DataFrame) -> dict[str, Any]:
-    """Compute average spend by day of week."""
+    """Compute average discretionary outflow spend by day of week."""
     if transactions_df is None or transactions_df.empty:
         return {"by_day": {}, "expensive_day": None, "expensive_day_avg": None, "cheapest_day": None}
 
     df = transactions_df.copy()
     ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
-    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0).abs()
+    amount_source = "signed_amount" if "signed_amount" in df.columns else "amount"
+    signed_amount = pd.to_numeric(df.get(amount_source, 0.0), errors="coerce").fillna(0.0)
+    amount = signed_amount.abs()
+    text = _transaction_text_series(df)
+    inflow_mask = text.str.contains(_INFLOW_KEYWORDS, na=False)
+
+    has_positive = bool((signed_amount > 0).any())
+    has_negative = bool((signed_amount < 0).any())
+    if has_positive and has_negative:
+        spend_mask = signed_amount < 0
+    else:
+        spend_mask = ~inflow_mask
+
+    tagged_df, _ = tag_spend(df)
+    if "is_discretionary" in tagged_df.columns and bool(tagged_df["is_discretionary"].any()):
+        discretionary_mask = tagged_df["is_discretionary"].reindex(df.index).fillna(False).astype(bool)
+        spend_mask = spend_mask & discretionary_mask
+
     df["_dow"] = ts.dt.day_name()
+    df["_date"] = ts.dt.date
     df["_amount"] = amount
 
-    df = df.dropna(subset=["_dow"])
+    df = df[spend_mask & (df["_amount"] > 0)].dropna(subset=["_dow", "_date"])
     if df.empty:
         return {"by_day": {}, "expensive_day": None, "expensive_day_avg": None, "cheapest_day": None}
 
-    by_day = df.groupby("_dow")["_amount"].mean().round(2).to_dict()
+    daily_totals = df.groupby(["_date", "_dow"], as_index=False)["_amount"].sum()
+    by_day = daily_totals.groupby("_dow")["_amount"].mean().round(2).to_dict()
 
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     by_day_ordered = {d: by_day.get(d, 0.0) for d in day_order if d in by_day}
@@ -431,23 +469,32 @@ def _detect_paydays(
     return paydays, outflows
 
 
+def _filter_to_discretionary_if_available(source_df: pd.DataFrame, candidate_df: pd.DataFrame) -> pd.DataFrame:
+    """Restrict candidate transactions to discretionary rows when signals exist."""
+    if candidate_df.empty:
+        return candidate_df
+
+    tagged_df, _ = tag_spend(source_df)
+    if "is_discretionary" not in tagged_df.columns or not bool(tagged_df["is_discretionary"].any()):
+        return candidate_df
+
+    discretionary_index = set(tagged_df.index[tagged_df["is_discretionary"]])
+    return candidate_df[candidate_df.index.isin(discretionary_index)].copy()
+
+
 def _compute_post_payday_surge(transactions_df: pd.DataFrame) -> dict[str, Any]:
-    """Detect spending concentration in the 3 days after income deposits."""
+    """Detect discretionary spending concentration in the 3 days after income deposits."""
     if transactions_df is None or transactions_df.empty:
         return {"detected": False, "surge_ratio": None, "payday_count": 0}
 
     df = transactions_df.copy()
     ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
-    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0)
+    amount_source = "signed_amount" if "signed_amount" in df.columns else "amount"
+    amount = pd.to_numeric(df.get(amount_source, 0.0), errors="coerce").fillna(0.0)
     df["_ts"] = ts
     df["_amount"] = amount.abs()
 
-    text_cols = ("text", "description", "merchant", "memo")
-    texts = pd.Series([""] * len(df), index=df.index)
-    for col in text_cols:
-        if col in df.columns:
-            texts = texts + " " + df[col].fillna("").astype(str)
-    df["_text"] = texts.str.lower()
+    df["_text"] = _transaction_text_series(df)
 
     paydays, outflows = _detect_paydays(df, amount, df["_text"])
     paydays = paydays.dropna(subset=["_ts"])
@@ -456,7 +503,7 @@ def _compute_post_payday_surge(transactions_df: pd.DataFrame) -> dict[str, Any]:
         return {"detected": False, "surge_ratio": None, "payday_count": 0}
 
     # For each payday, sum spending in the next 3 days
-    outflows = outflows.dropna(subset=["_ts"])
+    outflows = _filter_to_discretionary_if_available(df, outflows).dropna(subset=["_ts"])
 
     if outflows.empty:
         return {"detected": False, "surge_ratio": None, "payday_count": int(len(paydays))}
@@ -471,7 +518,7 @@ def _compute_post_payday_surge(transactions_df: pd.DataFrame) -> dict[str, Any]:
         post_payday_spend += float(in_window["_amount"].sum())
 
     surge_ratio = round(post_payday_spend / total_spend, 2) if total_spend > 0 else 0.0
-    # A surge_ratio > 0.30 means 30%+ of all spending happens in 3-day post-payday windows
+    # A surge_ratio > 0.30 means 30%+ of discretionary spend happens in 3-day post-payday windows
     detected = surge_ratio > 0.25
 
     return {
@@ -632,17 +679,13 @@ def _compute_spending_velocity(transactions_df: pd.DataFrame) -> dict[str, Any]:
 
     df = transactions_df.copy()
     ts = pd.to_datetime(df.get("ts", df.get("date")), errors="coerce", utc=True)
-    amount = pd.to_numeric(df.get("amount", 0.0), errors="coerce").fillna(0.0)
+    amount_source = "signed_amount" if "signed_amount" in df.columns else "amount"
+    amount = pd.to_numeric(df.get(amount_source, 0.0), errors="coerce").fillna(0.0)
     df["_ts"] = ts
     df["_amount"] = amount.abs()
     df = df.dropna(subset=["_ts"])
 
-    text_cols = ("text", "description", "merchant", "memo")
-    texts = pd.Series([""] * len(df), index=df.index)
-    for col in text_cols:
-        if col in df.columns:
-            texts = texts + " " + df[col].fillna("").astype(str)
-    df["_text"] = texts.str.lower()
+    df["_text"] = _transaction_text_series(df)
 
     paydays_df, outflows_guess = _detect_paydays(df, amount, df["_text"])
     paydays = paydays_df["_ts"].dropna().sort_values().tolist()
@@ -650,9 +693,12 @@ def _compute_spending_velocity(transactions_df: pd.DataFrame) -> dict[str, Any]:
     if len(paydays) < 2:
         return {"has_data": False}
 
-    # Get outflow transactions
+    # Get discretionary outflow transactions when the upload includes enough merchant/category signals.
     is_discretionary = df.get("is_discretionary", pd.Series(False, index=df.index))
-    outflows = df[is_discretionary == True].copy() if is_discretionary.any() else outflows_guess.copy()
+    if is_discretionary.any():
+        outflows = df[is_discretionary == True].copy()
+    else:
+        outflows = _filter_to_discretionary_if_available(df, outflows_guess)
     outflows = outflows.dropna(subset=["_ts"]).sort_values("_ts")
 
     if outflows.empty:
@@ -814,11 +860,11 @@ INSIGHT_PROVENANCE: dict[str, dict[str, Any]] = {
     },
     "expensive_day_of_week": {
         "source_types": ["bank"],
-        "method": "transaction_day_of_week_average_v1",
+        "method": "discretionary_outflow_day_of_week_average_v1",
     },
     "post_payday_surge": {
         "source_types": ["bank"],
-        "method": "income_deposit_window_spend_concentration_v1",
+        "method": "income_deposit_window_discretionary_spend_concentration_v1",
     },
     "worry_timeline": {
         "source_types": ["ai_chat", "bank"],
@@ -921,14 +967,14 @@ def _confidence_for_insight(insight: dict[str, Any]) -> dict[str, Any]:
 
     if insight_id == "post_payday_surge":
         if insight.get("detected"):
-            return _confidence("high", 0.82, "Income deposits and spend windows were both detected.")
+            return _confidence("high", 0.82, "Income deposits and discretionary spend windows were both detected.")
         if insight.get("surge_pct") is not None:
             return _confidence("medium", 0.65, "Income deposits were detected, but no surge crossed the threshold.")
         return _confidence("low", 0.34, "Income deposits could not be detected.")
 
     if insight_id == "expensive_day_of_week":
         if insight.get("expensive_day"):
-            return _confidence("medium", 0.72, "Day-of-week averages are based on normalized transactions.")
+            return _confidence("medium", 0.72, "Day-of-week averages are based on normalized discretionary outflows.")
         return _confidence("low", 0.34, "Not enough transaction dates were available.")
 
     return _confidence("medium", 0.62, "Deterministic insight generated from normalized source data.")
@@ -1198,6 +1244,7 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "evidence": [
             f"Average by day: {', '.join(f'{d}: ${v:.2f}' for d, v in dow_data.get('by_day', {}).items())}",
             f"Cheapest day: {dow_data.get('cheapest_day', 'N/A')}",
+            "Income deposits, transfers, and fixed non-discretionary rows are excluded from spend averages when tagged.",
         ],
         "dollar_impact": None,
         "by_day": dow_data.get("by_day", {}),
@@ -1221,18 +1268,18 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
         "id": "post_payday_surge",
         "title": "Post-payday spending surge",
         "finding": (
-            f"{surge_data.get('surge_pct', 0)}% of your spending happens within 3 days of getting paid (${surge_data.get('post_payday_total', 0):.2f} of ${surge_data.get('total_spend', 0):.2f})."
+            f"{surge_data.get('surge_pct', 0)}% of your discretionary spending happens within 3 days of getting paid (${surge_data.get('post_payday_total', 0):.2f} of ${surge_data.get('total_spend', 0):.2f})."
             if surge_data.get("detected")
             else (
-                f"No significant post-payday surge — {surge_data.get('surge_pct', 0)}% of spending is in the 3-day post-payday window."
+                f"No significant post-payday surge — {surge_data.get('surge_pct', 0)}% of discretionary spending is in the 3-day post-payday window."
                 if surge_data.get("surge_ratio") is not None
                 else "Could not detect income deposits to analyze payday patterns."
             )
         ),
         "evidence": [
             f"Paydays detected: {surge_data.get('payday_count', 0)}",
-            f"Post-payday spend: ${surge_data.get('post_payday_total', 0)}",
-            f"Total spend: ${surge_data.get('total_spend', 0)}",
+            f"Post-payday discretionary spend: ${surge_data.get('post_payday_total', 0)}",
+            f"Total discretionary spend: ${surge_data.get('total_spend', 0)}",
             f"Surge ratio: {surge_data.get('surge_pct', 0)}%",
         ],
         "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
@@ -1306,7 +1353,11 @@ def compute_insights(persona_id: str) -> dict[str, Any]:
             f"{'jumps' if biggest_p['shift_pct'] > 0 else 'drops'} {abs(biggest_p['shift_pct']):.0f}% "
             f"(${biggest_p['high_stress_avg']:.2f}/week vs ${biggest_p['low_stress_avg']:.2f} on calm weeks)."
             if biggest_p and biggest_p.get("shift_pct", 0) != 0
-            else "Not enough data to compare spending categories across stress levels."
+            else (
+                "Your discretionary spending mix is stable across high-stress and calmer weeks."
+                if cat_shift_data_p.get("has_data")
+                else "Not enough data to compare spending categories across stress levels."
+            )
         ),
         "evidence": [
             f"Compared {cat_shift_data_p.get('weeks_analyzed', 0)} weeks of spending by stress level",
@@ -1612,6 +1663,7 @@ def compute_insights_from_dataframes(
         "evidence": [
             f"Average spending by day: {', '.join(f'{d}: ${v:.2f}' for d, v in dow_data.get('by_day', {}).items())}",
             f"Cheapest day: {dow_data.get('cheapest_day', 'N/A')}",
+            "Income deposits, transfers, and fixed non-discretionary rows are excluded from spend averages when tagged.",
         ],
         "dollar_impact": None,
         "by_day": dow_data.get("by_day", {}),
@@ -1634,7 +1686,7 @@ def compute_insights_from_dataframes(
         "id": "post_payday_surge",
         "title": "Post-payday spending surge",
         "finding": (
-            f"{surge_data.get('surge_pct', 0)}% of your spending happens within 3 days of getting paid \u2014 that's ${surge_data.get('post_payday_total', 0):.2f} out of ${surge_data.get('total_spend', 0):.2f} total."
+            f"{surge_data.get('surge_pct', 0)}% of your discretionary spending happens within 3 days of getting paid \u2014 that's ${surge_data.get('post_payday_total', 0):.2f} out of ${surge_data.get('total_spend', 0):.2f} total."
             if surge_data.get("detected")
             else (
                 f"Your spending is spread pretty evenly through the pay cycle \u2014 no big post-payday splurges."
@@ -1644,7 +1696,7 @@ def compute_insights_from_dataframes(
         ),
         "evidence": [
             f"Found {surge_data.get('payday_count', 0)} paydays in your data",
-            f"Checked spending in the 3 days after each payday",
+            f"Checked discretionary spending in the 3 days after each payday",
         ],
         "dollar_impact": surge_data.get("post_payday_total") if surge_data.get("detected") else None,
         "detected": surge_data.get("detected", False),
@@ -1791,7 +1843,11 @@ def compute_insights_from_dataframes(
             f"{'jumps' if biggest['shift_pct'] > 0 else 'drops'} {abs(biggest['shift_pct']):.0f}% "
             f"(${biggest['high_stress_avg']:.2f}/week vs ${biggest['low_stress_avg']:.2f} on calm weeks)."
             if biggest and biggest.get("shift_pct", 0) != 0
-            else "Not enough data to compare spending categories across stress levels yet."
+            else (
+                "Your discretionary spending mix is stable across high-stress and calmer weeks."
+                if cat_shift_data.get("has_data")
+                else "Not enough data to compare spending categories across stress levels yet."
+            )
         ),
         "evidence": [
             f"Compared {cat_shift_data.get('weeks_analyzed', 0)} weeks of spending by stress level",

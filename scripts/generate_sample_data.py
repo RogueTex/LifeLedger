@@ -155,7 +155,7 @@ def calendar_rows(spec: PersonaSpec, start: date) -> list[dict[str, Any]]:
             "Customer follow-up",
             "1:1 coaching",
             "Launch deadline review",
-            "Executive presentation prep",
+            "Executive readout prep",
             "OKR risk review",
         ]
         if spec.freelance:
@@ -163,7 +163,7 @@ def calendar_rows(spec: PersonaSpec, start: date) -> list[dict[str, Any]]:
                 "Client design block 3h",
                 "Portfolio review",
                 "Invoice follow-up",
-                "Brand presentation deadline",
+                "Brand readout deadline",
                 "Client revisions 4h",
                 "Scope review",
                 "Proposal work 2h",
@@ -178,7 +178,7 @@ def calendar_rows(spec: PersonaSpec, start: date) -> list[dict[str, Any]]:
                 "calendar",
                 "event",
                 f"{title} - {'high pressure week' if week in spec.high_stress_weeks else 'normal cadence'}",
-                ["work", "deadline"] if any(word in title.lower() for word in ("deadline", "review", "presentation")) else ["work"],
+                ["work", "deadline"] if any(word in title.lower() for word in ("deadline", "review", "readout")) else ["work"],
             )
             record["title"] = title
             record["start"] = iso(day, hour)

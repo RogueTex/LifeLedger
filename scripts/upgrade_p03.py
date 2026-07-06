@@ -28,8 +28,8 @@ new_cal = [
     # ── Week 2024-18: Apr 29 – May 5 ──
     {"id": "cal_0095", "ts": "2024-04-29T09:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
-     "text": "Q1 research synthesis deadline — final presentation to product team",
-     "tags": ["work", "deadline", "presentation", "sprint"],
+     "text": "Q1 research synthesis deadline — final readout to product team",
+     "tags": ["work", "deadline", "readout", "sprint"],
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0096", "ts": "2024-04-30T14:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
@@ -43,8 +43,8 @@ new_cal = [
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0098", "ts": "2024-05-02T13:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
-     "text": "OKR mid-cycle review — Q2 research roadmap presentation (deadline)",
-     "tags": ["work", "okr", "presentation", "review", "deadline"],
+     "text": "OKR mid-cycle review — Q2 research roadmap readout (deadline)",
+     "tags": ["work", "okr", "readout", "review", "deadline"],
      "refs": [], "pii_level": "synthetic"},
 
     # ── Week 2024-28: Jul 8 – Jul 14 ──
@@ -55,8 +55,8 @@ new_cal = [
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0100", "ts": "2024-07-09T14:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
-     "text": "Sprint deadline kickoff — synthesis presentation draft due today",
-     "tags": ["work", "deadline", "presentation", "sprint"],
+     "text": "Sprint deadline kickoff — synthesis readout draft due today",
+     "tags": ["work", "deadline", "readout", "sprint"],
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0101", "ts": "2024-07-10T10:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
@@ -65,8 +65,8 @@ new_cal = [
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0102", "ts": "2024-07-11T13:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
-     "text": "Demo prep — final delivery presentation rehearsal (deadline Friday)",
-     "tags": ["work", "demo", "presentation", "deadline"],
+     "text": "Demo prep — final delivery readout rehearsal (deadline Friday)",
+     "tags": ["work", "demo", "readout", "deadline"],
      "refs": [], "pii_level": "synthetic"},
 
     # ── Week 2024-36: Sep 2 – Sep 8 ──
@@ -77,8 +77,8 @@ new_cal = [
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0104", "ts": "2024-09-03T14:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
-     "text": "Dual-track sprint deadline — synthesis presentation delivery due",
-     "tags": ["work", "deadline", "presentation", "sprint", "overload"],
+     "text": "Dual-track sprint deadline — synthesis readout delivery due",
+     "tags": ["work", "deadline", "readout", "sprint", "overload"],
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0105", "ts": "2024-09-04T10:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
@@ -87,8 +87,8 @@ new_cal = [
      "refs": [], "pii_level": "synthetic"},
     {"id": "cal_0106", "ts": "2024-09-05T13:00:00-05:00", "source": "calendar",
      "type": "calendar_event",
-     "text": "OKR go/no-go demo — September launch decision presentation",
-     "tags": ["work", "okr", "demo", "presentation", "deadline"],
+     "text": "OKR go/no-go demo — September launch decision readout",
+     "tags": ["work", "okr", "demo", "readout", "deadline"],
      "refs": [], "pii_level": "synthetic"},
 ]
 

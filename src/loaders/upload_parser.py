@@ -88,6 +88,7 @@ def parse_transactions_csv(file_bytes: bytes) -> pd.DataFrame:
             "tags": [category.strip().lower()] if category.strip() else [],
             "refs": [],
             "amount": abs(raw_amount),
+            "signed_amount": raw_amount,
             "pii_level": "user_upload",
         })
 
@@ -144,7 +145,7 @@ def _parse_date(raw: str) -> datetime | None:
 
 def _empty_txn_df() -> pd.DataFrame:
     return pd.DataFrame(columns=[
-        "id", "ts", "source", "type", "text", "tags", "refs", "amount",
+        "id", "ts", "source", "type", "text", "tags", "refs", "amount", "signed_amount",
         "pii_level", "date", "year_week",
     ])
 
@@ -343,7 +344,7 @@ _TAG_PATTERNS: dict[str, tuple[str, ...]] = {
     "stress": ("stress", "stressed", "pressure", "overwhelm"),
     "burnout": ("burnout", "exhausted", "burned out", "tired"),
     "money": ("money", "budget", "finance", "savings", "debt", "rent", "mortgage"),
-    "career": ("career", "job", "promotion", "interview", "resume", "salary"),
+    "career": ("career", "job", "promotion", "hiring loop", "resume", "salary"),
     "health": ("health", "doctor", "sick", "exercise", "sleep", "therapy"),
     "relationship": ("relationship", "partner", "dating", "family", "friend"),
     "productivity": ("productivity", "procrastination", "focus", "adhd", "habit"),
